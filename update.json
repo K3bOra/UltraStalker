@@ -1,13 +1,13 @@
 {
-  "version": "9.2.4",
-  "revision": 571,
-  "name": "Ultra Stalker Final V9.2.4",
-  "ipk": "https://github.com/K3bOra/UltraStalker/releases/download/v9.2.4/Ultra_Stalker_Final.ipk",
-  "sha256": "dbf1993464aea67c69129e575915d69ea9cf0ebd9926756982e85cb288f99c51",
-  "size": 9514814,
-  "notes": "• Repair internal payload checksums that blocked installation of 9.2.3.\n• Validate every internal payload checksum before publishing.",
+  "version": "9.2.5",
+  "revision": 572,
+  "name": "Ultra Stalker Final V9.2.5",
+  "ipk": "https://github.com/K3bOra/UltraStalker/releases/download/v9.2.5/Ultra_Stalker_Final.ipk",
+  "sha256": "99170d3e5670b479f5862329e6b78caf0d34ae87ebc94871caa5e459a3759745",
+  "size": 9480676,
+  "notes": "• Fix package integrity failures after generated Python bytecode is cleaned.\n• Treat unavailable py_compile as an optional compilation warning, not an installation failure; report real syntax failures.\n• Confirm key 0 already restarts the current live stream; retain its existing mapping.",
   "notes_i18n": {
-    "en": "• Repair internal payload checksums that blocked installation of 9.2.3.\n• Validate every internal payload checksum before publishing.",
-    "ar": "• إصلاح بصمات الملفات الداخلية التي منعت تثبيت 9.2.3.\n• فحص جميع بصمات الملفات الداخلية قبل نشر أي إصدار."
+    "en": "• Fix package integrity failures after generated Python bytecode is cleaned.\n• Treat unavailable py_compile as an optional compilation warning, not an installation failure; report real syntax failures.\n• Confirm key 0 already restarts the current live stream; retain its existing mapping.",
+    "ar": "• إصلاح فشل فحص سلامة الحزمة بعد تنظيف ملفات Python المؤقتة.\n• تجاوز تجميع bytecode الاختياري فقط عند غياب py_compile، مع إظهار أخطاء السورس الحقيقية.\n• تأكيد أن زر 0 يعيد تشغيل بث اللايف الحالي مع الحفاظ على تعيينه الموجود."
   }
 }
