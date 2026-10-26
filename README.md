@@ -9,14 +9,14 @@
 <br>
 
 [![Platform](https://img.shields.io/badge/PLATFORM-Enigma2-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](#)
-[![Version](https://img.shields.io/badge/PLUGIN-V9.2.2-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](update.json)
-[![Revision](https://img.shields.io/badge/REVISION-569-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](update.json)
+[![Version](https://img.shields.io/badge/PLUGIN-V9.2.3-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](update.json)
+[![Revision](https://img.shields.io/badge/REVISION-570-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](update.json)
 [![Python](https://img.shields.io/badge/PYTHON-3.12%E2%80%933.15-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](install.sh)
 
-[![License](https://img.shields.io/github/license/K3bOra/-UltraStalker?style=for-the-badge&labelColor=321d24&color=43bb87)](LICENSE)
-[![Last commit](https://img.shields.io/github/last-commit/K3bOra/-UltraStalker?style=for-the-badge&labelColor=321d24&color=43bb87)](https://github.com/K3bOra/-UltraStalker/commits/main)
-[![Downloads](https://img.shields.io/github/downloads/K3bOra/-UltraStalker/total?style=for-the-badge&labelColor=321d24&color=43bb87)](https://github.com/K3bOra/-UltraStalker/releases)
-[![Stars](https://img.shields.io/github/stars/K3bOra/-UltraStalker?style=for-the-badge&labelColor=321d24&color=43bb87)](https://github.com/K3bOra/-UltraStalker/stargazers)
+[![License](https://img.shields.io/github/license/K3bOra/UltraStalker?style=for-the-badge&labelColor=321d24&color=43bb87)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/K3bOra/UltraStalker?style=for-the-badge&labelColor=321d24&color=43bb87)](https://github.com/K3bOra/UltraStalker/commits/main)
+[![Downloads](https://img.shields.io/github/downloads/K3bOra/UltraStalker/total?style=for-the-badge&labelColor=321d24&color=43bb87)](https://github.com/K3bOra/UltraStalker/releases)
+[![Stars](https://img.shields.io/github/stars/K3bOra/UltraStalker?style=for-the-badge&labelColor=321d24&color=43bb87)](https://github.com/K3bOra/UltraStalker/stargazers)
 
 <br>
 
@@ -24,7 +24,7 @@
 
 <br>
 
-[![Install Ultra Stalker](assets/action-install.svg)](#-ready-to-get-started) &nbsp;&nbsp; [![Browse official releases](assets/action-releases.svg)](https://github.com/K3bOra/-UltraStalker/releases)
+[![Install Ultra Stalker](assets/action-install.svg)](#-ready-to-get-started) &nbsp;&nbsp; [![Browse official releases](assets/action-releases.svg)](https://github.com/K3bOra/UltraStalker/releases)
 
 </div>
 
@@ -184,16 +184,16 @@ Manage saved Portal and M3U sources, then fine-tune playback, language, performa
 **For compatible Enigma2 receivers** — open a terminal or Telnet/SSH session as **root**, then run the official installer:
 
 ```sh
-wget -qO- https://raw.githubusercontent.com/K3bOra/-UltraStalker/main/install.sh | /bin/sh
+wget -qO- https://raw.githubusercontent.com/K3bOra/UltraStalker/main/install.sh | /bin/sh
 ```
 
 Prefer reviewing the script first? [Read the official installer](install.sh) before running it.
 
 **What the installer checks:** Python 3.12–3.15, `opkg`, required libraries, available temporary storage and SHA-256 integrity of the downloaded IPK.
 
-**Manual package:** [Download the latest IPK from Releases](https://github.com/K3bOra/-UltraStalker/releases/latest).
+**Manual package:** [Download the latest IPK from Releases](https://github.com/K3bOra/UltraStalker/releases/latest).
 
-> ℹ️ **Version note:** the installed plugin version is **V9.2.2 (Revision 569)**. The authoritative source for online updates is always [`update.json`](update.json).
+> ℹ️ **Version note:** the current plugin version is **V9.2.3 (Revision 570)**. The authoritative source for online updates is always [`update.json`](update.json).
 
 > ⚠️ Installation and updates require receiver access and may restart Enigma2. **Back up important receiver configuration first.**
 
@@ -203,45 +203,47 @@ Prefer reviewing the script first? [Read the official installer](install.sh) bef
 
 <div align="center">
 
-[![Current](https://img.shields.io/badge/CURRENT-Ultra%20Stalker%20V9.2.2-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](update.json)
-[![Revision](https://img.shields.io/badge/REVISION-569-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](update.json)
+[![Current](https://img.shields.io/badge/CURRENT-Ultra%20Stalker%20V9.2.3-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](update.json)
+[![Revision](https://img.shields.io/badge/REVISION-570-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](update.json)
 
 </div>
 
-**Ultra Stalker V9.2.2 · Revision 569**
+**Ultra Stalker V9.2.3 · Revision 570**
 
-- **Player New & Player New 2** — new glass info bars for Live, Movies and Series (*Settings › Media › Player View*) with a Sub/Audio line, real picture size and a clearer buffer line.
-- **Next Episode card** — countdown, Play now, and Autoplay off.
-- **Richer series data** — episode names and runtimes in the Series list and Player, filled from TMDB.
-- **Info Bar Timeout** — adjustable from 3 seconds up to Always On.
-- **Export** a Live, Movies or Series folder, or add it to a Bouquet, with a progress bar.
-- **Hidden categories** stay hidden everywhere, while the *All* row is kept.
-- **Home shortcut** — press **BLUE** for quick settings.
-- **Premium web cards** for Movies, Series, Live, Local and Search, with glowing Details pages.
-- **Smarter Arabic descriptions** — the longest Arabic text from Portal, Xtream or TMDB appears first.
-- **Web Browse** keeps loading after a failed page, plus web navigation and download fixes.
+- **Subtitle preservation fix** for late-mounted storage (HDD/USB that appears after boot).
+- **Buffered reader handoff fix** for smoother, more reliable playback.
+- **General stability and reliability improvements.**
 
 <details>
 <summary><b>🇸🇦 جديد النسخة بالعربي</b></summary>
 
 <br>
 
-**الترا ستوكر V9.2.2 · مراجعة 569**
+**الترا ستوكر V9.2.3 · مراجعة 570**
 
-- **Player New وPlayer New 2** — أشرطة معلومات زجاجية جديدة للبث المباشر والأفلام والمسلسلات (*الإعدادات › الوسائط › عرض المشغل*) مع سطر لغة الترجمة والصوت، حجم الصورة الحقيقي، وخط بافر أوضح.
-- **كارت الحلقة التالية** — عدّ تنازلي، تشغيل الآن، وإيقاف التشغيل التلقائي.
-- **بيانات أدق للمسلسلات** — أسماء الحلقات ومدتها في قائمة المسلسلات والمشغل، تُكمَّل من TMDB.
-- **مهلة شريط المعلومات** — من 3 ثوانٍ وحتى "دائم".
-- **تصدير** فولدر لايف أو أفلام أو مسلسلات، أو إضافته إلى باقة، مع شريط تقدّم.
-- **الفئات المخفية** تبقى مخفية في كل مكان مع الاحتفاظ بصف *All*.
-- **اختصار الرئيسية** — زر **الأزرق** للإعدادات السريعة.
-- **كروت ويب فاخرة** للأفلام والمسلسلات واللايف واللوكال والبحث، مع صفحات تفاصيل متوهّجة.
-- **وصف عربي أذكى** — أطول وصف عربي من البورتال أو الإكستريم أو TMDB يظهر أولاً.
-- **تصفّح الويب** يكمل التحميل بعد أي صفحة فاشلة، مع إصلاحات التنقّل والتنزيل.
+- **إصلاح الحفاظ على الترجمة** مع وحدات التخزين اللي بتتوصّل متأخّر (هارد/فلاشة بتظهر بعد التشغيل).
+- **إصلاح تسليم قارئ البافر** لتشغيل أنعم وأكثر ثباتًا.
+- **تحسينات عامة في الاستقرار والموثوقية.**
 
 </details>
 
-> 🌍 Release notes are localized into **31 languages** inside [`update.json`](update.json) — the plugin shows them in your chosen interface language during an online update.
+<details>
+<summary><b>Previously in V9.2.2</b></summary>
+
+<br>
+
+- **Player New & Player New 2** — glass info bars for Live, Movies and Series with a Sub/Audio line, real picture size and a clearer buffer line.
+- **Next Episode card** — countdown, Play now, and Autoplay off.
+- **Richer series data** — episode names and runtimes filled from TMDB.
+- **Info Bar Timeout** — adjustable from 3 seconds up to Always On.
+- **Export** a Live, Movies or Series folder, or add it to a Bouquet, with a progress bar.
+- **Hidden categories** stay hidden everywhere, while the *All* row is kept.
+- **Home shortcut** — press **BLUE** for quick settings.
+- **Premium web cards** for Movies, Series, Live, Local and Search, with glowing Details pages.
+
+</details>
+
+> 🌍 Release notes are localized inside [`update.json`](update.json) — the plugin shows them in your chosen interface language during an online update.
 
 ---
 
@@ -249,7 +251,7 @@ Prefer reviewing the script first? [Read the official installer](install.sh) bef
 
 ## 🔄 Stay up to date
 
-- [**Releases**](https://github.com/K3bOra/-UltraStalker/releases) — published build downloads.
+- [**Releases**](https://github.com/K3bOra/UltraStalker/releases) — published build downloads.
 - [**update.json**](update.json) — official version metadata and localized update notes.
 - [**install.sh**](install.sh) — installer used by the public installation command.
 - [**CHANGELOG.md**](CHANGELOG.md) — version notes and documentation changes.
@@ -342,6 +344,6 @@ Released under the [MIT License](LICENSE).
 
 **ULTRA STALKER** · *Premium media experience for Enigma2*
 
-Developed and maintained by the project team · [GitHub Repository](https://github.com/K3bOra/-UltraStalker)
+Developed and maintained by the project team · [GitHub Repository](https://github.com/K3bOra/UltraStalker)
 
 </div>
