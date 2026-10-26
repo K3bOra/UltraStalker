@@ -9,7 +9,7 @@
 <br>
 
 [![Platform](https://img.shields.io/badge/PLATFORM-Enigma2-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](#)
-[![Version](https://img.shields.io/badge/PLUGIN-V9.2.3-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](update.json)
+[![Version](https://img.shields.io/github/v/release/K3bOra/UltraStalker?style=for-the-badge&label=RELEASE&labelColor=321d24&color=43bb87)](https://github.com/K3bOra/UltraStalker/releases/latest)
 [![Revision](https://img.shields.io/badge/REVISION-570-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](update.json)
 [![Python](https://img.shields.io/badge/PYTHON-3.12%E2%80%933.15-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](install.sh)
 
@@ -123,9 +123,6 @@ Manage saved Portal and M3U sources, then fine-tune playback, language, performa
 | [![Portal manager — MAC addresses and server URLs permanently redacted](docs/screenshots/01_portal_manager_private.jpg)](docs/screenshots/01_portal_manager_private.jpg)<br>**Portal Management**<br><sub>Private MAC addresses and server URLs are permanently redacted.</sub> | [![Playback Settings](docs/screenshots/15_settings.jpg)](docs/screenshots/15_settings.jpg)<br>**Settings** |
 |:---:|:---:|
 
-> 🎥 **Want a live demo?** Drop a short screen recording at `docs/demo.gif` and it will show up here:
-> `![Ultra Stalker demo](docs/demo.gif)`
-
 ---
 
 [![BUILT AROUND YOUR MEDIA — From live channels to your local library.](assets/section-features.svg)](assets/section-features.svg)
@@ -189,11 +186,11 @@ wget -qO- https://raw.githubusercontent.com/K3bOra/UltraStalker/main/install.sh 
 
 Prefer reviewing the script first? [Read the official installer](install.sh) before running it.
 
-**What the installer checks:** Python 3.12–3.15, `opkg`, required libraries, available temporary storage and SHA-256 integrity of the downloaded IPK.
+**What the installer checks:** Python 3.12 or newer, the official release URL, and the IPK size, SHA-256, package identity, version and architecture before installation with `opkg`. The current package lists Python 3.12–3.15 support.
 
 **Manual package:** [Download the latest IPK from Releases](https://github.com/K3bOra/UltraStalker/releases/latest).
 
-> ℹ️ **Version note:** the current plugin version is **V9.2.3 (Revision 570)**. The authoritative source for online updates is always [`update.json`](update.json).
+> ℹ️ **Version note:** the current plugin version is **V9.2.3 (Revision 570)**. The installer and current plugin updater read the [manifest attached to the latest official release](https://github.com/K3bOra/UltraStalker/releases/latest/download/update.json). The repository [`update.json`](update.json) is a synchronized copy.
 
 > ⚠️ Installation and updates require receiver access and may restart Enigma2. **Back up important receiver configuration first.**
 
@@ -252,7 +249,9 @@ Prefer reviewing the script first? [Read the official installer](install.sh) bef
 ## 🔄 Stay up to date
 
 - [**Releases**](https://github.com/K3bOra/UltraStalker/releases) — published build downloads.
-- [**update.json**](update.json) — official version metadata and localized update notes.
+- [**Release update.json**](https://github.com/K3bOra/UltraStalker/releases/latest/download/update.json) — manifest used by the installer and current plugin updater.
+- [**Repository update.json**](update.json) — synchronized version metadata and localized update notes.
+- [**Publishing guide**](RELEASING.md) — how to prepare and publish future verified releases.
 - [**install.sh**](install.sh) — installer used by the public installation command.
 - [**CHANGELOG.md**](CHANGELOG.md) — version notes and documentation changes.
 
@@ -347,3 +346,4 @@ Released under the [MIT License](LICENSE).
 Developed and maintained by the project team · [GitHub Repository](https://github.com/K3bOra/UltraStalker)
 
 </div>
+
