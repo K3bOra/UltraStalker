@@ -1,13 +1,13 @@
 {
-  "version": "9.2.3",
-  "revision": 570,
-  "name": "Ultra Stalker Final V9.2.3",
-  "ipk": "https://github.com/K3bOra/UltraStalker/releases/download/v9.2.3/Ultra_Stalker_Final.ipk",
-  "sha256": "512901e71de67ca9cf25935c03402636f68b0242826238c08930a3a16554271d",
-  "size": 9546864,
-  "notes": "• Subtitle preservation fix for late-mounted storage (HDD/USB that appears after boot).\n• Buffered reader handoff fix for smoother, more reliable playback.\n• General stability and reliability improvements.",
+  "version": "9.2.4",
+  "revision": 571,
+  "name": "Ultra Stalker Final V9.2.4",
+  "ipk": "https://github.com/K3bOra/UltraStalker/releases/download/v9.2.4/Ultra_Stalker_Final.ipk",
+  "sha256": "dbf1993464aea67c69129e575915d69ea9cf0ebd9926756982e85cb288f99c51",
+  "size": 9514814,
+  "notes": "• Repair internal payload checksums that blocked installation of 9.2.3.\n• Validate every internal payload checksum before publishing.",
   "notes_i18n": {
-    "en": "• Subtitle preservation fix for late-mounted storage (HDD/USB that appears after boot).\n• Buffered reader handoff fix for smoother, more reliable playback.\n• General stability and reliability improvements.",
-    "ar": "• إصلاح الحفاظ على الترجمة مع وحدات التخزين التي تظهر متأخرًا (هارد/فلاشة تظهر بعد التشغيل).\n• إصلاح تسليم قارئ البافر لتشغيل أنعم وأكثر ثباتًا.\n• تحسينات عامة في الاستقرار والموثوقية."
+    "en": "• Repair internal payload checksums that blocked installation of 9.2.3.\n• Validate every internal payload checksum before publishing.",
+    "ar": "• إصلاح بصمات الملفات الداخلية التي منعت تثبيت 9.2.3.\n• فحص جميع بصمات الملفات الداخلية قبل نشر أي إصدار."
   }
 }
