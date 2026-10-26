@@ -90,7 +90,7 @@ def main():
         "version": args.version,
         "revision": args.revision,
         "name": args.name or ("Ultra Stalker Final V%s" % args.version),
-        "ipk": "https://raw.githubusercontent.com/%s/main/packages/%s" % (REPO, ASSET),
+        "ipk": "https://github.com/%s/releases/download/v%s/%s" % (REPO, args.version, ASSET),
         "sha256": hashlib.sha256(payload).hexdigest(),
         "size": len(payload),
         "notes": notes_en,
@@ -105,8 +105,9 @@ def main():
     print("  size    : %d bytes" % manifest["size"])
     print("  sha256  : %s" % manifest["sha256"])
     print("  ipk     : %s" % manifest["ipk"])
-    print("\nNext: commit packages/%s and update.json to main." % ASSET)
-    print("      The installer and the in-plugin updater read both straight from the repo.")
+    print("\nNext: create a GitHub release tagged v%s and attach" % args.version)
+    print("      packages/%s  AND  update.json" % ASSET)
+    print("      (the installer and online updater read update.json from the latest release)")
 
 
 if __name__ == "__main__":
