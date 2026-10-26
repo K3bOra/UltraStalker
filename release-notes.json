@@ -1,11 +1,13 @@
 {
-  "version": "9.2.4",
+  "version": "9.2.5",
   "notes": [
-    "Repair internal payload checksums that blocked installation of 9.2.3.",
-    "Validate every internal payload checksum before publishing."
+    "Fix package integrity failures after generated Python bytecode is cleaned.",
+    "Treat unavailable py_compile as an optional compilation warning, not an installation failure; report real syntax failures.",
+    "Confirm key 0 already restarts the current live stream; retain its existing mapping."
   ],
   "notes_ar": [
-    "إصلاح بصمات الملفات الداخلية التي منعت تثبيت 9.2.3.",
-    "فحص جميع بصمات الملفات الداخلية قبل نشر أي إصدار."
+    "إصلاح فشل فحص سلامة الحزمة بعد تنظيف ملفات Python المؤقتة.",
+    "تجاوز تجميع bytecode الاختياري فقط عند غياب py_compile، مع إظهار أخطاء السورس الحقيقية.",
+    "تأكيد أن زر 0 يعيد تشغيل بث اللايف الحالي مع الحفاظ على تعيينه الموجود."
   ]
 }
