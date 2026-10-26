@@ -26,6 +26,7 @@
 <a name="overview"></a>
 
 <img src="assets/section-overview.svg" width="100%" alt="MEET ULTRA STALKER — Your receiver. Reimagined." />
+
 **Ultra Stalker** brings Portal, Xtream and M3U services together with a premium media experience built for Enigma2 receivers. Go from Live TV to cinematic movie discovery, series, local media, favorites and global search without switching between plugins.
 
 The interface is designed around elegant dark panels, subtle red-to-emerald accents, fast browsing, intelligent artwork caching and straightforward remote-control navigation.
@@ -35,6 +36,7 @@ The interface is designed around elegant dark panels, subtle red-to-emerald acce
 <a name="gallery"></a>
 
 <img src="assets/section-gallery.svg" width="100%" alt="THE EXPERIENCE — A closer look at Ultra Stalker." />
+
 ### 🏠 Home — Your media, beautifully arranged
 
 A single dashboard for media discovery, recently viewed content, source status and quick access to the features that matter.
@@ -85,6 +87,7 @@ Manage saved Portal and M3U sources, then fine-tune playback, language, performa
 <a name="features"></a>
 
 <img src="assets/section-features.svg" width="100%" alt="BUILT AROUND YOUR MEDIA — From live channels to your local library." />
+
 | Experience | What Ultra Stalker offers |
 |:--|:--|
 | 📺 **Live TV** | Portal, Xtream and M3U sources; EPG Now/Next; stream quality detection; automatic stream retry. |
@@ -113,6 +116,7 @@ Manage saved Portal and M3U sources, then fine-tune playback, language, performa
 <a name="installation"></a>
 
 <img src="assets/section-installation.svg" width="100%" alt="READY TO GET STARTED? — One command. Your media in one place." />
+
 **For compatible Enigma2 receivers** — open a terminal or Telnet/SSH session as root, then run the project's official installer:
 
 ```sh
@@ -130,6 +134,7 @@ Prefer reviewing the script first? [Read the official installer](install.sh) bef
 <a name="updates"></a>
 
 <img src="assets/section-updates.svg" width="100%" alt="STAY UP TO DATE — Official releases and installation resources." />
+
 - **[Releases](https://github.com/K3bOra/-UltraStalker/releases)** — published build downloads.
 - **[update.json](update.json)** — official version metadata and localized update notes.
 - **[install.sh](install.sh)** — installer used by the public installation command.
@@ -138,6 +143,7 @@ Prefer reviewing the script first? [Read the official installer](install.sh) bef
 <a name="arabic"></a>
 
 <img src="assets/section-arabic.svg" width="100%" alt="ULTRA STALKER — Quick start guide in Arabic." />
+
 <details open><summary><strong>شرح مختصر للتثبيت والمميزات</strong></summary>
 
 <div dir="rtl">
@@ -155,6 +161,7 @@ Prefer reviewing the script first? [Read the official installer](install.sh) bef
 <a name="privacy"></a>
 
 <img src="assets/section-privacy.svg" width="100%" alt="SHARE WITH CONFIDENCE — Keep your connection details private." />
+
 When sharing screenshots or reporting problems publicly, always remove Portal URLs, server IPs, MAC addresses, user names, passwords, API keys and access tokens. In this gallery, the Portal Manager screenshot has been permanently sanitized — **no original identifiers are included in the published image**.
 
 ---
