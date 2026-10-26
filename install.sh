@@ -23,8 +23,8 @@ REPO = 'K3bOra/UltraStalker'
 PACKAGE = 'enigma2-plugin-extensions-ultrastalker'
 TITLE = 'Ultra Stalker Final'
 LIMIT = 64 * 1024 * 1024
-MANIFEST = 'https://raw.githubusercontent.com/K3bOra/UltraStalker/main/update.json'
-IPK_URL_RE = re.compile(r'^/K3bOra/-?UltraStalker/main/packages/Ultra_?Stalker[-_A-Za-z0-9.]*\.ipk$', re.I)
+MANIFEST = 'https://github.com/' + REPO + '/releases/latest/download/update.json'
+ASSET_RE = re.compile(r'Ultra_?Stalker[-_A-Za-z0-9.]*\.ipk', re.I)
 
 
 def github_https(url):
@@ -97,9 +97,14 @@ def verify_manifest(meta):
     if not isinstance(meta.get('ipk'), str):
         raise ValueError('Missing package URL')
     p = urlsplit(meta['ipk'])
-    if (p.scheme != 'https' or p.hostname != 'raw.githubusercontent.com' or p.username or p.password
-            or p.port or p.query or p.fragment or '..' in p.path or not IPK_URL_RE.fullmatch(p.path)):
-        raise ValueError('Package must be the official repository package')
+    prefix = '/' + REPO + '/releases/download/'
+    if (p.scheme != 'https' or p.hostname != 'github.com' or p.username or p.password or p.port
+            or p.query or p.fragment or not p.path.startswith(prefix)):
+        raise ValueError('Package must belong to the official repository')
+    parts = p.path[len(prefix):].split('/')
+    if (len(parts) != 2 or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', parts[0]) or '..' in parts[0]
+            or not ASSET_RE.fullmatch(parts[1])):
+        raise ValueError('Invalid release asset URL')
     return meta
 
 

@@ -2,9 +2,9 @@
   "version": "9.2.3",
   "revision": 570,
   "name": "Ultra Stalker Final V9.2.3",
-  "ipk": "https://raw.githubusercontent.com/K3bOra/UltraStalker/main/packages/Ultra_Stalker_Final.ipk",
-  "sha256": "8bf20862d282c8f32487a4f590e2b1f52575d4e6f5927e15b7de90965dbbb23b",
-  "size": 9546862,
+  "ipk": "https://github.com/K3bOra/UltraStalker/releases/download/v9.2.3/Ultra_Stalker_Final.ipk",
+  "sha256": "512901e71de67ca9cf25935c03402636f68b0242826238c08930a3a16554271d",
+  "size": 9546864,
   "notes": "• Subtitle preservation fix for late-mounted storage (HDD/USB that appears after boot)\n• Buffered reader handoff fix for smoother, more reliable playback\n• General stability and reliability improvements",
   "notes_i18n": {
     "en": "• Subtitle preservation fix for late-mounted storage (HDD/USB that appears after boot)\n• Buffered reader handoff fix for smoother, more reliable playback\n• General stability and reliability improvements",
