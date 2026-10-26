@@ -1,13 +1,11 @@
 {
-  "version": "9.2.3",
+  "version": "9.2.4",
   "notes": [
-    "Subtitle preservation fix for late-mounted storage (HDD/USB that appears after boot).",
-    "Buffered reader handoff fix for smoother, more reliable playback.",
-    "General stability and reliability improvements."
+    "Repair internal payload checksums that blocked installation of 9.2.3.",
+    "Validate every internal payload checksum before publishing."
   ],
   "notes_ar": [
-    "إصلاح الحفاظ على الترجمة مع وحدات التخزين التي تظهر متأخرًا (هارد/فلاشة تظهر بعد التشغيل).",
-    "إصلاح تسليم قارئ البافر لتشغيل أنعم وأكثر ثباتًا.",
-    "تحسينات عامة في الاستقرار والموثوقية."
+    "إصلاح بصمات الملفات الداخلية التي منعت تثبيت 9.2.3.",
+    "فحص جميع بصمات الملفات الداخلية قبل نشر أي إصدار."
   ]
 }
