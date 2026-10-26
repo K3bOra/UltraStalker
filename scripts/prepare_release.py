@@ -61,7 +61,8 @@ def inspect_package(path):
     version = field('Version')
     if not re.fullmatch(r'\d+\.\d+\.\d+', version):
         raise ValueError('Only stable package versions may be released')
-    present, values = set(), {}
+    present, values, payload_hashes = set(), {}, {}
+    payload_manifest = None
     with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz']), mode='r:gz') as archive:
         for item in archive:
             normalized = item.name.removeprefix('./')
@@ -71,6 +72,13 @@ def inspect_package(path):
                 if normalized in present:
                     raise ValueError('Duplicate package path')
                 present.add(normalized)
+                if normalized.startswith(PREFIX):
+                    data = archive.extractfile(item).read()
+                    relative = normalized[len(PREFIX):]
+                    if relative == '.install_payload.sha256':
+                        payload_manifest = data.decode('utf-8')
+                    else:
+                        payload_hashes[relative] = hashlib.sha256(data).hexdigest()
                 if normalized == PREFIX + 'version.py':
                     tree = ast.parse(archive.extractfile(item).read().decode('utf-8'))
                     for node in tree.body:
@@ -78,6 +86,20 @@ def inspect_package(path):
                             for target in node.targets:
                                 if isinstance(target, ast.Name) and target.id in ('PLUGIN_VERSION', 'PLUGIN_REVISION'):
                                     values[target.id] = ast.literal_eval(node.value)
+    if payload_manifest is None:
+        raise ValueError('Missing internal payload checksum manifest')
+    checked = set()
+    for line in payload_manifest.splitlines():
+        match = re.fullmatch(r'([a-fA-F0-9]{64}) [ *](.+)', line)
+        if not match:
+            raise ValueError('Malformed internal payload checksum')
+        digest, relative = match.groups()
+        relative = relative.removeprefix('./')
+        if relative in checked or payload_hashes.get(relative) != digest.lower():
+            raise ValueError('Internal payload checksum mismatch or duplicate: ' + relative)
+        checked.add(relative)
+    if checked != set(payload_hashes):
+        raise ValueError('Internal payload checksum coverage is incomplete')
     required = ('__init__.py', 'plugin.py', 'plugin.png', 'ui.py', 'updater.py', 'version.py', 'services/player.py')
     missing = [name for name in required if PREFIX + name not in present]
     if missing:
