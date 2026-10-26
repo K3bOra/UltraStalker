@@ -5,9 +5,9 @@
   "ipk": "https://github.com/K3bOra/UltraStalker/releases/download/v9.2.3/Ultra_Stalker_Final.ipk",
   "sha256": "512901e71de67ca9cf25935c03402636f68b0242826238c08930a3a16554271d",
   "size": 9546864,
-  "notes": "• Subtitle preservation fix for late-mounted storage (HDD/USB that appears after boot)\n• Buffered reader handoff fix for smoother, more reliable playback\n• General stability and reliability improvements",
+  "notes": "• Subtitle preservation fix for late-mounted storage (HDD/USB that appears after boot).\n• Buffered reader handoff fix for smoother, more reliable playback.\n• General stability and reliability improvements.",
   "notes_i18n": {
-    "en": "• Subtitle preservation fix for late-mounted storage (HDD/USB that appears after boot)\n• Buffered reader handoff fix for smoother, more reliable playback\n• General stability and reliability improvements",
-    "ar": "• إصلاح الحفاظ على الترجمة مع وحدات التخزين التي تظهر متأخرًا (هارد/فلاشة تظهر بعد التشغيل)\n• إصلاح تسليم قارئ البافر لتشغيل أنعم وأكثر ثباتًا\n• تحسينات عامة في الاستقرار والموثوقية"
+    "en": "• Subtitle preservation fix for late-mounted storage (HDD/USB that appears after boot).\n• Buffered reader handoff fix for smoother, more reliable playback.\n• General stability and reliability improvements.",
+    "ar": "• إصلاح الحفاظ على الترجمة مع وحدات التخزين التي تظهر متأخرًا (هارد/فلاشة تظهر بعد التشغيل).\n• إصلاح تسليم قارئ البافر لتشغيل أنعم وأكثر ثباتًا.\n• تحسينات عامة في الاستقرار والموثوقية."
   }
 }
