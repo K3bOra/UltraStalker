@@ -128,6 +128,13 @@ Prefer reviewing the script first? [Read the official installer](install.sh) bef
 **What the current installer checks:** Python 3.12–3.15, `opkg`, required libraries, available temporary storage and SHA-256 integrity of the downloaded IPK. The current installer targets **Ultra Stalker V9.2.2**. These version checks reflect the installer as published, rather than a guarantee of compatibility with every receiver or image.
 
 **Manual package:** [Open the release asset used by the current installer](https://github.com/K3bOra/-UltraStalker/releases/download/v10.0.60/UltraStalker_V7_UPDATE.ipk).
+**Version Clarification**
+
+Ultra Stalker V9.2.2 (Revision 569) is the current installed plugin version.
+
+The GitHub Release tag `v10.0.60` identifies the release containing the downloadable IPK package. It is not the installed plugin version.
+
+The official `update.json` manifest remains the authoritative source for online updates.
 
 > Installation and update steps require receiver access and may restart Enigma2. Back up important receiver configuration first.
 
