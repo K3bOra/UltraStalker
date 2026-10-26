@@ -191,7 +191,7 @@ Prefer reviewing the script first? [Read the official installer](install.sh) bef
 
 **What the installer checks:** Python 3.12–3.15, `opkg`, required libraries, available temporary storage and SHA-256 integrity of the downloaded IPK.
 
-**Manual package:** [Download the latest IPK from Releases](https://github.com/K3bOra/UltraStalker/releases/latest).
+**Manual package:** [Download the IPK](packages/Ultra_Stalker_Final.ipk) from the `packages/` folder.
 
 > ℹ️ **Version note:** the current plugin version is **V9.2.3 (Revision 570)**. The authoritative source for online updates is always [`update.json`](update.json).
 
