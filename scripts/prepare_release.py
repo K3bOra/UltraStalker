@@ -120,7 +120,7 @@ def prepare(version=None, revision=None, name=None, notes_en=None, notes_ar=None
     shutil.copyfile(BASE / 'install.sh', dest / 'install.sh')
     (dest / 'update.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     (dest / 'SHA256SUMS').write_text(''.join(hashlib.sha256((dest / n).read_bytes()).hexdigest() + '  ' + n + '\n' for n in (ASSET, 'update.json', 'install.sh')), encoding='utf-8')
-    title = meta['name'] + ' · R' + str(meta['revision'])
+    title = 'Ultra Stalker Final'
     (dest / 'release-info.json').write_text(json.dumps({'tag': 'v' + meta['version'], 'version': meta['version'], 'title': title}) + '\n')
     body = '# ' + title + '\n\n## What’s new\n\n' + '\n'.join('- ' + x for x in notes['notes']) + '\n\n## الجديد بالعربي\n\n' + '\n'.join('- ' + x for x in notes['notes_ar']) + '\n\n## Install / التثبيت\n\n```sh\nwget -qO- https://raw.githubusercontent.com/' + REPO + '/main/install.sh | /bin/sh\n```\n\nEnigma2 · Python 3.12–3.15 · opkg · root\n\nAttach the IPK for manual installation. The installer and plugin updater use the attached update.json. SHA256SUMS covers the IPK, manifest and installer.\n'
     (dest / 'notes.md').write_text(body, encoding='utf-8')
