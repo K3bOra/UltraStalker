@@ -169,18 +169,92 @@ Connection identifiers in the Portal Manager screenshot have been permanently re
 ## Built around your media
 ### مميزات تناسب طريقة مشاهدتك
 
-| Experience<br>القسم | What it offers<br>المميزات |
-|:---|:---|
-| **Live TV**<br>البث المباشر | Portal, Xtream and M3U sources; Now/Next EPG; stream quality detection and automatic retry.<br>مصادر Portal وXtream وM3U، ودليل البرنامج الحالي والتالي، والتعرف على جودة البث وإعادة المحاولة تلقائيًا. |
-| **Movies & Series**<br>الأفلام والمسلسلات | Cinematic and poster grid views, metadata matching, artwork and title logos when available.<br>عرض سينمائي وشبكات بوسترات، ومطابقة بيانات المحتوى والصور وشعارات العناوين عند توفرها. |
-| **Title Details**<br>تفاصيل المحتوى | Overviews, ratings, genres, cast, runtime, writers and directors when metadata is available.<br>وصف وتقييم وتصنيفات وطاقم العمل والمدة والكاتب والمخرج عند توفر البيانات. |
-| **Search**<br>البحث | Live TV, movies and series search, server-wide discovery and search history.<br>البحث في القنوات والأفلام والمسلسلات، واكتشاف المحتوى على السيرفر وحفظ سجل البحث. |
-| **Local Media**<br>المحتوى المحلي | HDD/USB indexing, folder browsing and season/episode recognition.<br>فهرسة الهارد والفلاشة، وتصفح المجلدات والتعرف على المواسم والحلقات. |
-| **Favorites**<br>المفضلة | Separate favorites, custom folders and manual ordering.<br>قوائم مفضلة منفصلة ومجلدات مخصصة وترتيب يدوي. |
-| **Playback**<br>التشغيل | Resume, aspect ratio controls, subtitle options and playback information.<br>استكمال المشاهدة، وضبط أبعاد الصورة وخيارات الترجمة ومعلومات التشغيل. |
-| **Languages**<br>اللغات | 29 interface languages with right-to-left support.<br>٢٩ لغة للواجهة مع دعم الكتابة من اليمين لليسار. |
-| **Performance**<br>الأداء | Persistent artwork cache and fewer repeated TMDb requests.<br>حفظ صور المحتوى لإعادة استخدامها وتقليل طلبات TMDb المتكررة. |
-| **Management**<br>الإدارة | Web-based source management, backup/restore, export and online updates.<br>إدارة المصادر من الويب، والنسخ الاحتياطي والاستعادة والتصدير والتحديث أونلاين. |
+[![UltraStalker feature cards / كروت المميزات](assets/premium-features-stalker.svg)](assets/premium-features-stalker.svg)
+
+<details>
+<summary><b>Full feature descriptions<br>تفاصيل المميزات كاملة</b></summary>
+
+**Live TV**
+
+**البث المباشر**
+
+Portal, Xtream and M3U sources; Now/Next EPG; stream quality detection and automatic retry.
+
+مصادر Portal وXtream وM3U، ودليل البرنامج الحالي والتالي، والتعرف على جودة البث وإعادة المحاولة تلقائيًا.
+
+**Movies & Series**
+
+**الأفلام والمسلسلات**
+
+Cinematic and poster grid views, metadata matching, artwork and title logos when available.
+
+عرض سينمائي وشبكات بوسترات، ومطابقة بيانات المحتوى والصور وشعارات العناوين عند توفرها.
+
+**Title Details**
+
+**تفاصيل المحتوى**
+
+Overviews, ratings, genres, cast, runtime, writers and directors when metadata is available.
+
+وصف وتقييم وتصنيفات وطاقم العمل والمدة والكاتب والمخرج عند توفر البيانات.
+
+**Search**
+
+**البحث**
+
+Live TV, movies and series search, server-wide discovery and search history.
+
+البحث في القنوات والأفلام والمسلسلات، واكتشاف المحتوى على السيرفر وحفظ سجل البحث.
+
+**Local Media**
+
+**المحتوى المحلي**
+
+HDD/USB indexing, folder browsing and season/episode recognition.
+
+فهرسة الهارد والفلاشة، وتصفح المجلدات والتعرف على المواسم والحلقات.
+
+**Favorites**
+
+**المفضلة**
+
+Separate favorites, custom folders and manual ordering.
+
+قوائم مفضلة منفصلة ومجلدات مخصصة وترتيب يدوي.
+
+**Playback**
+
+**التشغيل**
+
+Resume, aspect ratio controls, subtitle options and playback information.
+
+استكمال المشاهدة، وضبط أبعاد الصورة وخيارات الترجمة ومعلومات التشغيل.
+
+**Languages**
+
+**اللغات**
+
+29 interface languages with right-to-left support.
+
+٢٩ لغة للواجهة مع دعم الكتابة من اليمين لليسار.
+
+**Performance**
+
+**الأداء**
+
+Persistent artwork cache and fewer repeated TMDb requests.
+
+حفظ صور المحتوى لإعادة استخدامها وتقليل طلبات TMDb المتكررة.
+
+**Management**
+
+**الإدارة**
+
+Web-based source management, backup/restore, export and online updates.
+
+إدارة المصادر من الويب، والنسخ الاحتياطي والاستعادة والتصدير والتحديث أونلاين.
+
+</details>
 
 <details>
 <summary><b>Advanced capabilities / مميزات إضافية</b></summary>
@@ -304,10 +378,13 @@ Two plugins. One family. Explore media with Ultra Stalker, and choose your comme
 
 بلجنين من عيلة واحدة: اكتشف المحتوى مع الترا ستالكر، واختار الصوتية والتوقيت المناسب مع الترا أوديو.
 
-| [Ultra Stalker](https://github.com/K3bOra/UltraStalker) | [Ultra Audio](https://github.com/K3bOra/UltraAudio) |
-|:---:|:---:|
-| Live TV, movies, series and local media.<br>البث المباشر والأفلام والمسلسلات والمحتوى المحلي. | Internet audio, picture/audio timing and mobile control.<br>صوتيات الإنترنت وتزامن الصورة والصوت والتحكم من الموبايل. |
-| [Explore Ultra Stalker](https://github.com/K3bOra/UltraStalker)<br>[اكتشف الترا ستالكر](https://github.com/K3bOra/UltraStalker) | [Explore Ultra Audio](https://github.com/K3bOra/UltraAudio)<br>[اكتشف الترا أوديو](https://github.com/K3bOra/UltraAudio) |
+<p align="center">
+<a href="https://github.com/K3bOra/UltraStalker"><img src="assets/ultra-family-stalker.svg" width="100%" alt="Ultra Stalker — Live TV, movies, series and local media / البث المباشر والأفلام والمسلسلات والمحتوى المحلي" /></a>
+</p>
+
+<p align="center">
+<a href="https://github.com/K3bOra/UltraAudio"><img src="assets/ultra-family-audio.svg" width="100%" alt="Ultra Audio — Internet audio, timing and mobile control / صوتيات الإنترنت والتزامن والتحكم بالموبايل" /></a>
+</p>
 
 Each plugin has its own installation command and official updates.
 
@@ -366,5 +443,6 @@ Developed and maintained by **Ahmed L-HadarY**
 [المستودع الرسمي على GitHub](https://github.com/K3bOra/UltraStalker)
 
 </div>
+
 
 
