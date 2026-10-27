@@ -295,6 +295,26 @@ Upgrades are designed to preserve portals, favorites, history and artwork caches
 
 ---
 
+<a name="ultra-family"></a>
+
+## The Ultra family
+### عيلة Ultra
+
+Two plugins. One family. Explore media with Ultra Stalker, and choose your commentary and timing with Ultra Audio.
+
+بلجنين من عيلة واحدة: اكتشف المحتوى مع الترا ستالكر، واختار الصوتية والتوقيت المناسب مع الترا أوديو.
+
+| [Ultra Stalker](https://github.com/K3bOra/UltraStalker) | [Ultra Audio](https://github.com/K3bOra/UltraAudio) |
+|:---:|:---:|
+| Live TV, movies, series and local media.<br>البث المباشر والأفلام والمسلسلات والمحتوى المحلي. | Internet audio, picture/audio timing and mobile control.<br>صوتيات الإنترنت وتزامن الصورة والصوت والتحكم من الموبايل. |
+| [Explore Ultra Stalker](https://github.com/K3bOra/UltraStalker)<br>[اكتشف الترا ستالكر](https://github.com/K3bOra/UltraStalker) | [Explore Ultra Audio](https://github.com/K3bOra/UltraAudio)<br>[اكتشف الترا أوديو](https://github.com/K3bOra/UltraAudio) |
+
+Each plugin has its own installation command and official updates.
+
+لكل بلجن أمر تثبيت وتحديثات رسمية خاصة به.
+
+---
+
 <a name="resources"></a>
 
 ## Updates & resources
@@ -346,4 +366,5 @@ Developed and maintained by **Ahmed L-HadarY**
 [المستودع الرسمي على GitHub](https://github.com/K3bOra/UltraStalker)
 
 </div>
+
 
