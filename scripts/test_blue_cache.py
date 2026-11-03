@@ -44,14 +44,18 @@ def get(self,path,params=None):
 t.TMDBClient._get=get
 with tempfile.TemporaryDirectory() as tmp:
  def dirs(*paths):
-  for path in paths:os.makedirs(path,exist_ok=True)
+  for path in paths:
+   assert os.path.commonpath([os.path.abspath(path),tmp])==tmp,('Test path escaped sandbox',path)
+   os.makedirs(path,exist_ok=True)
   return True
  for name,module in list(sys.modules.items()):
   if not name.startswith('realtest') or module is None:continue
   for key in ('ROOT','ART_ROOT','V3_ROOT','MANUAL_RESCUE_ROOT'): 
    if hasattr(module,key):setattr(module,key,tmp)
-  for key,sub in [('POSTERS','posters'),('POSTER_ROOT','posters'),('BACKDROPS','backdrops'),('BACKDROP_ROOT','backdrops'),('INDEX','index'),('MANIFEST_ROOT','index'),('LOOKUP','lookup'),('LOGS','logs'),('GENERATED','generated')]:
+  for key,sub in [('POSTERS','posters'),('POSTER_ROOT','posters'),('BACKDROPS','backdrops'),('BACKDROP_ROOT','backdrops'),('INDEX','index'),('MANIFEST_ROOT','index'),('LOOKUP','lookup'),('LOGS','logs'),('ART_LOG_ROOT','logs'),('GENERATED','generated'),('CACHE_DIR','index'),('POSTER_CACHE_DIR','posters'),('BACKDROP_CACHE_DIR','backdrops'),('IMAGE_CACHE_DIR','generated'),('SOURCE_POSTER_CACHE_DIR','source_posters'),('SOURCE_BACKDROP_CACHE_DIR','source_backdrops')]:
    if hasattr(module,key):setattr(module,key,tmp+'/'+sub);dirs(tmp+'/'+sub)
+  if hasattr(module,'ART_LOG_PATH'):module.ART_LOG_PATH=tmp+'/logs/artwork.log'
+  if hasattr(module,'ART_DIRS'):module.ART_DIRS=tuple(tmp+'/'+sub for sub in ('posters','backdrops','index','logs'))
   if hasattr(module,'hdd_ready'):module.hdd_ready=lambda *a,**kw:True
   if hasattr(module,'hdd_read_ready'):module.hdd_read_ready=lambda *a,**kw:True
   if hasattr(module,'persistent_write_gate'):module.persistent_write_gate=lambda *a,**kw:True
