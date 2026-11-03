@@ -1,17 +1,12 @@
 # نشر إصدارات Ultra Stalker
 
-النشر يتم من GitHub Actions يدويًا، على غرار Ultra Audio. رفع الملفات وحده لا ينشر تحديثًا.
+1. ضع النسختين النهائيتين في `packages/Ultra_Stalker_Final.ipk` و`packages/Ultra_Stalker_DreamOS_Py2.deb`.
+2. ارفع رقم الإصدار والمراجعة في النسختين وحدّث `release-notes.json` بنفس الإصدار.
+3. شغّل `python3 -B scripts/prepare_release.py` ثم `python3 -B scripts/test_blue_cache.py` محلياً. تحتاج اختبارات الصور Pillow.
+4. من Actions اختر Publish verified Ultra Stalker release ثم Run workflow على main.
 
-1. ضع الحزمة الجديدة باسم `packages/Ultra_Stalker_Final.ipk`. ارفع رقم Version داخل الحزمة، وحدث `PLUGIN_VERSION` و`PLUGIN_REVISION` في `version.py`.
-2. حدث `release-notes.json`: نفس رقم النسخة داخل الحزمة، وقائمتي `notes` و`notes_ar`.
-3. يمكنك الفحص محليًا دون تثبيت: `python3 scripts/prepare_release.py`. يمكن استخدام `--version` و`--revision` للتحقق من الأرقام المطلوبة.
-4. افتح **Actions → Publish verified Ultra Stalker release → Run workflow** على فرع `main`.
-5. انتظر نجاح خطوات الفحص والتنزيل العام. سيظهر الإصدار في Releases بعلامة Latest.
+الإجراء يفحص الحزمتين دون تثبيتهما، ويختبر كاش البوسترات بمسار التحميل الحقيقي مع بدائل لاتصال الشبكة فقط. ثم يجهز ملفات التحديث المنفصلة وبصمات الملفات، ويرفع مسودة، وينزل المرفقات ويطابقها قبل النشر كـ Latest. بعد النشر يفحص التنزيل العام للحزمتين ويحدّث ملفات التحديث الأربعة في المستودع.
 
-الإجراء يقرأ رقم النسخة والمراجعة من الحزمة نفسها، ويتحقق من اسم البلجن ومعماريته والملفات الأساسية وبنية الأرشيف. ينشئ مسودة مرفقًا بها الحزمة و`update.json` و`install.sh` و`SHA256SUMS`، ثم ينزل المرفقات ويطابقها قبل نشر الإصدار. بعد النشر يجرب تنزيل التثبيت بواسطة `--verify-only` دون تثبيت على أي رسيفر، ثم يحدث نسخة `update.json` في المستودع.
+الإصدارات المنشورة لا تستبدل؛ ارفع رقم الإصدار عند أي تعديل. يدعم Open ملفات update.json وupdate-ipk.json، وتدعم DreamOS ملفات update-dreamos-py2.json وupdate-dreamos.json. أمر install.sh الحالي مخصص لـ Open/Python 3؛ DreamOS يستخدم DEB أو التحديث من داخل البلجن.
 
-إذا كان التاج موجودًا بالفعل يتوقف الإجراء دون استبدال الإصدار. عند فشل التحقق قبل النشر تبقى المسودة للمراجعة، ولا تعاد المحاولة بتغيير الملفات المنشورة.
-
-ملف التحديث الرسمي هو `https://github.com/K3bOra/UltraStalker/releases/latest/download/update.json`. حافظ على الحقول `version`, `revision`, `name`, `ipk`, `sha256`, `size`, `notes`, `notes_i18n` لتوافق المشغل والمثبت.
-
-النسخة 9.2.3 / المراجعة 570 أول إصدار ينشر بهذا الإجراء. الفحوص تثبت سلامة التوزيع وتطابق البيانات، ويظل اختبار التشغيل الفعلي على أجهزة Enigma2 خطوة منفصلة عند تجهيز كل إصدار جديد.
+فحوص الحزم والتوزيع لا تغني عن تجربة أجهزة Enigma2 الفعلية.

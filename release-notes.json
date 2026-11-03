@@ -1,13 +1,15 @@
 {
-  "version": "9.2.5",
+  "version": "9.3.1",
   "notes": [
-    "Fix package integrity failures after generated Python bytecode is cleaned.",
-    "Treat unavailable py_compile as an optional compilation warning, not an installation failure; report real syntax failures.",
-    "Confirm key 0 already restarts the current live stream; retain its existing mapping."
+    "WQHD support for Open and DreamOS, with sharp 780px poster caching and continued FHD support.",
+    "Fix BLUE Cache Artwork failing on new posters while page browsing could load them: use the same poster resolver, preserve verified rescue image paths and recover gallery posters after a failed details request.",
+    "Respect saved manual title matches during artwork caching; retain four bounded poster workers and screen-specific poster/backdrop downloads.",
+    "Preserve existing cached artwork, user settings and the Adaptive Colors default for new installs."
   ],
   "notes_ar": [
-    "إصلاح فشل فحص سلامة الحزمة بعد تنظيف ملفات Python المؤقتة.",
-    "تجاوز تجميع bytecode الاختياري فقط عند غياب py_compile، مع إظهار أخطاء السورس الحقيقية.",
-    "تأكيد أن زر 0 يعيد تشغيل بث اللايف الحالي مع الحفاظ على تعيينه الموجود."
+    "دعم WQHD لنسختي Open وDreamOS مع بوسترات واضحة بعرض 780 بكسل واستمرار دعم FHD.",
+    "إصلاح فشل الزر الأزرق في تحميل بوسترات جديدة رغم ظهورها أثناء التنقل: استخدام نفس مسار تحميل الصفحة، والحفاظ على رابط البوستر من البحث الاحتياطي واستكمال البحث في معرض الصور عند تعذر طلب التفاصيل.",
+    "احترام المطابقة اليدوية المحفوظة أثناء الكاش، مع الحفاظ على أربع عمليات تحميل بوسترات متوازية وتحميل الصور المطلوبة لكل شاشة.",
+    "الحفاظ على الصور المحفوظة وإعدادات المستخدم وإغلاق Adaptive Colors افتراضياً للتثبيت الجديد."
   ]
 }

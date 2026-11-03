@@ -14,7 +14,7 @@ Live TV, movies, series and your local library — built for Enigma2.
 [![Python / بايثون](https://img.shields.io/badge/PYTHON-3.12%E2%80%933.15-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](#compatibility)
 [![Downloads / التنزيلات](https://img.shields.io/github/downloads/K3bOra/UltraStalker/total?style=for-the-badge&labelColor=321d24&color=43bb87)](https://github.com/K3bOra/UltraStalker/releases)
 
-Platform: Enigma2 · Python: 3.12–3.15 · Official release and download count above.
+Platform: Enigma2 / DreamOS · Python: 3.12–3.15 / 2.7 · Official release and download count above.
 
 المنصة: Enigma2 · بايثون: 3.12–3.15 · الشارات بالأعلى تعرض الإصدار الرسمي وعدد التنزيلات.
 
@@ -52,20 +52,18 @@ Dark panels, subtle red-to-emerald accents, reusable artwork and straightforward
 
 <a name="whats-new"></a>
 
-## What's new — V9.2.5 · Revision 572
-### الجديد في V9.2.5 · المراجعة 572
+## What's new — V9.3.1 · Revision 576
+### الجديد في V9.3.1 · المراجعة 576
 
-The latest published release is **V9.2.5**. These notes describe that release.
+- WQHD support for Open and DreamOS, with sharp 780px poster caching and continued FHD support.<br>دعم WQHD لنسختي Open وDreamOS مع بوسترات واضحة بعرض 780 بكسل واستمرار دعم FHD.
 
-أحدث إصدار منشور هو **V9.2.5**، والملاحظات التالية تخص هذا الإصدار.
+- Fix BLUE Cache Artwork failing on new posters while page browsing could load them: use the same poster resolver, preserve verified rescue image paths and recover gallery posters after a failed details request.<br>إصلاح فشل الزر الأزرق في تحميل بوسترات جديدة رغم ظهورها أثناء التنقل: استخدام نفس مسار تحميل الصفحة، والحفاظ على رابط البوستر من البحث الاحتياطي واستكمال البحث في معرض الصور عند تعذر طلب التفاصيل.
 
-- **Package integrity:** fixed verification failures after temporary Python bytecode files are cleaned.<br>**سلامة الحزمة:** إصلاح فشل التحقق بعد تنظيف ملفات بايثون المؤقتة.
-- **Installation:** skip optional bytecode compilation when `py_compile` is unavailable, while still reporting genuine source compilation errors.<br>**التثبيت:** تجاوز تجميع ملفات بايثون الاختياري عند غياب `py_compile`، مع الاستمرار في إظهار أخطاء تجميع السورس الحقيقية.
-- **Live shortcut:** confirmed that **0** already restarts the current live stream; its existing mapping is retained.<br>**اختصار اللايف:** التأكد من أن زر **0** يعيد تشغيل البث الحالي، مع الحفاظ على تعيينه الموجود.
+- Respect saved manual title matches during artwork caching; retain four bounded poster workers and screen-specific poster/backdrop downloads.<br>احترام المطابقة اليدوية المحفوظة أثناء الكاش، مع الحفاظ على أربع عمليات تحميل بوسترات متوازية وتحميل الصور المطلوبة لكل شاشة.
 
-[Full release notes and downloads](https://github.com/K3bOra/UltraStalker/releases/latest) · [Previous versions](CHANGELOG.md)
+- Preserve existing cached artwork, user settings and the Adaptive Colors default for new installs.<br>الحفاظ على الصور المحفوظة وإعدادات المستخدم وإغلاق Adaptive Colors افتراضياً للتثبيت الجديد.
 
-[تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraStalker/releases/latest) · [سجل الإصدارات السابقة](CHANGELOG.md)
+[Full release notes and downloads](https://github.com/K3bOra/UltraStalker/releases/latest) · [تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraStalker/releases/latest)
 
 ---
 
@@ -278,8 +276,8 @@ Web-based source management, backup/restore, export and online updates.
 | Requirement<br>المتطلب | Details<br>التفاصيل |
 |:---|:---|
 | Platform<br>المنصة | Enigma2 receivers<br>أجهزة استقبال Enigma2 |
-| Python<br>بايثون | 3.12–3.15 |
-| Package manager<br>مدير الحزم | `opkg` |
+| Python<br>بايثون | Open: 3.12–3.15 · DreamOS: 2.7 |
+| Package manager<br>مدير الحزم | Open: `opkg` / IPK · DreamOS: DEB |
 | Access<br>الوصول | Root via Telnet / SSH<br>حساب root عبر Telnet أو SSH |
 | Sources<br>المصادر | Stalker Portal · Xtream Codes · M3U |
 | Local storage<br>التخزين المحلي | HDD / USB for local media<br>هارد أو فلاشة للمحتوى المحلي |
@@ -302,6 +300,10 @@ Open Telnet or SSH on a compatible receiver as **root**, then run:
 ```sh
 wget -qO- https://raw.githubusercontent.com/K3bOra/UltraStalker/main/install.sh | /bin/sh
 ```
+
+The command above is for Open/Python 3. DreamOS/Python 2.7 uses the DEB from the latest release or the plugin updater.
+
+أمر التثبيت أعلاه مخصص لـ Open/Python 3. لنسخة DreamOS/Python 2.7 استخدم ملف DEB من أحدث إصدار أو التحديث من داخل البلجن.
 
 The installer reads the latest official release and checks the package size, SHA-256, name, version and architecture before installing with `opkg`.
 
@@ -443,6 +445,7 @@ Developed and maintained by **Ahmed L-HadarY**
 [المستودع الرسمي على GitHub](https://github.com/K3bOra/UltraStalker)
 
 </div>
+
 
 
 
