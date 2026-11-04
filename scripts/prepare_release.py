@@ -164,7 +164,7 @@ def prepare(version=None, revision=None, name=None, notes_en=None, notes_ar=None
     for filenames,m in [(MANIFESTS[:2],meta),(MANIFESTS[2:],dream)]:
         for filename in filenames:(dest/filename).write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     title='Ultra Stalker Final V'+meta['version']+' - Enigma2 & DreamOS'
-    body='# '+title+'\n\n**ipk '+meta['version']+' — Open / Enigma2**\n`'+ASSET+'` · `update-ipk.json`\n\n**dreamos '+meta['version']+' — Python 2.7**\n`'+DREAM_ASSET+'` · `update-dreamos.json`\n\n## What’s new\n\n'+'\n'.join('- '+x for x in notes['notes'])+'\n\n## الجديد بالعربي\n\n'+'\n'.join('- '+x for x in notes['notes_ar'])+'\n\n## Installation / التثبيت\n\nOpen: IPK (Python 3.12–3.15). DreamOS: DEB (Python 2.7).\nThe plugin updater uses the attached platform manifest. Existing manifest names remain supported.\n\n```sh\nwget -qO- https://raw.githubusercontent.com/'+REPO+'/main/install.sh | /bin/sh\n```\nThe command above is for Open/Python 3. DreamOS uses the DEB or its plugin updater.\n'
+    body='# '+title+'\n\n**ipk '+meta['version']+' — Open / Enigma2**\n`'+ASSET+'` · `update-ipk.json`\n\n**dreamos '+meta['version']+' — Python 2.7**\n`'+DREAM_ASSET+'` · `update-dreamos.json`\n\n## What’s new\n\n'+'\n'.join('- '+x for x in notes['notes'])+'\n\n## الجديد بالعربي\n\n'+'\n'.join('- '+x for x in notes['notes_ar'])+'\n\n## Installation / التثبيت\n\nOpen: IPK (Python 3.12–3.15). DreamOS: DEB (Python 2.7).\nThe plugin updater uses the attached platform manifest. Existing manifest names remain supported.\n\n```sh\nwget -qO- https://raw.githubusercontent.com/'+REPO+'/main/install.sh | /bin/sh\n```\nThe same command automatically selects IPK for Open/Python 3 or DEB for DreamOS/Python 2.7.\n'
     (dest/'notes.md').write_text(body,encoding='utf-8')
     (dest/'RELEASE_NOTES.md').write_text(body,encoding='utf-8')
     (dest/'release-info.json').write_text(json.dumps({'tag':'v'+meta['version'],'version':meta['version'],'title':title})+'\n')
@@ -215,4 +215,5 @@ if __name__ == '__main__':
         verify(args.verify_published)
     else:
         prepare(args.version, args.revision, args.name, args.notes_en, args.notes_ar)
+
 

@@ -67,6 +67,7 @@ with tempfile.TemporaryDirectory() as tmp:
  cls=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='GridPostersMixin')
  node=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name=='_cache_current_page_backdrops_worker')
  env=dict(__name__='realtest.worker',__package__='realtest',os=os,load_settings=lambda:{},load_artwork_v2_manifest=m.load_manifest,canonical_art_paths=m.canonical_art_paths,_=lambda x:x,optional_failure=lambda tag,exc:errors.append((tag,type(exc).__name__,str(exc))))
+ if variant=='dream':env['us_casefold']=importlib.import_module('realtest.us_env').us_casefold
  exec(compile(ast.Module(body=[node],type_ignores=[]),'worker','exec'),env)
  rows=[{'id':'abc','name':'The Ghost Killer','year':'2025'}]
  if scenario=='mixed':rows=[{'id':i,'name':'The Ghost Killer '+str(i),'year':'2025','_locked_tmdb_id':1000+i,'_ultra_search_verified_tmdb_id':1000+i} for i in range(25)]
@@ -98,3 +99,4 @@ with tempfile.TemporaryDirectory() as tmp:
   if not bridges:break
   if time.monotonic()>deadline:raise AssertionError('Cache bridge did not finish')
   for bridge in bridges:bridge.join(timeout=.5)
+
