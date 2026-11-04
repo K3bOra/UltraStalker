@@ -1,14 +1,14 @@
 {
-  "version": "9.3.1",
-  "revision": 576,
-  "name": "Ultra Stalker Final V9.3.1",
-  "deb": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.1/Ultra_Stalker_DreamOS_Py2.deb",
-  "sha256": "d665219b885936562033ec2008dd575d52a00d4e4a959da2f0777324358511b1",
-  "size": 10400580,
-  "notes": "• WQHD support for Open and DreamOS, with sharp 780px poster caching and continued FHD support.\n• Fix BLUE Cache Artwork failing on new posters while page browsing could load them: use the same poster resolver, preserve verified rescue image paths and recover gallery posters after a failed details request.\n• Respect saved manual title matches during artwork caching; retain four bounded poster workers and screen-specific poster/backdrop downloads.\n• Preserve existing cached artwork, user settings and the Adaptive Colors default for new installs.",
+  "version": "9.3.2",
+  "revision": 581,
+  "name": "Ultra Stalker Final V9.3.2",
+  "deb": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.2/Ultra_Stalker_DreamOS_Py2.deb",
+  "sha256": "867f93d2f14b19d0028435dd935ac36e5331c498d93cd1d36ceff00368d5584e",
+  "size": 11494952,
+  "notes": "• Improve plugin responsiveness and smoother navigation between pages.\n• Speed up posters, backdrops and title logos.\n• Improve Check Artwork scanning and artwork caching.\n• Interface improvements for a faster, smoother experience.",
   "notes_i18n": {
-    "en": "• WQHD support for Open and DreamOS, with sharp 780px poster caching and continued FHD support.\n• Fix BLUE Cache Artwork failing on new posters while page browsing could load them: use the same poster resolver, preserve verified rescue image paths and recover gallery posters after a failed details request.\n• Respect saved manual title matches during artwork caching; retain four bounded poster workers and screen-specific poster/backdrop downloads.\n• Preserve existing cached artwork, user settings and the Adaptive Colors default for new installs.",
-    "ar": "• دعم WQHD لنسختي Open وDreamOS مع بوسترات واضحة بعرض 780 بكسل واستمرار دعم FHD.\n• إصلاح فشل الزر الأزرق في تحميل بوسترات جديدة رغم ظهورها أثناء التنقل: استخدام نفس مسار تحميل الصفحة، والحفاظ على رابط البوستر من البحث الاحتياطي واستكمال البحث في معرض الصور عند تعذر طلب التفاصيل.\n• احترام المطابقة اليدوية المحفوظة أثناء الكاش، مع الحفاظ على أربع عمليات تحميل بوسترات متوازية وتحميل الصور المطلوبة لكل شاشة.\n• الحفاظ على الصور المحفوظة وإعدادات المستخدم وإغلاق Adaptive Colors افتراضياً للتثبيت الجديد."
+    "en": "• Improve plugin responsiveness and smoother navigation between pages.\n• Speed up posters, backdrops and title logos.\n• Improve Check Artwork scanning and artwork caching.\n• Interface improvements for a faster, smoother experience.",
+    "ar": "• تحسين خفة البلجن وسلاسة التنقل بين الصفحات.\n• تسريع ظهور البوسترات والخلفيات وشعارات العناوين.\n• تحسين فحص الصور وملفات العرض (Check Artwork).\n• تحسينات في الواجهات لتجربة استخدام أسرع وأكثر سلاسة."
   },
   "platform": "dreamos-py2"
 }
