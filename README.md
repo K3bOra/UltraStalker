@@ -52,16 +52,16 @@ Dark panels, subtle red-to-emerald accents, reusable artwork and straightforward
 
 <a name="whats-new"></a>
 
-## What's new — V9.3.1 · Revision 576
-### الجديد في V9.3.1 · المراجعة 576
+## What's new — V9.3.2 · Revision 581
+### الجديد في V9.3.2 · المراجعة 581
 
-- WQHD support for Open and DreamOS, with sharp 780px poster caching and continued FHD support.<br>دعم WQHD لنسختي Open وDreamOS مع بوسترات واضحة بعرض 780 بكسل واستمرار دعم FHD.
+- Improve plugin responsiveness and smoother navigation between pages.<br>تحسين خفة البلجن وسلاسة التنقل بين الصفحات.
 
-- Fix BLUE Cache Artwork failing on new posters while page browsing could load them: use the same poster resolver, preserve verified rescue image paths and recover gallery posters after a failed details request.<br>إصلاح فشل الزر الأزرق في تحميل بوسترات جديدة رغم ظهورها أثناء التنقل: استخدام نفس مسار تحميل الصفحة، والحفاظ على رابط البوستر من البحث الاحتياطي واستكمال البحث في معرض الصور عند تعذر طلب التفاصيل.
+- Speed up posters, backdrops and title logos.<br>تسريع ظهور البوسترات والخلفيات وشعارات العناوين.
 
-- Respect saved manual title matches during artwork caching; retain four bounded poster workers and screen-specific poster/backdrop downloads.<br>احترام المطابقة اليدوية المحفوظة أثناء الكاش، مع الحفاظ على أربع عمليات تحميل بوسترات متوازية وتحميل الصور المطلوبة لكل شاشة.
+- Improve Check Artwork scanning and artwork caching.<br>تحسين فحص الصور وملفات العرض (Check Artwork).
 
-- Preserve existing cached artwork, user settings and the Adaptive Colors default for new installs.<br>الحفاظ على الصور المحفوظة وإعدادات المستخدم وإغلاق Adaptive Colors افتراضياً للتثبيت الجديد.
+- Interface improvements for a faster, smoother experience.<br>تحسينات في الواجهات لتجربة استخدام أسرع وأكثر سلاسة.
 
 [Full release notes and downloads](https://github.com/K3bOra/UltraStalker/releases/latest) · [تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraStalker/releases/latest)
 
@@ -301,17 +301,17 @@ Open Telnet or SSH on a compatible receiver as **root**, then run:
 wget -qO- https://raw.githubusercontent.com/K3bOra/UltraStalker/main/install.sh | /bin/sh
 ```
 
-The command above is for Open/Python 3. DreamOS/Python 2.7 uses the DEB from the latest release or the plugin updater.
+The same command automatically selects IPK for Open/Python 3 or DEB for DreamOS/Python 2.7.
 
-أمر التثبيت أعلاه مخصص لـ Open/Python 3. لنسخة DreamOS/Python 2.7 استخدم ملف DEB من أحدث إصدار أو التحديث من داخل البلجن.
+نفس الأمر يختار تلقائيًا IPK للأوبن/Python 3 أو DEB للدريم/Python 2.7.
 
-The installer reads the latest official release and checks the package size, SHA-256, name, version and architecture before installing with `opkg`.
+The installer reads the latest official release and checks the package size, SHA-256, name, version and architecture before installing with `opkg` on Open or `dpkg` on DreamOS.
 
-المُثبّت يقرأ أحدث إصدار رسمي، ويتحقق من حجم الحزمة وبصمة SHA-256 واسمها ورقمها ومعماريتها قبل التثبيت باستخدام `opkg`.
+المُثبّت يقرأ أحدث إصدار رسمي، ويتحقق من حجم الحزمة وبصمة SHA-256 واسمها ورقمها ومعماريتها قبل التثبيت باستخدام `opkg` للأوبن أو `dpkg` للدريم.
 
-[Review the installer](install.sh) · [Download the latest IPK](https://github.com/K3bOra/UltraStalker/releases/latest)
+[Review the installer](install.sh) · [Download the latest packages](https://github.com/K3bOra/UltraStalker/releases/latest)
 
-[راجع سكربت التثبيت](install.sh) · [حمّل أحدث حزمة IPK](https://github.com/K3bOra/UltraStalker/releases/latest)
+[راجع سكربت التثبيت](install.sh) · [حمّل أحدث الحزم](https://github.com/K3bOra/UltraStalker/releases/latest)
 
 > Installation may restart Enigma2. Back up important receiver settings first.
 >
@@ -445,6 +445,7 @@ Developed and maintained by **Ahmed L-HadarY**
 [المستودع الرسمي على GitHub](https://github.com/K3bOra/UltraStalker)
 
 </div>
+
 
 
 
