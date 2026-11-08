@@ -5,6 +5,16 @@ For the authoritative current version and download metadata, see [update.json](u
 
 لمعرفة الإصدار الحالي وبيانات التحميل الرسمية، راجع [update.json](update.json).
 
+## V9.3.4 · Revision 583
+### V9.3.4 · المراجعة 583
+
+- Improved YouTube trailer resolution and playback, with 1080p preferred and 720p or lower fallback when available.<br>تحسين جلب وتشغيل تريلرات يوتيوب، مع أولوية لجودة 1080p والرجوع لـ720p أو أقل حسب المتاح.
+
+- Web management starts automatically and opens without a PIN on the local network by default. Explicit Web Cleaner settings are respected.<br>صفحة إدارة السيرفرات بتشتغل تلقائيًا وبتفتح من الشبكة المحلية من غير PIN افتراضيًا، مع احترام الإعدادات اللي اخترتها بنفسك.
+
+[Release and downloads](https://github.com/K3bOra/UltraStalker/releases/tag/v9.3.4)<br>
+[تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraStalker/releases/tag/v9.3.4)
+
 ## V9.3.3 · Revision 582
 ### الجديد في V9.3.3 · المراجعة 582
 
