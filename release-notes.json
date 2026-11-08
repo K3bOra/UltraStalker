@@ -1,15 +1,21 @@
 {
-  "version": "9.3.2",
+  "version": "9.3.3",
   "notes": [
-    "Improve plugin responsiveness and smoother navigation between pages.",
-    "Speed up posters, backdrops and title logos.",
-    "Improve Check Artwork scanning and artwork caching.",
-    "Interface improvements for a faster, smoother experience."
+    "Two source cards for Stalker Portal and Xtream / M3U, with green Online status and local playlist browsing.",
+    "Edit and reorder each source group separately in Manage Servers. Web Cleaner starts automatically with PIN / QR protection by default.",
+    "Search shows Xtream / M3U results as they arrive and limits simultaneous requests.",
+    "Local opens mounted drives without waiting for a media scan. Refresh rebuilds the library when requested.",
+    "Check Artwork reuses cached images and prepares title logos for different views.",
+    "Updated the Live channel list, picons and poster frames in the player, and restored Recent and Continue cards.",
+    "Added Free Portal and Free Xtream catalogs, and cleaned up unused picons when exported bouquets are removed."
   ],
   "notes_ar": [
-    "تحسين خفة البلجن وسلاسة التنقل بين الصفحات.",
-    "تسريع ظهور البوسترات والخلفيات وشعارات العناوين.",
-    "تحسين فحص الصور وملفات العرض (Check Artwork).",
-    "تحسينات في الواجهات لتجربة استخدام أسرع وأكثر سلاسة."
+    "كارتين للمصادر، Stalker Portal وXtream / M3U، مع حالة Online باللون الأخضر وإمكانية تصفّح قوائم M3U المحلية.",
+    "تعديل وترتيب كل مجموعة سيرفرات لوحدها من الويب. Web Cleaner بيشتغل تلقائيًا بحماية PIN أو QR افتراضيًا.",
+    "عرض نتائج بحث Xtream وM3U أول ما تظهر، مع تقليل عدد الطلبات اللي بتشتغل في نفس الوقت.",
+    "فتح الهارد والفلاشة من Local مباشرةً، وتحديث فهرس المكتبة عند الضغط على Refresh.",
+    "إعادة استخدام الصور المحفوظة وتجهيز شعارات العناوين لأكتر من واجهة عند فحص الصور.",
+    "تحسين قائمة قنوات اللايف وأيقوناتها وإطارات البوسترات في المشغّل، واسترجاع عرض آخر المشاهدات ومتابعة المشاهدة.",
+    "إضافة قوائم Free Portal وFree Xtream، وتنظيف أيقونات القنوات غير المستخدمة عند حذف الباقات المصدّرة."
   ]
 }
