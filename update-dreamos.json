@@ -1,14 +1,14 @@
 {
-  "version": "9.3.3",
-  "revision": 582,
-  "name": "Ultra Stalker Final V9.3.3",
-  "deb": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.3/Ultra_Stalker_DreamOS_Py2.deb",
-  "sha256": "4abcde8b09a21e2625be285dd6b332e74513ed93933306f3a21de6d92dac8e92",
-  "size": 10247288,
-  "notes": "• Two source cards for Stalker Portal and Xtream / M3U, with green Online status and local playlist browsing.\n• Edit and reorder each source group separately in Manage Servers. Web Cleaner starts automatically with PIN / QR protection by default.\n• Search shows Xtream / M3U results as they arrive and limits simultaneous requests.\n• Local opens mounted drives without waiting for a media scan. Refresh rebuilds the library when requested.\n• Check Artwork reuses cached images and prepares title logos for different views.\n• Updated the Live channel list, picons and poster frames in the player, and restored Recent and Continue cards.\n• Added Free Portal and Free Xtream catalogs, and cleaned up unused picons when exported bouquets are removed.",
+  "version": "9.3.4",
+  "revision": 583,
+  "name": "Ultra Stalker Final V9.3.4",
+  "deb": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.4/Ultra_Stalker_DreamOS_Py2.deb",
+  "sha256": "8d2114b45510161d64900c475040495bb5ebd92e6d45e252028cd37d3aa28344",
+  "size": 10249568,
+  "notes": "• Improved YouTube trailer resolution and playback, with 1080p preferred and 720p or lower fallback when available.\n• Web management starts automatically and opens without a PIN on the local network by default. Explicit Web Cleaner settings are respected.",
   "notes_i18n": {
-    "en": "• Two source cards for Stalker Portal and Xtream / M3U, with green Online status and local playlist browsing.\n• Edit and reorder each source group separately in Manage Servers. Web Cleaner starts automatically with PIN / QR protection by default.\n• Search shows Xtream / M3U results as they arrive and limits simultaneous requests.\n• Local opens mounted drives without waiting for a media scan. Refresh rebuilds the library when requested.\n• Check Artwork reuses cached images and prepares title logos for different views.\n• Updated the Live channel list, picons and poster frames in the player, and restored Recent and Continue cards.\n• Added Free Portal and Free Xtream catalogs, and cleaned up unused picons when exported bouquets are removed.",
-    "ar": "• كارتين للمصادر، Stalker Portal وXtream / M3U، مع حالة Online باللون الأخضر وإمكانية تصفّح قوائم M3U المحلية.\n• تعديل وترتيب كل مجموعة سيرفرات لوحدها من الويب. Web Cleaner بيشتغل تلقائيًا بحماية PIN أو QR افتراضيًا.\n• عرض نتائج بحث Xtream وM3U أول ما تظهر، مع تقليل عدد الطلبات اللي بتشتغل في نفس الوقت.\n• فتح الهارد والفلاشة من Local مباشرةً، وتحديث فهرس المكتبة عند الضغط على Refresh.\n• إعادة استخدام الصور المحفوظة وتجهيز شعارات العناوين لأكتر من واجهة عند فحص الصور.\n• تحسين قائمة قنوات اللايف وأيقوناتها وإطارات البوسترات في المشغّل، واسترجاع عرض آخر المشاهدات ومتابعة المشاهدة.\n• إضافة قوائم Free Portal وFree Xtream، وتنظيف أيقونات القنوات غير المستخدمة عند حذف الباقات المصدّرة."
+    "en": "• Improved YouTube trailer resolution and playback, with 1080p preferred and 720p or lower fallback when available.\n• Web management starts automatically and opens without a PIN on the local network by default. Explicit Web Cleaner settings are respected.",
+    "ar": "• تحسين جلب وتشغيل تريلرات يوتيوب، مع أولوية لجودة 1080p والرجوع لـ720p أو أقل حسب المتاح.\n• صفحة إدارة السيرفرات بتشتغل تلقائيًا وبتفتح من الشبكة المحلية من غير PIN افتراضيًا، مع احترام الإعدادات اللي اخترتها بنفسك."
   },
   "platform": "dreamos-py2"
 }
