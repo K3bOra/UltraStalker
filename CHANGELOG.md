@@ -5,6 +5,40 @@ For the authoritative current version and download metadata, see [update.json](u
 
 لمعرفة الإصدار الحالي وبيانات التحميل الرسمية، راجع [update.json](update.json).
 
+## V9.3.3 · Revision 582
+### الجديد في V9.3.3 · المراجعة 582
+
+- Two source cards for Stalker Portal and Xtream / M3U, with green Online status and local playlist browsing.<br>كارتين للمصادر، Stalker Portal وXtream / M3U، مع حالة Online باللون الأخضر وإمكانية تصفّح قوائم M3U المحلية.
+
+- Edit and reorder each source group separately in Manage Servers. Web Cleaner starts automatically with PIN / QR protection by default.<br>تعديل وترتيب كل مجموعة سيرفرات لوحدها من الويب. Web Cleaner بيشتغل تلقائيًا بحماية PIN أو QR افتراضيًا.
+
+- Search shows Xtream / M3U results as they arrive and limits simultaneous requests.<br>عرض نتائج بحث Xtream وM3U أول ما تظهر، مع تقليل عدد الطلبات اللي بتشتغل في نفس الوقت.
+
+- Local opens mounted drives without waiting for a media scan. Refresh rebuilds the library when requested.<br>فتح الهارد والفلاشة من Local مباشرةً، وتحديث فهرس المكتبة عند الضغط على Refresh.
+
+- Check Artwork reuses cached images and prepares title logos for different views.<br>إعادة استخدام الصور المحفوظة وتجهيز شعارات العناوين لأكتر من واجهة عند فحص الصور.
+
+- Updated the Live channel list, picons and poster frames in the player, and restored Recent and Continue cards.<br>تحسين قائمة قنوات اللايف وأيقوناتها وإطارات البوسترات في المشغّل، واسترجاع عرض آخر المشاهدات ومتابعة المشاهدة.
+
+- Added Free Portal and Free Xtream catalogs, and cleaned up unused picons when exported bouquets are removed.<br>إضافة قوائم Free Portal وFree Xtream، وتنظيف أيقونات القنوات غير المستخدمة عند حذف الباقات المصدّرة.
+
+[Release and downloads](https://github.com/K3bOra/UltraStalker/releases/tag/v9.3.3)<br>
+[تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraStalker/releases/tag/v9.3.3)
+
+## V9.3.2 · Revision 581
+### الجديد في V9.3.2 · المراجعة 581
+
+- Improve plugin responsiveness and smoother navigation between pages.<br>تحسين خفة البلجن وسلاسة التنقل بين الصفحات.
+
+- Speed up posters, backdrops and title logos.<br>تسريع ظهور البوسترات والخلفيات وشعارات العناوين.
+
+- Improve Check Artwork scanning and artwork caching.<br>تحسين فحص الصور وملفات العرض (Check Artwork).
+
+- Interface improvements for a faster, smoother experience.<br>تحسينات في الواجهات لتجربة استخدام أسرع وأكثر سلاسة.
+
+[Release and downloads](https://github.com/K3bOra/UltraStalker/releases/tag/v9.3.2)<br>
+[تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraStalker/releases/tag/v9.3.2)
+
 ## V9.2.5 · Revision 572 — 2026-10-26
 ### V9.2.5 · المراجعة 572
 
