@@ -1,4 +1,4 @@
-import sys,types,importlib,ast,tempfile,os,io,queue,traceback
+import sys,types,importlib,ast,tempfile,os,io,queue,traceback,hashlib,json,time,threading
 from pathlib import Path
 from PIL import Image
 sys.dont_write_bytecode=True
@@ -61,17 +61,37 @@ with tempfile.TemporaryDirectory() as tmp:
   if hasattr(module,'persistent_write_gate'):module.persistent_write_gate=lambda *a,**kw:True
   if hasattr(module,'ensure_persistent_dirs'):module.ensure_persistent_dirs=dirs
  storage=importlib.import_module('realtest.storage');storage.CONFIG_DIR=tmp+'/config'
+ persistent=importlib.import_module('realtest.persistent_cache')
+ persistent.BLUE_CACHE=tmp+'/blue'
+ # These pure disk/cache helpers live alongside native Enigma2 screen classes.
+ # Load the actual packaged helpers without starting the receiver UI.
+ grid=types.ModuleType('realtest.ui_grid_screens')
+ grid.__dict__.update(os=os,time=time,threading=threading,hashlib=hashlib,json=json)
+ logo_helpers={'_pgv2_logo_seal_path_detached','_pgv2_read_logo_seal_detached',
+               '_pgv2_write_logo_seal_detached','_pgv2_logo_seal_ram_put',
+               '_pgv2_known_tmdb_id_detached','_pgv2_logo_seal_state_detached'}
+ seal_constants={'_TITLE_LOGO_SEAL_RAM','_TITLE_LOGO_SEAL_RAM_MAX','_TITLE_LOGO_NEGATIVE_TTL'}
+ screen=ast.parse((root/'ui_grid_screens.py').read_text())
+ helpers=[n for n in screen.body if (isinstance(n,ast.FunctionDef) and n.name in logo_helpers)
+          or (isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id in seal_constants for t in n.targets))]
+ assert len(helpers)==len(logo_helpers)+len(seal_constants)
+ exec(compile(ast.Module(body=helpers,type_ignores=[]),'logo_seal','exec'),grid.__dict__)
+ sys.modules[grid.__name__]=grid
+ ui=ast.parse((root/'ui.py').read_text())
+ cancellation=next(n for n in ui.body if isinstance(n,ast.ClassDef) and n.name=='_ArtworkCancelled')
+ exec(compile(ast.Module(body=[cancellation],type_ignores=[]),'ui_cancellation','exec'),grid.__dict__)
+
  errors=[]
  source=(root/'ui_grid_mixin_posters.py').read_text()
  tree=ast.parse(source)
  cls=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='GridPostersMixin')
  node=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name=='_cache_current_page_backdrops_worker')
- env=dict(__name__='realtest.worker',__package__='realtest',os=os,load_settings=lambda:{},load_artwork_v2_manifest=m.load_manifest,canonical_art_paths=m.canonical_art_paths,_=lambda x:x,optional_failure=lambda tag,exc:errors.append((tag,type(exc).__name__,str(exc))))
+ env=dict(_ArtworkCancelled=grid._ArtworkCancelled,load_detail_snapshot=persistent.load_detail_snapshot,__name__='realtest.worker',__package__='realtest',os=os,load_settings=lambda:{},load_artwork_v2_manifest=m.load_manifest,canonical_art_paths=m.canonical_art_paths,_=lambda x:x,optional_failure=lambda tag,exc:errors.append((tag,type(exc).__name__,str(exc))))
  if variant=='dream':env['us_casefold']=importlib.import_module('realtest.us_env').us_casefold
  exec(compile(ast.Module(body=[node],type_ignores=[]),'worker','exec'),env)
  rows=[{'id':'abc','name':'The Ghost Killer','year':'2025'}]
  if scenario=='mixed':rows=[{'id':i,'name':'The Ghost Killer '+str(i),'year':'2025','_locked_tmdb_id':1000+i,'_ultra_search_verified_tmdb_id':1000+i} for i in range(25)]
- obj=types.SimpleNamespace(artwork_cache_backdrops=False,_grid_settings={'tmdb_credential':'offline-test'},profile={'name':'test'},media_type='vod',_folder_artwork_progress=queue.Queue(),_cache_backdrop_category_total=lambda:len(rows),_cache_backdrop_category_rows=lambda e:rows)
+ obj=types.SimpleNamespace(artwork_cache_backdrops=False,_grid_settings={'tmdb_credential':'offline-test'},profile={'name':'test'},media_type='vod',_folder_artwork_progress=queue.Queue(),_cache_backdrop_category_total=lambda:len(rows),_cache_backdrop_category_rows=lambda e:rows,_iter_backdrop_category_rows=lambda e:iter(rows))
  if scenario=='manual':
   manual=importlib.import_module('realtest.manual_identity')
   manual.set_choice(obj.profile,'vod',rows[0],{'id':123,'media_type':'movie','title':'The Ghost Killer','year':'2025'})
