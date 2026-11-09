@@ -1,14 +1,14 @@
 {
-  "version": "9.3.4",
-  "revision": 583,
-  "name": "Ultra Stalker Final V9.3.4",
-  "deb": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.4/Ultra_Stalker_DreamOS_Py2.deb",
-  "sha256": "8d2114b45510161d64900c475040495bb5ebd92e6d45e252028cd37d3aa28344",
-  "size": 10249568,
-  "notes": "• Improved YouTube trailer resolution and playback, with 1080p preferred and 720p or lower fallback when available.\n• Web management starts automatically and opens without a PIN on the local network by default. Explicit Web Cleaner settings are respected.",
+  "version": "9.3.5",
+  "revision": 584,
+  "name": "Ultra Stalker Final V9.3.5",
+  "deb": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.5/Ultra_Stalker_DreamOS_Py2.deb",
+  "sha256": "6d5074e807c3f909322bf02c4c02c7ee5cf16f201e922eab877887b40a7cab5c",
+  "size": 10249540,
+  "notes": "• Fixed a DreamOS crash when opening Settings options.",
   "notes_i18n": {
-    "en": "• Improved YouTube trailer resolution and playback, with 1080p preferred and 720p or lower fallback when available.\n• Web management starts automatically and opens without a PIN on the local network by default. Explicit Web Cleaner settings are respected.",
-    "ar": "• تحسين جلب وتشغيل تريلرات يوتيوب، مع أولوية لجودة 1080p والرجوع لـ720p أو أقل حسب المتاح.\n• صفحة إدارة السيرفرات بتشتغل تلقائيًا وبتفتح من الشبكة المحلية من غير PIN افتراضيًا، مع احترام الإعدادات اللي اخترتها بنفسك."
+    "en": "• Fixed a DreamOS crash when opening Settings options.",
+    "ar": "• إصلاح كراش نسخة DreamOS عند فتح خيارات الإعدادات."
   },
   "platform": "dreamos-py2"
 }
