@@ -1,14 +1,14 @@
 {
-  "version": "9.3.5",
-  "revision": 584,
-  "name": "Ultra Stalker Final V9.3.5",
-  "deb": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.5/Ultra_Stalker_DreamOS_Py2.deb",
-  "sha256": "6d5074e807c3f909322bf02c4c02c7ee5cf16f201e922eab877887b40a7cab5c",
-  "size": 10249540,
-  "notes": "• Fixed a DreamOS crash when opening Settings options.",
+  "version": "9.3.6",
+  "revision": 585,
+  "name": "Ultra Stalker Final V9.3.6",
+  "deb": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.6/Ultra_Stalker_DreamOS_Py2.deb",
+  "sha256": "9a5a203071551a9668aba130f3c9254d8104181efe18477764047e737fca3116",
+  "size": 10249612,
+  "notes": "• Fixed a DreamOS player startup error when opening movies, episodes or catch-up.",
   "notes_i18n": {
-    "en": "• Fixed a DreamOS crash when opening Settings options.",
-    "ar": "• إصلاح كراش نسخة DreamOS عند فتح خيارات الإعدادات."
+    "en": "• Fixed a DreamOS player startup error when opening movies, episodes or catch-up.",
+    "ar": "• إصلاح خطأ في نسخة DreamOS كان يوقف فتح مشغّل الأفلام والحلقات والكَتش أب."
   },
   "platform": "dreamos-py2"
 }
