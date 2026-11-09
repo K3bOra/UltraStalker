@@ -1,9 +1,9 @@
 {
-  "version": "9.3.5",
+  "version": "9.3.6",
   "notes": [
-    "Fixed a DreamOS crash when opening Settings options."
+    "Fixed a DreamOS player startup error when opening movies, episodes or catch-up."
   ],
   "notes_ar": [
-    "إصلاح كراش نسخة DreamOS عند فتح خيارات الإعدادات."
+    "إصلاح خطأ في نسخة DreamOS كان يوقف فتح مشغّل الأفلام والحلقات والكَتش أب."
   ]
 }

@@ -5,6 +5,14 @@ For the authoritative current version and download metadata, see [update.json](u
 
 لمعرفة الإصدار الحالي وبيانات التحميل الرسمية، راجع [update.json](update.json).
 
+## V9.3.6 · Revision 585
+### V9.3.6 · المراجعة 585
+
+- Fixed a DreamOS player startup error when opening movies, episodes or catch-up.<br>إصلاح خطأ في نسخة DreamOS كان يوقف فتح مشغّل الأفلام والحلقات والكَتش أب.
+
+[Release and downloads](https://github.com/K3bOra/UltraStalker/releases/tag/v9.3.6)<br>
+[تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraStalker/releases/tag/v9.3.6)
+
 ## V9.3.5 · Revision 584
 ### V9.3.5 · المراجعة 584
 
