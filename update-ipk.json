@@ -1,13 +1,13 @@
 {
-  "version": "9.3.5",
-  "revision": 584,
-  "name": "Ultra Stalker Final V9.3.5",
-  "ipk": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.5/Ultra_Stalker_Final.ipk",
-  "sha256": "fe65dacd750d02edd05181b21c3b78f3c51d638afcda51d9b7b618c3fd4b0fcf",
-  "size": 10284014,
-  "notes": "• Fixed a DreamOS crash when opening Settings options.",
+  "version": "9.3.6",
+  "revision": 585,
+  "name": "Ultra Stalker Final V9.3.6",
+  "ipk": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.6/Ultra_Stalker_Final.ipk",
+  "sha256": "396cd8ff01c83ee0cb6b27f6a989ca1f2a7a2dc78a7b2baba6ca646466f4fc33",
+  "size": 10284064,
+  "notes": "• Fixed a DreamOS player startup error when opening movies, episodes or catch-up.",
   "notes_i18n": {
-    "en": "• Fixed a DreamOS crash when opening Settings options.",
-    "ar": "• إصلاح كراش نسخة DreamOS عند فتح خيارات الإعدادات."
+    "en": "• Fixed a DreamOS player startup error when opening movies, episodes or catch-up.",
+    "ar": "• إصلاح خطأ في نسخة DreamOS كان يوقف فتح مشغّل الأفلام والحلقات والكَتش أب."
   }
 }
