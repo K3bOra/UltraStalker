@@ -5,6 +5,14 @@ For the authoritative current version and download metadata, see [update.json](u
 
 لمعرفة الإصدار الحالي وبيانات التحميل الرسمية، راجع [update.json](update.json).
 
+## V9.3.5 · Revision 584
+### V9.3.5 · المراجعة 584
+
+- Fixed a DreamOS crash when opening Settings options.<br>إصلاح كراش نسخة DreamOS عند فتح خيارات الإعدادات.
+
+[Release and downloads](https://github.com/K3bOra/UltraStalker/releases/tag/v9.3.5)<br>
+[تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraStalker/releases/tag/v9.3.5)
+
 ## V9.3.4 · Revision 583
 ### V9.3.4 · المراجعة 583
 

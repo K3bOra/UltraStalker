@@ -1,11 +1,9 @@
 {
-  "version": "9.3.4",
+  "version": "9.3.5",
   "notes": [
-    "Improved YouTube trailer resolution and playback, with 1080p preferred and 720p or lower fallback when available.",
-    "Web management starts automatically and opens without a PIN on the local network by default. Explicit Web Cleaner settings are respected."
+    "Fixed a DreamOS crash when opening Settings options."
   ],
   "notes_ar": [
-    "تحسين جلب وتشغيل تريلرات يوتيوب، مع أولوية لجودة 1080p والرجوع لـ720p أو أقل حسب المتاح.",
-    "صفحة إدارة السيرفرات بتشتغل تلقائيًا وبتفتح من الشبكة المحلية من غير PIN افتراضيًا، مع احترام الإعدادات اللي اخترتها بنفسك."
+    "إصلاح كراش نسخة DreamOS عند فتح خيارات الإعدادات."
   ]
 }

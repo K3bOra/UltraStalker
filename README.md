@@ -52,12 +52,10 @@ Dark panels, subtle red-to-emerald accents, reusable artwork and straightforward
 
 <a name="whats-new"></a>
 
-## What's new — V9.3.4 · Revision 583
-### الجديد في V9.3.4 · المراجعة 583
+## What's new — V9.3.5 · Revision 584
+### الجديد في V9.3.5 · المراجعة 584
 
-- Improved YouTube trailer resolution and playback, with 1080p preferred and 720p or lower fallback when available.<br>تحسين جلب وتشغيل تريلرات يوتيوب، مع أولوية لجودة 1080p والرجوع لـ720p أو أقل حسب المتاح.
-
-- Web management starts automatically and opens without a PIN on the local network by default. Explicit Web Cleaner settings are respected.<br>صفحة إدارة السيرفرات بتشتغل تلقائيًا وبتفتح من الشبكة المحلية من غير PIN افتراضيًا، مع احترام الإعدادات اللي اخترتها بنفسك.
+- Fixed a DreamOS crash when opening Settings options.<br>إصلاح كراش نسخة DreamOS عند فتح خيارات الإعدادات.
 
 [Full release notes and downloads](https://github.com/K3bOra/UltraStalker/releases/latest) · [تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraStalker/releases/latest)
 
