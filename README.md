@@ -52,10 +52,10 @@ Dark panels, subtle red-to-emerald accents, reusable artwork and straightforward
 
 <a name="whats-new"></a>
 
-## What's new — V9.3.5 · Revision 584
-### الجديد في V9.3.5 · المراجعة 584
+## What's new — V9.3.6 · Revision 585
+### الجديد في V9.3.6 · المراجعة 585
 
-- Fixed a DreamOS crash when opening Settings options.<br>إصلاح كراش نسخة DreamOS عند فتح خيارات الإعدادات.
+- Fixed a DreamOS player startup error when opening movies, episodes or catch-up.<br>إصلاح خطأ في نسخة DreamOS كان يوقف فتح مشغّل الأفلام والحلقات والكَتش أب.
 
 [Full release notes and downloads](https://github.com/K3bOra/UltraStalker/releases/latest) · [تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraStalker/releases/latest)
 
