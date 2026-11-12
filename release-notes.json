@@ -1,9 +1,13 @@
 {
-  "version": "9.3.6",
+  "version": "9.3.7",
   "notes": [
-    "Fixed a DreamOS player startup error when opening movies, episodes or catch-up."
+    "Dreambox bug fixes.",
+    "Fixed overlapping servers on the main cards.",
+    "General plugin improvements."
   ],
   "notes_ar": [
-    "إصلاح خطأ في نسخة DreamOS كان يوقف فتح مشغّل الأفلام والحلقات والكَتش أب."
+    "إصلاحات أخطاء في الدريم بوكس.",
+    "إصلاح تداخل السيرفرات في الكروت الرئيسية.",
+    "تحسينات عامة للبلجن."
   ]
 }
