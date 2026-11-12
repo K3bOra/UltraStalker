@@ -1,13 +1,13 @@
 {
-  "version": "9.3.6",
-  "revision": 585,
-  "name": "Ultra Stalker Final V9.3.6",
-  "ipk": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.6/Ultra_Stalker_Final.ipk",
-  "sha256": "396cd8ff01c83ee0cb6b27f6a989ca1f2a7a2dc78a7b2baba6ca646466f4fc33",
-  "size": 10284064,
-  "notes": "• Fixed a DreamOS player startup error when opening movies, episodes or catch-up.",
+  "version": "9.3.7",
+  "revision": 586,
+  "name": "Ultra Stalker Final V9.3.7",
+  "ipk": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.7/Ultra_Stalker_Final.ipk",
+  "sha256": "a921ebd752b8142b241fd24a70d0c8e5b69a5dc3b64beb716fa14bb48f7ee806",
+  "size": 10376632,
+  "notes": "• Dreambox bug fixes.\n• Fixed overlapping servers on the main cards.\n• General plugin improvements.",
   "notes_i18n": {
-    "en": "• Fixed a DreamOS player startup error when opening movies, episodes or catch-up.",
-    "ar": "• إصلاح خطأ في نسخة DreamOS كان يوقف فتح مشغّل الأفلام والحلقات والكَتش أب."
+    "en": "• Dreambox bug fixes.\n• Fixed overlapping servers on the main cards.\n• General plugin improvements.",
+    "ar": "• إصلاحات أخطاء في الدريم بوكس.\n• إصلاح تداخل السيرفرات في الكروت الرئيسية.\n• تحسينات عامة للبلجن."
   }
 }
