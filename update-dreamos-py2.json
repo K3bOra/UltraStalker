@@ -1,14 +1,14 @@
 {
-  "version": "9.3.6",
-  "revision": 585,
-  "name": "Ultra Stalker Final V9.3.6",
-  "deb": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.6/Ultra_Stalker_DreamOS_Py2.deb",
-  "sha256": "9a5a203071551a9668aba130f3c9254d8104181efe18477764047e737fca3116",
-  "size": 10249612,
-  "notes": "• Fixed a DreamOS player startup error when opening movies, episodes or catch-up.",
+  "version": "9.3.7",
+  "revision": 586,
+  "name": "Ultra Stalker Final V9.3.7",
+  "deb": "https://github.com/K3bOra/UltraStalker/releases/download/v9.3.7/Ultra_Stalker_DreamOS_Py2.deb",
+  "sha256": "7b3f17622469f4328b572ca9b72e1c6fd5addb7c9aed885091b0d2226d9233a0",
+  "size": 9361600,
+  "notes": "• Dreambox bug fixes.\n• Fixed overlapping servers on the main cards.\n• General plugin improvements.",
   "notes_i18n": {
-    "en": "• Fixed a DreamOS player startup error when opening movies, episodes or catch-up.",
-    "ar": "• إصلاح خطأ في نسخة DreamOS كان يوقف فتح مشغّل الأفلام والحلقات والكَتش أب."
+    "en": "• Dreambox bug fixes.\n• Fixed overlapping servers on the main cards.\n• General plugin improvements.",
+    "ar": "• إصلاحات أخطاء في الدريم بوكس.\n• إصلاح تداخل السيرفرات في الكروت الرئيسية.\n• تحسينات عامة للبلجن."
   },
   "platform": "dreamos-py2"
 }
