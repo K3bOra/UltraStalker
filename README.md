@@ -1,446 +1,321 @@
 <div align="center">
 
-[![Ultra Stalker — Premium Enigma2 Media Hub / تجربة ترفيه متكاملة](assets/ultrastalker-hero.png)](assets/ultrastalker-hero.png)
+<a href="#overview"><img src="assets/ultrastalker-hero.jpg" width="100%" alt="Ultra Stalker — Premium Enigma2 media hub / الترا ستالكر — تجربة ترفيه متكاملة" /></a>
 
-### Your media. Beautifully connected.
-### محتواك المفضل… في تجربة واحدة متكاملة.
+<br />
 
-Live TV, movies, series and your local library — built for Enigma2.
+[![Release](https://img.shields.io/github/v/release/K3bOra/UltraStalker?style=for-the-badge&label=release&labelColor=321d24&color=43bb87)](https://github.com/K3bOra/UltraStalker/releases/latest)
+[![Enigma2 & DreamOS](https://img.shields.io/badge/Enigma2-DreamOS-43bb87?style=for-the-badge&labelColor=321d24)](#compatibility)
+[![Python](https://img.shields.io/badge/python-3.12%E2%80%933.15%20%7C%202.7-43bb87?style=for-the-badge&labelColor=321d24)](#compatibility)
+[![Downloads](https://img.shields.io/github/downloads/K3bOra/UltraStalker/total?style=for-the-badge&label=downloads&labelColor=321d24&color=d45263)](https://github.com/K3bOra/UltraStalker/releases)
 
-بث مباشر وأفلام ومسلسلات ومكتبتك المحلية — على أجهزة Enigma2.
+<a href="#install"><img src="assets/button-install.png" width="300" alt="ثبّت الترا ستالكر / Install Ultra Stalker" /></a>
+<a href="https://github.com/K3bOra/UltraStalker/releases"><img src="assets/button-releases.png" width="300" alt="الإصدارات الرسمية / Official releases" /></a>
 
-[![Release / الإصدار](https://img.shields.io/github/v/release/K3bOra/UltraStalker?style=for-the-badge&label=RELEASE&labelColor=321d24&color=43bb87)](https://github.com/K3bOra/UltraStalker/releases/latest)
-[![Platform / المنصة](https://img.shields.io/badge/PLATFORM-Enigma2-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](#compatibility)
-[![Python / بايثون](https://img.shields.io/badge/PYTHON-3.12%E2%80%933.15-172724?style=for-the-badge&labelColor=321d24&color=43bb87)](#compatibility)
-[![Downloads / التنزيلات](https://img.shields.io/github/downloads/K3bOra/UltraStalker/total?style=for-the-badge&labelColor=321d24&color=43bb87)](https://github.com/K3bOra/UltraStalker/releases)
+<p dir="rtl"><b>محتواك المفضل… في تجربة واحدة متكاملة.</b></p>
 
-Platform: Enigma2 / DreamOS · Python: 3.12–3.15 / 2.7 · Official release and download count above.
+**Your media. Beautifully connected.** Live TV, movies, series and your local library — built for Enigma2.
 
-المنصة: Enigma2 · بايثون: 3.12–3.15 · الشارات بالأعلى تعرض الإصدار الرسمي وعدد التنزيلات.
+<p dir="rtl"><a href="#whats-new">الجديد</a> · <a href="#tour">الصور</a> · <a href="#features">المميزات</a> · <a href="#compatibility">التوافق</a> · <a href="#install">التثبيت</a> · <a href="#faq">الأسئلة</a></p>
 
-[![Install Ultra Stalker / تثبيت الترا ستالكر](assets/action-install.svg)](#install)
-[![Official releases / الإصدارات الرسمية](assets/action-releases.svg)](https://github.com/K3bOra/UltraStalker/releases)
-
-**[التثبيت الرسمي](#install) · [تحميل الإصدارات الرسمية](https://github.com/K3bOra/UltraStalker/releases)**
-
-[What's new](#whats-new) · [Screenshots](#experience) · [Features](#features) · [Compatibility](#compatibility) · [Install](#install) · [FAQ](#faq)
-
-[الجديد](#whats-new) · [الصور](#experience) · [المميزات](#features) · [التوافق](#compatibility) · [التثبيت](#install) · [الأسئلة الشائعة](#faq)
+[What's new](#whats-new) · [Tour](#tour) · [Features](#features) · [Compatibility](#compatibility) · [Install](#install) · [FAQ](#faq)
 
 </div>
 
----
-
 <a name="overview"></a>
 
-## Meet Ultra Stalker
-### تعرّف على الترا ستالكر
+<p align="center"><img src="assets/heading-overview.png" width="100%" alt="تعرّف على الترا ستالكر / Meet Ultra Stalker" /></p>
+
+<p dir="rtl">اجمع مصادر Portal وXtream وM3U في واجهة واحدة للبث المباشر، وتصفح الأفلام والمسلسلات بعرض سينمائي، والبحث الشامل، والمفضلة، ومحتوى الهارد والفلاشة — من غير التنقل بين بلجنات مختلفة.</p>
 
 Bring Portal, Xtream and M3U sources together with Live TV, cinematic movie and series browsing, global search, favorites and HDD/USB media — without switching between plugins.
 
-اجمع مصادر Portal وXtream وM3U في واجهة واحدة للبث المباشر، وتصفح الأفلام والمسلسلات بعرض سينمائي، والبحث الشامل، والمفضلة، ومحتوى الهارد والفلاشة — من غير التنقل بين بلجنات مختلفة.
+<p dir="rtl">واجهات داكنة وتدرجات هادئة من الأحمر للأخضر، مع حفظ الصور لإعادة استخدامها وتنقل واضح بالريموت، لتجربة متناسقة في كل الأقسام.</p>
 
 Dark panels, subtle red-to-emerald accents, reusable artwork and straightforward remote navigation keep the experience consistent.
 
-واجهات داكنة وتدرجات هادئة من الأحمر للأخضر، مع حفظ الصور لإعادة استخدامها وتنقل واضح بالريموت، لتجربة متناسقة في كل الأقسام.
-
+> <span dir="rtl">الترا ستالكر واجهة لتشغيل المحتوى. أضف مصادر المحتوى القانونية الخاصة بك؛ البلجن لا يتضمن اشتراكات أو محتوى محميًا بحقوق النشر.</span><br>
 > Ultra Stalker is a media interface. Supply your own lawful content sources; no subscriptions or copyrighted content are included.
->
-> الترا ستالكر واجهة لتشغيل المحتوى. أضف مصادر المحتوى القانونية الخاصة بك؛ البلجن لا يتضمن اشتراكات أو محتوى محميًا بحقوق النشر.
-
----
 
 <a name="whats-new"></a>
 
-## What's new — V9.3.6 · Revision 585
-### الجديد في V9.3.6 · المراجعة 585
+<p align="center"><img src="assets/heading-whats-new.png" width="100%" alt="الجديد / What's new" /></p>
 
-- Fixed a DreamOS player startup error when opening movies, episodes or catch-up.<br>إصلاح خطأ في نسخة DreamOS كان يوقف فتح مشغّل الأفلام والحلقات والكَتش أب.
+<div align="center">
 
-[Full release notes and downloads](https://github.com/K3bOra/UltraStalker/releases/latest) · [تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraStalker/releases/latest)
+### Ultra Stalker V9.3.7 · Revision 586
 
----
+</div>
 
+<ul dir="rtl">
+<li>إصلاحات أخطاء في الدريم بوكس.</li>
+<li>إصلاح تداخل السيرفرات في الكروت الرئيسية.</li>
+<li>تحسينات عامة للبلجن.</li>
+</ul>
+
+- Dreambox bug fixes.
+- Fixed overlapping servers on the main cards.
+- General plugin improvements.
+
+[Full release notes and downloads](https://github.com/K3bOra/UltraStalker/releases/latest) · [Version history](CHANGELOG.md)
+
+<a name="tour"></a>
 <a name="experience"></a>
 
-## The experience
-### جولة داخل البلجن
+<p align="center"><img src="assets/heading-tour.png" width="100%" alt="جولة داخل البلجن / A tour of the plugin" /></p>
 
-### Home — Your media in one place
-#### الرئيسية — كل محتواك في مكان واحد
+<p align="center"><a href="docs/screenshots/02_home_cinematic.jpg"><img src="docs/screenshots/framed/02_home_cinematic.jpg" width="100%" alt="الرئيسية / Home" /></a></p>
 
-Discover content, return to recently viewed titles and reach your sources from one dashboard.
+<p dir="rtl" align="center"><b>الرئيسية</b> — اكتشف المحتوى، وارجع لآخر حاجة اتفرجت عليها، ووصل لمصادرك من شاشة واحدة.</p>
+<p align="center"><b>Home</b> — discover content, return to recently viewed titles and reach your sources from one dashboard.</p>
 
-اكتشف المحتوى، وارجع لما شاهدته مؤخرًا، ووصل لمصادرك من شاشة رئيسية واحدة.
+<h3 align="center">Live TV · البث المباشر</h3>
 
-[![Home / الشاشة الرئيسية](docs/screenshots/02_home_cinematic.jpg)](docs/screenshots/02_home_cinematic.jpg)
-
-### Live TV — Channels and guide
-#### البث المباشر — القنوات ودليل البرامج
-
-Browse categories, channels and Now/Next guide information in an interface designed for the TV.
-
-تصفح التصنيفات والقنوات، واعرف البرنامج الحالي والتالي من واجهة مصممة للتلفزيون.
-
-| Live TV Grid<br>شبكة قنوات البث المباشر | Channel Browser<br>قائمة القنوات |
-|:---:|:---:|
-| [![Live TV grid / شبكة القنوات](docs/screenshots/03_live_tv.jpg)](docs/screenshots/03_live_tv.jpg) | [![Channel browser / قائمة القنوات](docs/screenshots/04_live_channels.jpg)](docs/screenshots/04_live_channels.jpg) |
+<table>
+<tr><td align="center" width="50%"><a href="docs/screenshots/03_live_tv.jpg"><img src="docs/screenshots/framed/03_live_tv.jpg" alt="شبكة القنوات / Live TV grid" /></a><br /><b>شبكة القنوات</b><br /><sub>Live TV grid</sub></td><td align="center" width="50%"><a href="docs/screenshots/04_live_channels.jpg"><img src="docs/screenshots/framed/04_live_channels.jpg" alt="قائمة القنوات / Channel browser" /></a><br /><b>قائمة القنوات</b><br /><sub>Channel browser</sub></td></tr>
+</table>
 
 <details>
-<summary><b>More Live TV — Guide & EPG / المزيد — دليل البرامج</b></summary>
+<summary><b>دليل البرامج / Guide & EPG</b></summary>
 
-[![EPG / دليل البرامج](docs/screenshots/05_live_epg.jpg)](docs/screenshots/05_live_epg.jpg)
+<br />
+
+<p align="center"><a href="docs/screenshots/05_live_epg.jpg"><img src="docs/screenshots/framed/05_live_epg.jpg" width="100%" alt="دليل البرامج / EPG" /></a></p>
 
 </details>
 
-### Movies & Series — Cinematic discovery
-#### الأفلام والمسلسلات — تجربة تصفح سينمائية
+<h3 align="center">Movies & Series · الأفلام والمسلسلات</h3>
 
-Explore poster grids, backdrops, cast and title details when metadata is available.
+<p align="center"><a href="docs/screenshots/16_series_grid_v3.jpg"><img src="docs/screenshots/framed/16_series_grid_v3.jpg" width="100%" alt="شبكة المسلسلات V3 / Series poster grid V3" /></a></p>
 
-تصفح البوسترات والخلفيات وطاقم العمل وتفاصيل العناوين عند توفر بياناتها.
+<p dir="rtl" align="center"><b>شبكة البوسترات V3</b> — البوستر والتقييم والسن جنب لوحة التفاصيل، وطاقم العمل بالصور.</p>
+<p align="center"><b>Poster grid V3</b> — posters, ratings and age badges beside a details panel with cast photos.</p>
 
-| Cinematic Browsing<br>التصفح السينمائي | Poster Grid<br>شبكة البوسترات |
-|:---:|:---:|
-| [![Cinematic browsing / التصفح السينمائي](docs/screenshots/10_cinematic_browse.jpg)](docs/screenshots/10_cinematic_browse.jpg) | [![Poster grid / شبكة البوسترات](docs/screenshots/08_poster_grid.jpg)](docs/screenshots/08_poster_grid.jpg) |
-| **Movie Details**<br>تفاصيل الفيلم | **Series Details**<br>تفاصيل المسلسل |
-| [![Movie details / تفاصيل الفيلم](docs/screenshots/06_movie_details.jpg)](docs/screenshots/06_movie_details.jpg) | [![Series details / تفاصيل المسلسل](docs/screenshots/13_series_details.jpg)](docs/screenshots/13_series_details.jpg) |
+<table>
+<tr><td align="center" width="50%"><a href="docs/screenshots/17_movie_details_cinematic.jpg"><img src="docs/screenshots/framed/17_movie_details_cinematic.jpg" alt="تفاصيل الفيلم / Movie details" /></a><br /><b>تفاصيل الفيلم</b><br /><sub>Movie details</sub></td><td align="center" width="50%"><a href="docs/screenshots/18_series_details_cinematic.jpg"><img src="docs/screenshots/framed/18_series_details_cinematic.jpg" alt="تفاصيل المسلسل / Series details" /></a><br /><b>تفاصيل المسلسل</b><br /><sub>Series details</sub></td></tr>
+<tr><td align="center" width="50%"><a href="docs/screenshots/19_seasons.jpg"><img src="docs/screenshots/framed/19_seasons.jpg" alt="المواسم / Seasons" /></a><br /><b>المواسم</b><br /><sub>Seasons</sub></td><td align="center" width="50%"><a href="docs/screenshots/10_cinematic_browse.jpg"><img src="docs/screenshots/framed/10_cinematic_browse.jpg" alt="التصفح السينمائي / Cinematic browsing" /></a><br /><b>التصفح السينمائي</b><br /><sub>Cinematic browsing</sub></td></tr>
+</table>
 
 <details>
-<summary><b>More cinematic views / المزيد من شاشات العرض السينمائي</b></summary>
+<summary><b>المزيد من شاشات العرض السينمائي / More cinematic views</b></summary>
 
-**Discovery**<br>اكتشاف المحتوى
+<br />
 
-[![Discovery / اكتشاف المحتوى](docs/screenshots/07_cinematic_discovery.jpg)](docs/screenshots/07_cinematic_discovery.jpg)
-
-**Series Grid**<br>شبكة المسلسلات
-
-[![Series grid / شبكة المسلسلات](docs/screenshots/09_series_grid.jpg)](docs/screenshots/09_series_grid.jpg)
+<table>
+<tr><td align="center" width="50%"><a href="docs/screenshots/07_cinematic_discovery.jpg"><img src="docs/screenshots/framed/07_cinematic_discovery.jpg" alt="اكتشاف المحتوى / Discovery" /></a><br /><b>اكتشاف المحتوى</b><br /><sub>Discovery</sub></td><td align="center" width="50%"><a href="docs/screenshots/08_poster_grid.jpg"><img src="docs/screenshots/framed/08_poster_grid.jpg" alt="شبكة البوسترات / Poster grid" /></a><br /><b>شبكة البوسترات</b><br /><sub>Poster grid</sub></td></tr>
+<tr><td align="center" width="50%"><a href="docs/screenshots/09_series_grid.jpg"><img src="docs/screenshots/framed/09_series_grid.jpg" alt="شبكة المسلسلات / Series grid" /></a><br /><b>شبكة المسلسلات</b><br /><sub>Series grid</sub></td><td align="center" width="50%"><a href="docs/screenshots/06_movie_details.jpg"><img src="docs/screenshots/framed/06_movie_details.jpg" alt="تفاصيل الفيلم الكلاسيكية / Classic movie details" /></a><br /><b>تفاصيل الفيلم الكلاسيكية</b><br /><sub>Classic movie details</sub></td></tr>
+<tr><td align="center" width="50%"><a href="docs/screenshots/13_series_details.jpg"><img src="docs/screenshots/framed/13_series_details.jpg" alt="تفاصيل المسلسل الكلاسيكية / Classic series details" /></a><br /><b>تفاصيل المسلسل الكلاسيكية</b><br /><sub>Classic series details</sub></td><td></td></tr>
+</table>
 
 </details>
 
-### Search — Find what you love
-#### البحث — وصل للمحتوى اللي بتحبه
+<h3 align="center">Player · التشغيل</h3>
 
-Search across media, browse movie and series results, and return to your search history.
+<p align="center"><a href="docs/screenshots/20_player.jpg"><img src="docs/screenshots/framed/20_player.jpg" width="100%" alt="شريط التشغيل / Player" /></a></p>
 
-ابحث في المحتوى، وتصفح نتائج الأفلام والمسلسلات، وارجع لسجل عمليات البحث.
+<p dir="rtl" align="center"><b>شريط التشغيل</b> — الجودة والصوت والترجمة والوقت المتبقي، ومشغّل الدريم أو الأوبن ظاهر قدامك.</p>
+<p align="center"><b>Player</b> — resolution, audio, subtitles and time left, with the active player engine shown.</p>
 
-[![Search / البحث](docs/screenshots/14_search.jpg)](docs/screenshots/14_search.jpg)
+<h3 align="center">Search & library · البحث والمكتبة</h3>
 
-### Your library — Local Media & Favorites
-#### مكتبتك — المحتوى المحلي والمفضلة
+<table>
+<tr><td align="center" width="50%"><a href="docs/screenshots/14_search.jpg"><img src="docs/screenshots/framed/14_search.jpg" alt="البحث في كل المصادر / Search every source" /></a><br /><b>البحث في كل المصادر</b><br /><sub>Search every source</sub></td><td align="center" width="50%"><a href="docs/screenshots/11_local_library.jpg"><img src="docs/screenshots/framed/11_local_library.jpg" alt="المكتبة المحلية / Local library" /></a><br /><b>المكتبة المحلية</b><br /><sub>Local library</sub></td></tr>
+<tr><td align="center" width="50%"><a href="docs/screenshots/12_favorites.jpg"><img src="docs/screenshots/framed/12_favorites.jpg" alt="المفضلة / Favorites" /></a><br /><b>المفضلة</b><br /><sub>Favorites</sub></td><td align="center" width="50%"><a href="docs/screenshots/21_source_cards.jpg"><img src="docs/screenshots/framed/21_source_cards.jpg" alt="كروت المصادر / Source cards" /></a><br /><b>كروت المصادر</b><br /><sub>Source cards</sub></td></tr>
+</table>
 
-Browse HDD/USB media and organize favorite content in the same experience.
+<h3 align="center">Settings · الإعدادات</h3>
 
-تصفح محتوى الهارد والفلاشة، ونظم المحتوى المفضل عندك من نفس الواجهة.
+<table>
+<tr><td align="center" width="50%"><a href="docs/screenshots/22_settings_panel.jpg"><img src="docs/screenshots/framed/22_settings_panel.jpg" alt="لوحة الإعدادات / Settings panel" /></a><br /><b>لوحة الإعدادات</b><br /><sub>Settings panel</sub></td><td align="center" width="50%"><a href="docs/screenshots/15_settings.jpg"><img src="docs/screenshots/framed/15_settings.jpg" alt="الإعدادات الكاملة / All settings" /></a><br /><b>الإعدادات الكاملة</b><br /><sub>All settings</sub></td></tr>
+</table>
 
-| Local Library<br>المكتبة المحلية | Favorites<br>المفضلة |
-|:---:|:---:|
-| [![Local library / المكتبة المحلية](docs/screenshots/11_local_library.jpg)](docs/screenshots/11_local_library.jpg) | [![Favorites / المفضلة](docs/screenshots/12_favorites.jpg)](docs/screenshots/12_favorites.jpg) |
+<details>
+<summary><b>إدارة البورتلات / Portal manager</b></summary>
 
-### Sources & Settings
-#### المصادر والإعدادات
+<br />
 
-Manage your saved sources and adjust playback, language, appearance, performance and storage.
+<p align="center"><a href="docs/screenshots/01_portal_manager_private.jpg"><img src="docs/screenshots/framed/01_portal_manager_private.jpg" width="100%" alt="إدارة البورتلات / Portal manager" /></a></p>
 
-أدر مصادر المحتوى المحفوظة، واضبط التشغيل واللغة والمظهر والأداء والتخزين.
-
-| Portal Management<br>إدارة البورتلات | Settings<br>الإعدادات |
-|:---:|:---:|
-| [![Portal manager / إدارة البورتلات](docs/screenshots/01_portal_manager_private.jpg)](docs/screenshots/01_portal_manager_private.jpg) | [![Settings / الإعدادات](docs/screenshots/15_settings.jpg)](docs/screenshots/15_settings.jpg) |
+<p dir="rtl">تم إخفاء بيانات الاتصال الظاهرة في صورة إدارة البورتلات نهائيًا قبل نشرها.</p>
 
 Connection identifiers in the Portal Manager screenshot have been permanently redacted.
 
-تم إخفاء بيانات الاتصال الظاهرة في صورة إدارة البورتلات نهائيًا قبل نشرها.
-
----
+</details>
 
 <a name="features"></a>
 
-## Built around your media
-### مميزات تناسب طريقة مشاهدتك
+<p align="center"><img src="assets/heading-features.png" width="100%" alt="المميزات / Features" /></p>
 
-[![UltraStalker feature cards / كروت المميزات](assets/premium-features-stalker.svg)](assets/premium-features-stalker.svg)
+<p align="center"><img src="assets/features.jpg" width="100%" alt="البث المباشر، الأفلام والمسلسلات، تفاصيل المحتوى، البحث، المحتوى المحلي، المفضلة، التشغيل، اللغات والإدارة" /></p>
 
 <details>
-<summary><b>Full feature descriptions<br>تفاصيل المميزات كاملة</b></summary>
+<summary><b>تفاصيل المميزات كاملة / Full feature details</b></summary>
 
-**Live TV**
+<br />
 
-**البث المباشر**
-
-Portal, Xtream and M3U sources; Now/Next EPG; stream quality detection and automatic retry.
-
-مصادر Portal وXtream وM3U، ودليل البرنامج الحالي والتالي، والتعرف على جودة البث وإعادة المحاولة تلقائيًا.
-
-**Movies & Series**
-
-**الأفلام والمسلسلات**
-
-Cinematic and poster grid views, metadata matching, artwork and title logos when available.
-
-عرض سينمائي وشبكات بوسترات، ومطابقة بيانات المحتوى والصور وشعارات العناوين عند توفرها.
-
-**Title Details**
-
-**تفاصيل المحتوى**
-
-Overviews, ratings, genres, cast, runtime, writers and directors when metadata is available.
-
-وصف وتقييم وتصنيفات وطاقم العمل والمدة والكاتب والمخرج عند توفر البيانات.
-
-**Search**
-
-**البحث**
-
-Live TV, movies and series search, server-wide discovery and search history.
-
-البحث في القنوات والأفلام والمسلسلات، واكتشاف المحتوى على السيرفر وحفظ سجل البحث.
-
-**Local Media**
-
-**المحتوى المحلي**
-
-HDD/USB indexing, folder browsing and season/episode recognition.
-
-فهرسة الهارد والفلاشة، وتصفح المجلدات والتعرف على المواسم والحلقات.
-
-**Favorites**
-
-**المفضلة**
-
-Separate favorites, custom folders and manual ordering.
-
-قوائم مفضلة منفصلة ومجلدات مخصصة وترتيب يدوي.
-
-**Playback**
-
-**التشغيل**
-
-Resume, aspect ratio controls, subtitle options and playback information.
-
-استكمال المشاهدة، وضبط أبعاد الصورة وخيارات الترجمة ومعلومات التشغيل.
-
-**Languages**
-
-**اللغات**
-
-29 interface languages with right-to-left support.
-
-٢٩ لغة للواجهة مع دعم الكتابة من اليمين لليسار.
-
-**Performance**
-
-**الأداء**
-
-Persistent artwork cache and fewer repeated TMDb requests.
-
-حفظ صور المحتوى لإعادة استخدامها وتقليل طلبات TMDb المتكررة.
-
-**Management**
-
-**الإدارة**
-
-Web-based source management, backup/restore, export and online updates.
-
-إدارة المصادر من الويب، والنسخ الاحتياطي والاستعادة والتصدير والتحديث أونلاين.
+| العربية | English |
+|:---|:---|
+| <p dir="rtl"><b>البث المباشر</b><br>مصادر Portal وXtream وM3U، ودليل البرنامج الحالي والتالي، والتعرف على جودة البث وإعادة المحاولة تلقائيًا.</p> | **Live TV**<br>Portal, Xtream and M3U sources; Now/Next EPG; stream quality detection and automatic retry. |
+| <p dir="rtl"><b>الأفلام والمسلسلات</b><br>عرض سينمائي وشبكات بوسترات، ومطابقة بيانات المحتوى والصور وشعارات العناوين عند توفرها.</p> | **Movies & Series**<br>Cinematic and poster grid views, metadata matching, artwork and title logos when available. |
+| <p dir="rtl"><b>تفاصيل المحتوى</b><br>وصف وتقييم وتصنيفات وطاقم العمل والمدة والكاتب والمخرج عند توفر البيانات.</p> | **Title details**<br>Overviews, ratings, genres, cast, runtime, writers and directors when metadata is available. |
+| <p dir="rtl"><b>البحث</b><br>البحث في القنوات والأفلام والمسلسلات، واكتشاف المحتوى على السيرفر وحفظ سجل البحث.</p> | **Search**<br>Live TV, movies and series search, server-wide discovery and search history. |
+| <p dir="rtl"><b>المحتوى المحلي</b><br>فهرسة الهارد والفلاشة، وتصفح المجلدات والتعرف على المواسم والحلقات.</p> | **Local media**<br>HDD/USB indexing, folder browsing and season/episode recognition. |
+| <p dir="rtl"><b>المفضلة</b><br>قوائم مفضلة منفصلة ومجلدات مخصصة وترتيب يدوي.</p> | **Favorites**<br>Separate favorites, custom folders and manual ordering. |
+| <p dir="rtl"><b>التشغيل</b><br>استكمال المشاهدة، وضبط أبعاد الصورة وخيارات الترجمة ومعلومات التشغيل.</p> | **Playback**<br>Resume, aspect ratio controls, subtitle options and playback information. |
+| <p dir="rtl"><b>اللغات</b><br>٢٩ لغة للواجهة مع دعم الكتابة من اليمين لليسار.</p> | **Languages**<br>29 interface languages with right-to-left support. |
+| <p dir="rtl"><b>الأداء</b><br>حفظ صور المحتوى لإعادة استخدامها وتقليل طلبات TMDb المتكررة.</p> | **Performance**<br>Persistent artwork cache and fewer repeated TMDb requests. |
+| <p dir="rtl"><b>الإدارة</b><br>إدارة المصادر من الويب، والنسخ الاحتياطي والاستعادة والتصدير والتحديث أونلاين.</p> | **Management**<br>Web-based source management, backup/restore, export and online updates. |
 
 </details>
 
 <details>
-<summary><b>Advanced capabilities / مميزات إضافية</b></summary>
+<summary><b>مميزات إضافية / Advanced capabilities</b></summary>
 
-- Reusable posters, backdrops and logos, with 1080p trailer preference when supported.<br>إعادة استخدام البوسترات والخلفيات والشعارات، مع تفضيل تريلر بدقة 1080p عند دعمه.
-- Local series recognition using names such as `S01E01` and `1x01`.<br>التعرف على حلقات المسلسلات المحلية بأسماء مثل `S01E01` و`1x01`.
-- Local media remains available when a remote Portal is offline.<br>المحتوى المحلي يظل متاحًا عند انقطاع البورتال.
-- Enigma2 Bouquet and M3U export.<br>تصدير المحتوى إلى باقات Enigma2 وقوائم M3U.
-- Embedded, external and online subtitles, with SubsSupport integration when available.<br>ترجمة مدمجة وخارجية وأونلاين، مع تكامل SubsSupport عند توفره.
-- Upgrades are designed to preserve portals, favorites, history and artwork caches.<br>التحديثات مصممة للحفاظ على البورتلات والمفضلة والسجل والصور المحفوظة.
+<br />
+
+<ul dir="rtl">
+<li>إعادة استخدام البوسترات والخلفيات والشعارات، مع تفضيل تريلر بدقة 1080p عند دعمه.</li>
+<li>التعرف على حلقات المسلسلات المحلية بأسماء مثل <code dir="ltr">S01E01</code> و<code dir="ltr">1x01</code>.</li>
+<li>المحتوى المحلي يظل متاحًا عند انقطاع البورتال.</li>
+<li>تصدير المحتوى إلى باقات Enigma2 وقوائم M3U.</li>
+<li>ترجمة مدمجة وخارجية وأونلاين، مع تكامل SubsSupport عند توفره.</li>
+<li>التحديثات مصممة للحفاظ على البورتلات والمفضلة والسجل والصور المحفوظة.</li>
+</ul>
+
+- Reusable posters, backdrops and logos, with 1080p trailer preference when supported.
+- Local series recognition using names such as `S01E01` and `1x01`.
+- Local media remains available when a remote Portal is offline.
+- Enigma2 Bouquet and M3U export.
+- Embedded, external and online subtitles, with SubsSupport integration when available.
+- Upgrades are designed to preserve portals, favorites, history and artwork caches.
 
 </details>
-
----
 
 <a name="compatibility"></a>
 
-## Compatibility
-### التوافق والمتطلبات
+<p align="center"><img src="assets/heading-compatibility.png" width="100%" alt="التوافق والمتطلبات / Compatibility" /></p>
 
-| Requirement<br>المتطلب | Details<br>التفاصيل |
+| المتطلب · Requirement | التفاصيل · Details |
 |:---|:---|
-| Platform<br>المنصة | Enigma2 receivers<br>أجهزة استقبال Enigma2 |
-| Python<br>بايثون | Open: 3.12–3.15 · DreamOS: 2.7 |
-| Package manager<br>مدير الحزم | Open: `opkg` / IPK · DreamOS: DEB |
-| Access<br>الوصول | Root via Telnet / SSH<br>حساب root عبر Telnet أو SSH |
-| Sources<br>المصادر | Stalker Portal · Xtream Codes · M3U |
-| Local storage<br>التخزين المحلي | HDD / USB for local media<br>هارد أو فلاشة للمحتوى المحلي |
+| المنصة · Platform | <span dir="rtl">أجهزة استقبال Enigma2</span> · Enigma2 receivers |
+| بايثون · Python | Open: 3.12–3.15 · DreamOS: 2.7 |
+| الحزمة · Package | Open: `opkg` / IPK · DreamOS: DEB |
+| الوصول · Access | <span dir="rtl">حساب root عبر Telnet أو SSH</span> · Root via Telnet / SSH |
+| المصادر · Sources | Stalker Portal · Xtream Codes · M3U |
+| التخزين · Storage | <span dir="rtl">هارد أو فلاشة للمحتوى المحلي</span> · HDD / USB for local media |
+
+<p dir="rtl">دي متطلبات الحزمة المنشورة، وليست تأكيدًا إن كل جهاز وصورة تشغيل تم اختبارهم عمليًا.</p>
 
 These are the published package requirements, not confirmation that every receiver and image has been tested.
 
-دي متطلبات الحزمة المنشورة، وليست تأكيدًا إن كل جهاز وصورة تشغيل تم اختبارهم عمليًا.
-
----
-
 <a name="install"></a>
 
-## Official installation
-### التثبيت الرسمي
+<p align="center"><img src="assets/heading-install.png" width="100%" alt="التثبيت / Installation" /></p>
 
-Open Telnet or SSH on a compatible receiver as **root**, then run:
-
-افتح Telnet أو SSH على رسيفر متوافق بحساب **root**، ثم نفّذ:
+<p align="center"><img src="assets/install-steps.jpg" width="100%" alt="1 افتح الرسيفر بحساب root  2 الصق أمر التثبيت  3 أعد تشغيل الواجهة وافتح البلجن" /></p>
 
 ```sh
 wget -qO- https://raw.githubusercontent.com/K3bOra/UltraStalker/main/install.sh | /bin/sh
 ```
 
-The same command automatically selects IPK for Open/Python 3 or DEB for DreamOS/Python 2.7.
+<p dir="rtl">نفس الأمر يختار تلقائيًا IPK للأوبن/Python 3 أو DEB للدريم/Python 2.7. المُثبّت يقرأ أحدث إصدار رسمي، ويتحقق من حجم الحزمة وبصمة SHA-256 واسمها ورقمها ومعماريتها قبل التثبيت باستخدام <code dir="ltr">opkg</code> للأوبن أو <code dir="ltr">dpkg</code> للدريم.</p>
 
-نفس الأمر يختار تلقائيًا IPK للأوبن/Python 3 أو DEB للدريم/Python 2.7.
+The same command automatically selects IPK for Open/Python 3 or DEB for DreamOS/Python 2.7. The installer reads the latest official release and checks the package size, SHA-256, name, version and architecture before installing with `opkg` on Open or `dpkg` on DreamOS.
 
-The installer reads the latest official release and checks the package size, SHA-256, name, version and architecture before installing with `opkg` on Open or `dpkg` on DreamOS.
-
-المُثبّت يقرأ أحدث إصدار رسمي، ويتحقق من حجم الحزمة وبصمة SHA-256 واسمها ورقمها ومعماريتها قبل التثبيت باستخدام `opkg` للأوبن أو `dpkg` للدريم.
+> [!NOTE]
+> <span dir="rtl">التثبيت قد يعيد تشغيل واجهة Enigma2. احتفظ بنسخة احتياطية من إعدادات الرسيفر المهمة أولًا.</span><br>
+> Installation may restart Enigma2. Back up important receiver settings first.
 
 [Review the installer](install.sh) · [Download the latest packages](https://github.com/K3bOra/UltraStalker/releases/latest)
 
-[راجع سكربت التثبيت](install.sh) · [حمّل أحدث الحزم](https://github.com/K3bOra/UltraStalker/releases/latest)
-
-> Installation may restart Enigma2. Back up important receiver settings first.
->
-> التثبيت قد يعيد تشغيل واجهة Enigma2. احتفظ بنسخة احتياطية من إعدادات الرسيفر المهمة أولًا.
-
----
-
 <a name="faq"></a>
 
-## Troubleshooting & FAQ
-### حل المشاكل والأسئلة الشائعة
+<p align="center"><img src="assets/heading-faq.png" width="100%" alt="أسئلة شائعة / Questions & troubleshooting" /></p>
 
 <details>
-<summary><b>Installation failed — what should I check?<br>التثبيت فشل — أراجع إيه؟</b></summary>
+<summary><b>التثبيت فشل — أراجع إيه؟ · Installation failed</b></summary>
+
+<p dir="rtl">تأكد إنك داخل بحساب <b>root</b>، وإن بايثون <b>3.12–3.15</b>، والإنترنت شغال وفيه مساحة مؤقتة كافية. احتفظ برسالة الخطأ كاملة لو هتبلغ عن المشكلة.</p>
 
 Check that you are using **root**, Python **3.12–3.15**, an active internet connection and enough free temporary storage. Keep the full error output when reporting a problem.
 
-تأكد إنك داخل بحساب **root**، وإن بايثون **3.12–3.15**، والإنترنت شغال وفيه مساحة مؤقتة كافية. احتفظ برسالة الخطأ كاملة لو هتبلغ عن المشكلة.
-
 </details>
 
 <details>
-<summary><b>My Portal is offline — is my library lost?<br>البورتال مش متصل — هل مكتبتي ضاعت؟</b></summary>
+<summary><b>البورتال مش متصل — هل مكتبتي ضاعت؟ · My Portal is offline</b></summary>
+
+<p dir="rtl">المحتوى المحلي يظل متاحًا. راجع بيانات المصدر المحفوظة والاتصال من إدارة البورتلات.</p>
 
 Local media remains available. Check your saved source details and connection in Portal Management.
 
-المحتوى المحلي يظل متاحًا. راجع بيانات المصدر المحفوظة والاتصال من إدارة البورتلات.
-
 </details>
 
 <details>
-<summary><b>Posters or artwork are missing.<br>البوسترات أو صور المحتوى مش ظاهرة.</b></summary>
+<summary><b>البوسترات أو صور المحتوى مش ظاهرة · Posters or artwork are missing</b></summary>
+
+<p dir="rtl">راجع اتصال الإنترنت واديه وقت في أول تصفح. الصور تعتمد على مطابقة بيانات المحتوى، وبعد تحميلها بتتحفظ للاستخدام بعد كده.</p>
 
 Check the internet connection and allow time on the first browse. Artwork depends on metadata matching and is cached for later use.
 
-راجع اتصال الإنترنت واديه وقت في أول تصفح. الصور تعتمد على مطابقة بيانات المحتوى، وبعد تحميلها بتتحفظ للاستخدام بعد كده.
-
 </details>
 
 <details>
-<summary><b>Will an update remove my settings?<br>هل التحديث هيمسح إعداداتي؟</b></summary>
+<summary><b>هل التحديث هيمسح إعداداتي؟ · Will an update remove my settings?</b></summary>
+
+<p dir="rtl">التحديثات مصممة للحفاظ على البورتلات والمفضلة والسجل والصور المحفوظة. احتفظ بنسخة احتياطية من إعدادات الرسيفر المهمة.</p>
 
 Upgrades are designed to preserve portals, favorites, history and artwork caches. Keep a backup of important receiver settings.
 
-التحديثات مصممة للحفاظ على البورتلات والمفضلة والسجل والصور المحفوظة. احتفظ بنسخة احتياطية من إعدادات الرسيفر المهمة.
-
 </details>
 
 <details>
-<summary><b>How do I report a problem?<br>أبلغ عن مشكلة إزاي؟</b></summary>
+<summary><b>أبلغ عن مشكلة إزاي؟ · How do I report a problem?</b></summary>
+
+<p dir="rtl"><a href="https://github.com/K3bOra/UltraStalker/issues">افتح بلاغ مشكلة</a>، واكتب موديل الرسيفر واسم الصورة وإصدار بايثون والبلجن وخطوات ظهور المشكلة ورسالة الخطأ كاملة. امسح بيانات الاتصال الخاصة قبل النشر.</p>
 
 [Open an issue](https://github.com/K3bOra/UltraStalker/issues) with the receiver model, image, Python version, plugin version, steps to reproduce and full error text. Remove private connection details first.
 
-[افتح بلاغ مشكلة](https://github.com/K3bOra/UltraStalker/issues)، واكتب موديل الرسيفر واسم الصورة وإصدار بايثون والبلجن وخطوات ظهور المشكلة ورسالة الخطأ كاملة. امسح بيانات الاتصال الخاصة قبل النشر.
-
 </details>
-
----
 
 <a name="ultra-family"></a>
 
-## The Ultra family
-### عيلة Ultra
-
-Two plugins. One family. Explore media with Ultra Stalker, and choose your commentary and timing with Ultra Audio.
-
-بلجنين من عيلة واحدة: اكتشف المحتوى مع الترا ستالكر، واختار الصوتية والتوقيت المناسب مع الترا أوديو.
+<p align="center"><img src="assets/heading-family.png" width="100%" alt="عيلة Ultra / The Ultra family" /></p>
 
 <p align="center">
-<a href="https://github.com/K3bOra/UltraStalker"><img src="assets/ultra-family-stalker.svg" width="100%" alt="Ultra Stalker — Live TV, movies, series and local media / البث المباشر والأفلام والمسلسلات والمحتوى المحلي" /></a>
+<a href="https://github.com/K3bOra/UltraQuran"><img src="assets/family-quran.png" width="32%" alt="Ultra Quran — الترا قرآن" /></a>
+<a href="https://github.com/K3bOra/UltraStalker"><img src="assets/family-stalker.png" width="32%" alt="Ultra Stalker — الترا ستالكر" /></a>
+<a href="https://github.com/K3bOra/UltraAudio"><img src="assets/family-audio.png" width="32%" alt="Ultra Audio — الترا أوديو" /></a>
 </p>
 
-<p align="center">
-<a href="https://github.com/K3bOra/UltraAudio"><img src="assets/ultra-family-audio.svg" width="100%" alt="Ultra Audio — Internet audio, timing and mobile control / صوتيات الإنترنت والتزامن والتحكم بالموبايل" /></a>
-</p>
-
-Each plugin has its own installation command and official updates.
-
-لكل بلجن أمر تثبيت وتحديثات رسمية خاصة به.
-
----
+<p dir="rtl" align="center">تلات بلجنات من عيلة واحدة، ولكل واحد أمر تثبيت وتحديثات رسمية خاصة بيه.</p>
+<p align="center">Three plugins, one family. Each has its own install command and official updates.</p>
 
 <a name="resources"></a>
 
-## Updates & resources
-### التحديثات والروابط المهمة
+<p align="center"><img src="assets/heading-resources.png" width="100%" alt="التحديثات والروابط / Updates & resources" /></p>
+
+<p dir="rtl">المُثبّت ومحدّث البلجن الحالي بيعتمدوا على ملف بيانات أحدث إصدار رسمي، والنسخة الموجودة في المستودع بتتزامن بعد النشر.</p>
 
 The installer and current plugin updater use the manifest attached to the latest official release. The repository copy is synchronized after publishing.
 
-المُثبّت ومحدّث البلجن الحالي بيعتمدوا على ملف بيانات أحدث إصدار رسمي، والنسخة الموجودة في المستودع بتتزامن بعد النشر.
-
-- [Official releases](https://github.com/K3bOra/UltraStalker/releases)<br>[الإصدارات الرسمية](https://github.com/K3bOra/UltraStalker/releases)
-- [Latest release manifest](https://github.com/K3bOra/UltraStalker/releases/latest/download/update.json)<br>[ملف بيانات أحدث إصدار](https://github.com/K3bOra/UltraStalker/releases/latest/download/update.json)
-- [Repository manifest](update.json)<br>[نسخة بيانات التحديث في المستودع](update.json)
-- [Version history](CHANGELOG.md)<br>[سجل الإصدارات](CHANGELOG.md)
-- [Publishing guide](RELEASING.md)<br>[دليل نشر الإصدارات](RELEASING.md)
-
----
+- [Official releases](https://github.com/K3bOra/UltraStalker/releases) · [الإصدارات الرسمية](https://github.com/K3bOra/UltraStalker/releases)
+- [Latest release manifest](https://github.com/K3bOra/UltraStalker/releases/latest/download/update.json) · [ملف بيانات أحدث إصدار](https://github.com/K3bOra/UltraStalker/releases/latest/download/update.json)
+- [Repository manifest](update.json) · [نسخة بيانات التحديث في المستودع](update.json)
+- [Version history](CHANGELOG.md) · [سجل الإصدارات](CHANGELOG.md)
+- [Publishing guide](RELEASING.md) · [دليل نشر الإصدارات](RELEASING.md)
 
 <a name="privacy"></a>
 
-## Share with confidence
-### شارك من غير كشف بياناتك
+<p align="center"><img src="assets/heading-privacy.png" width="100%" alt="شارك من غير ما تكشف بياناتك / Share with confidence" /></p>
+
+<p dir="rtl">قبل مشاركة الصور أو سجلات الأخطاء، امسح روابط البورتلات وعناوين السيرفر وأرقام MAC وأسماء المستخدمين وكلمات المرور ومفاتيح API ورموز الوصول.</p>
 
 Before sharing screenshots or error logs, remove Portal URLs, server IPs, MAC addresses, usernames, passwords, API keys and access tokens.
 
-قبل مشاركة الصور أو سجلات الأخطاء، امسح روابط البورتلات وعناوين السيرفر وأرقام MAC وأسماء المستخدمين وكلمات المرور ومفاتيح API ورموز الوصول.
-
----
-
-## License
-### الترخيص
+<p dir="rtl">المشروع منشور بترخيص <a href="LICENSE">MIT</a>.</p>
 
 Released under the [MIT License](LICENSE).
 
-المشروع منشور بترخيص [MIT](LICENSE).
+<br />
 
----
-
-<div align="center">
-
-**ULTRA STALKER** · Premium media experience for Enigma2
-
-**الترا ستالكر** · تجربة ترفيه متكاملة لأجهزة Enigma2
-
-Developed and maintained by **Ahmed L-HadarY**
-
-تطوير وصيانة **Ahmed L-HadarY**
-
-[GitHub Repository](https://github.com/K3bOra/UltraStalker)<br>
-[المستودع الرسمي على GitHub](https://github.com/K3bOra/UltraStalker)
-
-</div>
-
-
-
-
-
+<p align="center"><img src="assets/colophon.jpg" width="100%" alt="ULTRA STALKER — تطوير وصيانة Ahmed L-HadarY" /></p>

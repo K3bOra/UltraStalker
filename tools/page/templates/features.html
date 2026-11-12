@@ -1,0 +1,33 @@
+<!doctype html><html lang="ar"><head><meta charset="utf-8"><meta name="size" content="1600x1010">
+<link rel="stylesheet" href="../base.css">
+<style>:root{--w:1600px;--h:1010px}
+.grid{position:absolute;left:70px;right:70px;top:70px;bottom:70px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);gap:22px 26px;direction:rtl}
+.p{display:flex;align-items:center;gap:26px;padding:0 30px}
+.ic{flex:none;width:96px;height:96px;border-radius:24px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(90,24,36,.9),rgba(16,22,24,.95) 50%,rgba(14,62,46,.9));box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.12),0 0 24px rgba(100,214,159,.12)}
+.ic svg{width:52px;height:52px;fill:none;stroke:#eaf3ee;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.h{font:600 34px/1.3 Cairo;color:var(--ivory)}
+.he{font:600 20px/1.2 Cairo;color:var(--green);margin-top:2px}
+.a{font:600 22px/1.5 Cairo;color:#d6e4dd;margin-top:6px;white-space:nowrap}
+</style></head><body><div class="ground"></div><div class="edge"></div><div class="grid" id="g"></div>
+<script>
+const I={
+tv:'<rect x="5" y="9" width="42" height="28" rx="4"/><path d="M18 45h16M26 37v8M20 4l6 5 6-5"/>',
+film:'<rect x="5" y="12" width="42" height="30" rx="3"/><path d="M5 20h42M13 12l5 8M23 12l5 8M33 12l5 8"/>',
+info:'<rect x="7" y="6" width="38" height="40" rx="5"/><path d="M15 16h22M15 24h22M15 32h14"/>',
+search:'<circle cx="22" cy="22" r="13"/><path d="M32 32l12 12"/>',
+folder:'<path d="M5 14a3 3 0 0 1 3-3h11l5 5h20a3 3 0 0 1 3 3v21a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/>',
+star:'<path d="M26 6l6 13 14 1.5-10.5 9.5 3 14L26 37l-12.5 7 3-14L6 20.5 20 19z"/>',
+play:'<circle cx="26" cy="26" r="20"/><path d="M21 17l13 9-13 9z"/>',
+globe:'<circle cx="26" cy="26" r="20"/><path d="M6 26h40M26 6c-8 9-8 31 0 40M26 6c8 9 8 31 0 40"/>'};
+const F=[['tv','البث المباشر','Live TV','Portal، Xtream، M3U ودليل البرامج الحالي والتالي'],
+['film','الأفلام والمسلسلات','Movies & Series','عرض سينمائي وشبكات بوسترات وشعارات العناوين'],
+['info','تفاصيل المحتوى','Title details','التقييم والقصة وطاقم العمل والمواسم والحلقات'],
+['search','البحث','Search','ابحث في كل مصادرك مرة واحدة واحفظ السجل'],
+['folder','المحتوى المحلي','Local media','الهارد والفلاشة، والتعرف على المواسم والحلقات'],
+['star','المفضلة','Favorites','قوائم منفصلة ومجلدات خاصة وترتيب يدوي'],
+['play','التشغيل','Player','استكمال وترجمة وأبعاد الصورة وبيانات البث'],
+['globe','اللغات والإدارة','Languages & management','29 لغة، وإدارة من الويب، ونسخ احتياطي وتحديث']];
+g.innerHTML=F.map(([i,h,he,a])=>`<div class="p glass"><div class="ic"><svg viewBox="0 0 52 52">${I[i]}</svg></div><div class="ar" style="text-align:right;flex:1"><div class="h">${h}</div><div class="he" style="direction:ltr;text-align:right">${he}</div><div class="a">${a}</div></div></div>`).join('');
+
+</script></body></html>
