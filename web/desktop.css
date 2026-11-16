@@ -118,6 +118,7 @@ body.desk.dk-home main.shell{display:none!important}
 .dk-btn.ghost{background:linear-gradient(rgba(4,14,9,.92),rgba(4,14,9,.92)) padding-box,linear-gradient(135deg,rgba(245,243,237,.2),rgba(39,190,102,.5),rgba(200,42,56,.4)) border-box}
 
 @media (max-width:1380px){body.desk{--side:272px;--gap:20px}.dk-nav>button,.dk-nav>a{min-height:52px}.dk-ic{width:40px;height:40px}.dk-hero{grid-template-columns:1fr}.dk-hero>img{max-width:420px}}
+@media (max-height:980px){.dk-side{gap:10px;padding-top:16px}.dk-brand img{max-width:210px}.dk-nav{gap:3px}.dk-nav>button{min-height:50px}.dk-ic{width:38px;height:38px;border-radius:12px}.dk-ic img{width:30px;height:23px}.dk-tools>a{min-height:44px}.dk-tools .dk-ic{width:34px;height:34px}.dk-credit{padding:10px}.dk-source .select{height:50px!important;min-height:50px!important}}
 @media (max-height:820px){.dk-brand img{max-width:200px}.dk-nav>button{min-height:48px}.dk-ic{width:38px;height:38px}.dk-tools>a{min-height:44px}.dk-credit{padding:10px}}
 
 /* The top bar already says where you are. */
@@ -148,3 +149,32 @@ body.desk-sources #browsePanel{display:none!important}
 body.desk-sources #backupPanel{grid-column:1/-1}
 body.desk-sources .glass{margin:0!important}
 .dk-tools>a.on{background:rgba(39,196,106,.1);border-color:rgba(39,196,106,.35)}
+
+/* ---------------------------------------------------------------- portal cards (big) */
+.dk-sources{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))!important;gap:22px!important}
+.dk-src{min-height:230px!important;padding:26px 28px!important;border-radius:28px!important;gap:10px!important;
+  background:radial-gradient(420px 220px at 100% 0%,rgba(39,196,106,.16),transparent 70%),radial-gradient(380px 200px at 0% 100%,rgba(214,44,58,.14),transparent 70%),linear-gradient(155deg,rgba(7,28,16,.98),rgba(3,11,7,.98) 60%,rgba(40,9,15,.75)) padding-box,var(--edge) border-box!important;box-shadow:0 18px 46px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.05)}
+.dk-src:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(70,185,114,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(70,185,114,.05) 1px,transparent 1px);background-size:30px 30px;mask-image:radial-gradient(circle at 85% 20%,#000,transparent 65%);pointer-events:none}
+.dk-src:hover{transform:translateY(-6px)!important;box-shadow:0 30px 60px rgba(0,0,0,.45),0 0 0 2px rgba(52,214,120,.35),0 0 40px rgba(39,196,106,.18)!important}
+.dk-src-art{position:absolute;top:22px;right:22px;width:86px;height:86px;border-radius:24px;display:grid;place-items:center;background:linear-gradient(150deg,rgba(9,34,20,.95),rgba(4,14,9,.95)) padding-box,linear-gradient(135deg,rgba(244,242,235,.25),rgba(39,190,102,.6),rgba(200,42,56,.5)) border-box;border:2px solid transparent;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.dk-src-art img{width:62px;height:46px;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(0,0,0,.4))}
+.dk-src b{position:relative;font-size:26px!important;max-width:calc(100% - 100px);margin-top:4px}
+.dk-src-host{position:relative;font-size:13px;color:#a7c2b1;font-weight:650;max-width:calc(100% - 100px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dk-src-id{position:relative;font-size:12px;color:#6f8f7b;font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em}
+.dk-src-go{position:relative;display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;font-size:13px!important;color:#eafff2!important;background:linear-gradient(135deg,rgba(22,127,68,.85),rgba(10,72,40,.85) 62%,rgba(105,20,31,.7));border:1px solid rgba(255,255,255,.14)}
+.dk-src-go i{font-style:normal;font-size:17px;line-height:1}
+.dk-row-h a{color:#7fd8a2;text-decoration:none;font-weight:800}
+
+/* ---------------------------------------------------------------- category tiles (big) */
+body.desk .categories{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))!important;gap:18px!important}
+body.desk .category{position:relative!important;overflow:hidden!important;min-height:132px!important;padding:20px 22px!important;border-radius:24px!important;
+  grid-template-columns:62px minmax(0,1fr)!important;column-gap:16px!important;
+  background:radial-gradient(260px 140px at 100% 0%,rgba(39,196,106,.13),transparent 70%),linear-gradient(150deg,rgba(7,27,16,.97),rgba(3,11,7,.98) 62%,rgba(44,10,16,.6)) padding-box,linear-gradient(140deg,rgba(244,242,235,.22),rgba(36,177,95,.6) 38%,rgba(18,94,53,.35) 58%,rgba(201,40,54,.5) 82%,rgba(8,12,9,.6)) border-box!important;box-shadow:0 14px 34px rgba(0,0,0,.28)!important}
+body.desk .category:after{content:""!important;display:block!important;position:absolute!important;left:auto!important;top:auto!important;right:-10px!important;bottom:-14px!important;width:138px!important;height:100px!important;background:url("ui/live.png") center/contain no-repeat!important;opacity:.11!important;pointer-events:none;border:0!important;transform:rotate(-8deg)}
+body.desk[data-media="vod"] .category:after{background-image:url("ui/movies.png")}
+body.desk[data-media="series"] .category:after{background-image:url("ui/series.png")}
+body.desk .category-icon{width:60px!important;height:60px!important;padding:9px;border-radius:18px;background:linear-gradient(150deg,rgba(9,34,20,.95),rgba(4,14,9,.95));border:1px solid rgba(255,255,255,.1);box-shadow:0 8px 20px rgba(0,0,0,.35)}
+body.desk .category-title{font-size:18px!important;font-weight:800!important;letter-spacing:-.015em;white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25}
+body.desk .category small{font-size:11.5px!important;color:#86a592!important;margin-top:6px!important}
+body.desk .category:hover{transform:translateY(-4px)!important;box-shadow:0 24px 48px rgba(0,0,0,.4),0 0 0 2px rgba(52,214,120,.3)!important;filter:brightness(1.08)}
+body.desk .category[data-category-active="1"]{outline:none!important;box-shadow:0 0 0 2px rgba(52,214,120,.6),0 20px 44px rgba(0,0,0,.4)!important}

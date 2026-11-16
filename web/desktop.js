@@ -20,6 +20,7 @@
     home: '<svg viewBox="0 0 24 24"><path d="M3 10.8 12 3l9 7.8"/><path d="M5.6 9.6V21h12.8V9.6"/></svg>',
   };
   const NAV = [
+    ["portals", "Portals", "البورتالات", '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>'],
     ["itv", "Live TV", "البث المباشر", '<img src="ui/live.png" alt="">'],
     ["vod", "Movies", "الأفلام", '<img src="ui/movies.png" alt="">'],
     ["series", "Series", "المسلسلات", '<img src="ui/series.png" alt="">'],
@@ -27,8 +28,9 @@
     ["fav", "Favorites", "المفضلة", ICON.star],
   ];
 
-  const BROWSE = !!document.getElementById("browseAccount");
+  let BROWSE = false;
   function build() {
+    BROWSE = !!document.getElementById("browseAccount");
     document.body.classList.add("desk", BROWSE ? "desk-browse" : "desk-sources");
     const side = document.createElement("aside");
     side.className = "dk-side";
@@ -96,6 +98,10 @@
       const b = e.target.closest("button[data-go]");
       if (!b) return;
       const go = b.dataset.go;
+      if (go === "portals") {
+        $("sourceHomeBtn").click();
+        return;
+      }
       if (go === "search") {
         const i = $("browseSearch");
         i.focus();
@@ -126,19 +132,38 @@
     if (!box) return;
     const sel = $("browseAccount");
     const opts = [...sel.options].filter((o) => o.value);
-    const kinds = { portal: "Stalker Portal", xtream: "Xtream", m3u: "M3U" };
+    const kinds = { portal: "Stalker Portal", xtream: "Xtream Codes", m3u: "M3U Playlist" };
+    const icons = { portal: "ui/live.png", xtream: "ui/movies.png", m3u: "ui/series.png" };
+    const host = (id) => {
+      try {
+        const p = window.USEngine.findProfile(id);
+        const k = window.USEngine.profileKind(p);
+        const u = new URL(p.portal);
+        return { host: u.host, mac: k === "portal" ? p.mac : k === "xtream" ? u.searchParams.get("username") || "" : "" };
+      } catch (_) {
+        return { host: "", mac: "" };
+      }
+    };
     box.innerHTML =
       '<div class="dk-hero"><div class="dk-hero-copy"><small>Ultra Stalker · Web</small><h2>Your sources, everywhere.</h2>' +
       '<p>Live TV, movies and series from your own Portal, Xtream and M3U servers — on any computer.</p>' +
       '<p class="ar">مصادرك في أي مكان: البث المباشر والأفلام والمسلسلات من سيرفراتك على أي كمبيوتر.</p></div>' +
       '<img src="brand-logo.webp" alt=""></div>' +
       (opts.length
-        ? '<div class="dk-row-h"><h3>Choose a source <span>اختار المصدر</span></h3><span>' + opts.length + " saved</span></div>" +
+        ? '<div class="dk-row-h"><h3>Portals <span>البورتالات</span></h3><span>' + opts.length + " saved · <a href=\"sources.html#connectionPanel\">＋ Add</a></span></div>" +
           '<div class="dk-sources">' +
           opts
             .map((o) => {
               const k = String(o.dataset.kind || "portal");
-              return `<button type="button" class="dk-src ${k}" data-v="${o.value}"><span class="dk-src-k">${kinds[k] || "Portal"}</span><b>${o.textContent.replace(/[<>&]/g, "")}</b><span class="dk-src-go">Open ›</span></button>`;
+              const h = host(o.value);
+              const safe = (t) => String(t || "").replace(/[<>&"]/g, "");
+              return `<button type="button" class="dk-src ${k}" data-v="${o.value}">
+                <span class="dk-src-art"><img src="${icons[k] || icons.portal}" alt=""></span>
+                <span class="dk-src-k">${kinds[k] || "Portal"}</span>
+                <b>${safe(o.textContent)}</b>
+                <span class="dk-src-host" dir="ltr">${safe(h.host)}</span>
+                ${h.mac ? `<span class="dk-src-id" dir="ltr">${safe(h.mac)}</span>` : ""}
+                <span class="dk-src-go">Open portal <i>›</i></span></button>`;
             })
             .join("") +
           "</div>"
@@ -163,7 +188,8 @@
     let go = media;
     if (visible("favoritesStage")) go = "fav";
     else if (visible("searchStage")) go = "search";
-    document.querySelectorAll("#dkNav button").forEach((b) => b.classList.toggle("on", active && b.dataset.go === go));
+    document.querySelectorAll("#dkNav button").forEach((b) => b.classList.toggle("on", active ? b.dataset.go === go : b.dataset.go === "portals"));
+    document.body.dataset.media = media;
     const names = { itv: "Live TV", vod: "Movies", series: "Series", search: "Search", fav: "Favorites" };
     const ar = { itv: "البث المباشر", vod: "الأفلام", series: "المسلسلات", search: "البحث", fav: "المفضلة" };
     const opt = $("browseAccount").selectedOptions[0];

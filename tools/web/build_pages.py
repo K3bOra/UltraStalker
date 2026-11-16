@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "web"
-WEB_VERSION = 4  # bump with any change to web/*.js or the pages (cache busting)
+WEB_VERSION = 5  # bump with any change to web/*.js or the pages (cache busting)
 PLUGIN_DIR = "usr/lib/enigma2/python/Plugins/Extensions/UltraStalker/"
 
 
