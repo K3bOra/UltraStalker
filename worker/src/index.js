@@ -201,6 +201,8 @@ async function relay(request, url, origin, env) {
   out.set("X-Upstream-Status", String(res.status));
 
   const type = res.headers.get("content-type") || "";
+  // Posters and logos: let the browser keep them, so pages open fast next time.
+  if (res.ok && /^image\//i.test(type)) out.set("Cache-Control", "public, max-age=604800");
   if (request.method !== "HEAD" && res.ok && looksLikePlaylist(final, type)) {
     const text = await res.text();
     if (text.trimStart().startsWith("#EXTM3U") && /#EXT-X-/.test(text)) {
@@ -444,6 +446,31 @@ async function play(request, ticket, env) {
   return new Response(request.method === "HEAD" ? null : res.body, { status: res.status, headers: out });
 }
 
+/* TMDB lookups for artwork and details. The key stays here as a Worker
+   secret (TMDB_KEY); the website only names the TMDB path it wants. */
+const TMDB_PATH = /^(search\/(movie|tv|multi)|movie\/\d{1,9}|tv\/\d{1,9}|tv\/\d{1,9}\/season\/\d{1,4}|find\/tt\d{4,10})$/;
+async function tmdb(request, url, origin, env) {
+  const key = String((env && env.TMDB_KEY) || "").trim();
+  if (!key) return json({ error: "tmdb is not set up" }, 503, origin);
+  const path = url.pathname.slice("/tmdb/".length);
+  if (!TMDB_PATH.test(path)) return json({ error: "bad path" }, 400, origin);
+  const target = new URL("https://api.themoviedb.org/3/" + path);
+  for (const [k, v] of url.searchParams) {
+    if (/^(query|year|first_air_date_year|primary_release_year|language|page|include_adult|append_to_response|include_image_language|external_source)$/.test(k)) target.searchParams.set(k, v.slice(0, 200));
+  }
+  const headers = { Accept: "application/json" };
+  if (/^[0-9a-f]{32}$/i.test(key)) target.searchParams.set("api_key", key);
+  else headers.Authorization = "Bearer " + key.replace(/^Bearer\s+/i, "");
+  let res;
+  try {
+    res = await fetch(target.toString(), { headers, cf: { cacheTtl: 86400, cacheEverything: true } });
+  } catch (e) {
+    return json({ error: "tmdb unreachable" }, 502, origin);
+  }
+  const body = await res.text();
+  return new Response(body, { status: res.status, headers: cors(origin, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": res.ok ? "public, max-age=86400" : "no-store" }) });
+}
+
 export default {
   // env.ALLOW_PRIVATE is only set for local testing (wrangler dev --var ALLOW_PRIVATE:1).
   async fetch(request, env) {
@@ -452,13 +479,14 @@ export default {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: origin ? 204 : 403, headers: cors(origin) });
     }
-    if (url.pathname === "/health") return json({ ok: true, service: "ultrastalker-web", tickets: /^[0-9a-f]{64}$/i.test(String((env && env.RELAY_KEY) || "")) }, 200, origin);
+    if (url.pathname === "/health") return json({ ok: true, service: "ultrastalker-web", tickets: /^[0-9a-f]{64}$/i.test(String((env && env.RELAY_KEY) || "")), tmdb: !!(env && env.TMDB_KEY) }, 200, origin);
     // Players (VLC, Outplayer, MX, the page) open tickets without an Origin header.
     const pm = url.pathname.match(/^\/play\/([A-Za-z0-9_-]+)(?:\.[a-z0-9]{1,5})?$/i);
     if (pm && (request.method === "GET" || request.method === "HEAD")) return play(request, pm[1], env);
     if (!origin) return json({ error: "This relay only works for the Ultra Stalker website." }, 403, "");
     if (url.pathname === "/p" && ["GET", "HEAD", "POST"].includes(request.method)) return relay(request, url, origin, env);
     if (url.pathname === "/ticket" && request.method === "POST") return makeTicket(request, origin, env);
+    if (url.pathname.startsWith("/tmdb/") && request.method === "GET") return tmdb(request, url, origin, env);
     return json({ error: "not found" }, 404, origin);
   },
 };

@@ -254,3 +254,111 @@ body.desk.detail-mode main.shell>.inner{padding:0!important}
 body.desk.detail-mode #movieStage,body.desk.detail-mode #seasonsStage{box-shadow:0 40px 90px -30px rgba(0,0,0,.8)!important}
 body.desk #movieHeroActions,body.desk #seriesHeroActions{max-width:1100px!important;width:100%!important;flex-direction:row!important;align-items:center!important}
 body.desk #movieHeroActions .movie-play-btn,body.desk #movieHeroActions .favorite-action,body.desk #seriesHeroActions .favorite-action{width:auto!important;flex:0 0 auto!important;justify-content:center!important}
+
+/* TMDB title logo, cast row, episode names */
+body.desk .series-cinematic .dk-logo{display:block;max-width:min(560px,90%);max-height:170px;object-fit:contain;object-position:left bottom;margin:18px 0 18px;filter:drop-shadow(0 10px 30px rgba(0,0,0,.7))}
+body.desk .series-cinematic .series-info.dk-has-logo h3{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;margin:0!important}
+body.desk .series-cinematic .dk-cast{grid-column:2;grid-row:4;max-width:1100px;min-width:0}
+body.desk .series-cinematic .dk-cast-h{font-size:12px;font-weight:900;letter-spacing:.18em;color:#7fd8a2;margin:4px 0 14px}
+body.desk .series-cinematic .dk-cast-row{display:flex;gap:18px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin}
+body.desk .series-cinematic .dk-person{flex:0 0 108px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+body.desk .series-cinematic .dk-face{width:92px;height:92px;border-radius:50%;overflow:hidden;display:grid;place-items:center;border:2px solid transparent;background:linear-gradient(#0a2416,#0a2416) padding-box,linear-gradient(140deg,rgba(255,255,255,.5),#2bc56d,#c82a38) border-box;box-shadow:0 10px 24px rgba(0,0,0,.5);margin-bottom:6px}
+body.desk .series-cinematic .dk-face img{width:100%;height:100%;object-fit:cover}
+body.desk .series-cinematic .dk-face i{font-style:normal;font-size:30px;font-weight:900;color:#bff5d3}
+body.desk .series-cinematic .dk-person b{font-size:13px;font-weight:800;color:#fff;line-height:1.25}
+body.desk .series-cinematic .dk-person small{font-size:11.5px;color:#88a796;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body.desk #seriesOverview .inline-episode .dk-ep-name{position:relative;z-index:1;font-size:13px;font-weight:700;color:#d9e8df;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;unicode-bidi:plaintext}
+body.desk #seriesSeasonStack .series-season-btn{width:auto!important;max-width:none!important;flex:0 0 auto!important;min-width:180px!important}
+
+/* ================================================================ performance
+   Live blur (backdrop-filter) and animated shadows are what make big pages
+   feel heavy on ordinary PCs. Keep the look with solid glass colours instead,
+   and let the browser skip cards that are off screen. */
+body.desk *,body.desk *:before,body.desk *:after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.desk .poster-card,body.desk .category,body.desk .live-card,.dk-src,.dk-nav>button,.dk-nav>a,body.desk #seriesOverview .inline-episode,body.desk .series-cinematic .series-season-btn{transition:transform .18s ease,background-color .18s ease!important}
+body.desk .poster-card:hover,body.desk .category:hover,.dk-src:hover,body.desk #seriesOverview .inline-episode:hover{filter:none!important}
+body.desk #browseItems .poster-card{content-visibility:auto;contain-intrinsic-size:auto 360px}
+body.desk #browseItems .item-card:not(.poster-card){content-visibility:auto;contain-intrinsic-size:auto 96px}
+body.desk #browseItems img{content-visibility:visible}
+body.desk .series-cinematic .series-chip,body.desk .series-cinematic .favorite-action,body.desk .series-cinematic .detail-back,body.desk .series-cinematic .series-kicker{background-color:rgba(6,20,12,.72)!important}
+body.desk .series-cinematic .series-overview:not(.episodes-mode){background:linear-gradient(160deg,rgba(10,26,17,.86),rgba(5,14,9,.9))!important}
+body.desk .series-cinematic .series-backdrop{will-change:auto}
+body.desk .series-cinematic .series-backdrop.poster-fallback{filter:blur(18px) saturate(1.1) brightness(.75)!important}
+
+/* ================================================================ Live TV screen */
+.dk-tv{display:none}
+.dk-tv-list{display:contents}
+body.desk.dk-tv-mode #itemsStage{display:grid!important;grid-template-columns:minmax(0,1fr) clamp(340px,26vw,460px);grid-template-areas:"head head" "tv list";gap:22px 24px;align-items:start}
+body.desk.dk-tv-mode #itemsStage>.items-head{grid-area:head}
+body.desk.dk-tv-mode .dk-tv{display:flex;flex-direction:column;gap:18px;grid-area:tv;position:sticky;top:18px;min-width:0}
+body.desk.dk-tv-mode .dk-tv-list{display:block;grid-area:list;max-height:calc(100vh - 210px);overflow-y:auto;overscroll-behavior:contain;padding:4px 8px 4px 4px;margin:-4px -8px -4px -4px;scrollbar-width:thin;scrollbar-color:rgba(60,190,110,.5) transparent}
+body.desk.dk-tv-mode .dk-tv-list::-webkit-scrollbar{width:8px}
+body.desk.dk-tv-mode .dk-tv-list::-webkit-scrollbar-thumb{background:rgba(60,190,110,.45);border-radius:8px}
+
+.dk-tv-screen{position:relative;aspect-ratio:16/9;border-radius:26px;overflow:hidden;background:#000;border:2px solid transparent;background:radial-gradient(70% 70% at 50% 40%,#0b2416,#020604) padding-box,linear-gradient(140deg,rgba(255,255,255,.4),#2bc56d 30%,rgba(16,90,50,.4) 60%,#c82a38) border-box;box-shadow:0 30px 70px -20px rgba(0,0,0,.85),0 0 60px -20px rgba(39,196,106,.35)}
+.dk-tv-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;color:#cfe3d6}
+.dk-tv-idle img{width:min(340px,48%);opacity:.9;filter:drop-shadow(0 12px 30px rgba(0,0,0,.6));margin-bottom:8px}
+.dk-tv-idle b{font-size:22px;font-weight:900;color:#fff}
+.dk-tv-idle span{font-size:15px;color:#8fb39d}
+.dk-tv.playing .dk-tv-idle{display:none}
+.dk-tv-screen .usp.docked{border-radius:24px}
+
+.dk-tv-info{display:none;flex-direction:column;gap:16px;padding:20px 22px;border-radius:24px;background:linear-gradient(155deg,rgba(9,31,19,.96),rgba(4,13,8,.97) 60%,rgba(44,10,16,.7)) padding-box,linear-gradient(140deg,rgba(244,242,235,.2),rgba(36,177,95,.55),rgba(201,40,54,.45)) border-box;border:1.5px solid transparent;box-shadow:0 18px 40px -18px rgba(0,0,0,.7)}
+.dk-tv.playing .dk-tv-info{display:flex}
+.dk-tv-ch{display:flex;align-items:center;gap:16px;min-width:0}
+.dk-tv-logo{flex:none;width:72px;height:72px;border-radius:20px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(150deg,#0d2c1b,#06150d);border:1px solid rgba(255,255,255,.12)}
+.dk-tv-logo img{width:100%;height:100%;object-fit:contain;padding:8px}
+.dk-tv-logo i{font-style:normal;font-size:28px;font-weight:900;color:#bff5d3}
+.dk-tv-name{flex:1;min-width:0}
+.dk-tv-name small{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:900;letter-spacing:.16em;color:#ff6b78}
+.dk-tv-name small:before{content:"";width:8px;height:8px;border-radius:50%;background:#ff3b4e;box-shadow:0 0 10px #ff3b4e;animation:dkLive 1.6s ease-in-out infinite}
+@keyframes dkLive{50%{opacity:.35}}
+.dk-tv-name b{display:block;font-size:26px;font-weight:900;color:#fff;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;unicode-bidi:plaintext;text-align:start}
+.dk-tv-acts{display:flex;gap:10px;flex:none}
+.dk-tv-btn{appearance:none;height:46px;min-width:46px;padding:0 18px;border-radius:15px;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-size:14px;font-weight:800;color:#f2fff7;text-decoration:none;cursor:pointer;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);transition:background .15s ease}
+.dk-tv-btn:hover{background:rgba(39,196,106,.3)}
+#dkTvFull{font-size:20px;padding:0}
+.dk-tv-epg{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px}
+.dk-epg-none{grid-column:1/-1;color:#86a592;font-size:13.5px;padding:4px 2px}
+.dk-epg-now{padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);min-width:0}
+.dk-epg-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.dk-epg-tag{font-size:11px;font-weight:900;letter-spacing:.14em;color:#7fd8a2}
+.dk-epg-time{font-size:12.5px;font-weight:800;color:#9fb9a9;font-variant-numeric:tabular-nums}
+.dk-epg-now b{display:block;font-size:17px;color:#fff;font-weight:800;unicode-bidi:plaintext;text-align:start}
+.dk-epg-now p{margin:6px 0 0;font-size:13px;line-height:1.6;color:#a9c1b2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;unicode-bidi:plaintext;text-align:start}
+.dk-epg-bar{height:5px;border-radius:5px;background:rgba(255,255,255,.1);margin-top:12px;overflow:hidden}
+.dk-epg-bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#27c46a,#c82a38)}
+.dk-epg-next{display:flex;flex-direction:column;gap:8px;justify-content:center;min-width:0}
+.dk-epg-next>div{display:flex;gap:12px;align-items:baseline;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.03);min-width:0}
+.dk-epg-next b{font-size:14px;color:#dfece4;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;unicode-bidi:plaintext}
+
+/* channel list: compact rows */
+body.desk.dk-tv-mode #browseItems.items,body.desk.dk-tv-mode #browseItems{display:flex!important;flex-direction:column!important;gap:8px!important;grid-template-columns:none!important}
+body.desk.dk-tv-mode #browseItems .live-card{min-height:0!important;height:auto!important;padding:9px 12px!important;border-radius:18px!important;grid-template-columns:56px minmax(0,1fr)!important;gap:14px!important;contain-intrinsic-size:auto 76px;cursor:pointer}
+body.desk.dk-tv-mode #browseItems .live-picon-frame{width:56px!important;height:56px!important;border-radius:14px!important}
+body.desk.dk-tv-mode #browseItems .live-card .item-title{font-size:15px!important;font-weight:800!important}
+body.desk.dk-tv-mode #browseItems .live-card:hover{transform:translateX(-3px)!important}
+body.desk.dk-tv-mode #browseItems .live-card.dk-on{background:linear-gradient(135deg,rgba(34,184,99,.95),rgba(17,110,60,.95) 60%,rgba(124,24,35,.9)) padding-box,linear-gradient(140deg,#fff,#3be38a,#d62c3a) border-box!important;box-shadow:0 14px 30px -12px rgba(39,196,106,.65)!important}
+body.desk.dk-tv-mode #browseItems .live-card.dk-on .item-title{color:#fff!important}
+body.desk.dk-tv-mode #itemInfinite{margin:10px 0 4px}
+body.desk.dk-tv-mode #browseItems .live-card .live-copy{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;min-width:0}
+body.desk.dk-tv-mode #browseItems .live-card .live-copy .item-title{flex:1;min-width:0;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;display:block!important;-webkit-line-clamp:unset!important;margin:0!important}
+body.desk.dk-tv-mode #browseItems .live-card .item-actions{margin:0!important;flex:none;width:auto!important;display:flex!important}
+body.desk.dk-tv-mode #browseItems .live-card .favorite-action.live-favorite{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important}
+html:has(body.dk-tv-mode){overflow:hidden}
+
+/* seasons as poster cards */
+body.desk #seriesSeasonStack{gap:18px!important}
+body.desk #seriesSeasonStack .series-season-btn.dk-season{flex:0 0 156px!important;width:156px!important;min-width:0!important;max-width:156px!important;min-height:0!important;padding:0 0 12px!important;border-radius:22px!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:3px!important;background:linear-gradient(170deg,rgba(10,30,19,.95),rgba(4,12,8,.98)) padding-box,linear-gradient(150deg,rgba(255,255,255,.22),rgba(36,177,95,.45),rgba(201,40,54,.4)) border-box!important;border:1.5px solid transparent!important;box-shadow:0 18px 36px -18px rgba(0,0,0,.8)!important}
+body.desk #seriesSeasonStack .dk-season-art{position:relative;display:block;width:100%;aspect-ratio:2/3;background:#0a2014 center/cover no-repeat;margin-bottom:9px}
+body.desk #seriesSeasonStack .dk-season-art:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(3,11,7,.85))}
+body.desk #seriesSeasonStack .dk-season-n{position:absolute;left:12px;bottom:8px;z-index:1;font-style:normal;font-size:40px;font-weight:900;line-height:1;letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.75)}
+body.desk #seriesSeasonStack .series-season-btn.dk-season strong{padding:0 14px;font-size:15.5px!important}
+body.desk #seriesSeasonStack .series-season-btn.dk-season small{padding:0 14px}
+body.desk #seriesSeasonStack .dk-season-year{padding:0 14px;font-style:normal;font-size:11.5px;font-weight:800;color:#6f9a80}
+body.desk #seriesSeasonStack .series-season-btn.dk-season:hover{transform:translateY(-5px)!important}
+body.desk #seriesSeasonStack .series-season-btn.dk-season.season-selected{background:linear-gradient(170deg,rgba(24,120,66,.98),rgba(9,60,34,.98) 70%,rgba(110,22,33,.95)) padding-box,linear-gradient(150deg,#fff,#3be38a 40%,#d62c3a) border-box!important;box-shadow:0 0 0 4px rgba(59,227,138,.18),0 22px 44px -14px rgba(39,196,106,.7)!important}
+body.desk #seriesSeasonStack .series-season-btn.dk-season.season-selected .dk-season-n{color:#fff;-webkit-text-stroke:0}
+body.desk #seriesSeasonStack .series-season-btn.dk-season.season-selected .dk-season-year{color:#c9f5da}
+body.desk #seriesSeasonStack .series-season-btn.dk-season{height:auto!important;max-height:none!important;aspect-ratio:auto!important}
+body.desk #seriesSeasonStack{flex-direction:row!important;align-items:flex-start!important}

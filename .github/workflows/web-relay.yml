@@ -3,7 +3,7 @@ name: Deploy the website relay (Cloudflare Worker)
 on:
   push:
     branches: [main]
-    paths: ["worker/**", ".github/workflows/web-relay.yml"]
+    paths: ["worker/**", ".github/workflows/web-relay.yml", "tools/web/tmdb_key.py"]
   workflow_dispatch:
 
 permissions:
@@ -38,12 +38,16 @@ jobs:
           if ! npx --yes wrangler@3 secret list 2>/dev/null | grep -q '"RELAY_KEY"'; then
             openssl rand -hex 32 | npx --yes wrangler@3 secret put RELAY_KEY
           fi
+          # TMDB key for artwork/details: the one bundled in the plugin package.
+          if ! npx --yes wrangler@3 secret list 2>/dev/null | grep -q '"TMDB_KEY"'; then
+            python3 ../tools/web/tmdb_key.py | npx --yes wrangler@3 secret put TMDB_KEY
+          fi
           URL=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log | head -1)
           if [ -z "$URL" ]; then
             echo "::error::No workers.dev address. Open Workers & Pages in the Cloudflare dashboard once to choose a workers.dev subdomain, then run this again."
             exit 1
           fi
-          for i in 1 2 3 4 5 6 7 8; do curl -fsS "$URL/health" | grep -q '"tickets":true' && break; sleep 5; done
+          for i in 1 2 3 4 5 6 7 8; do curl -fsS "$URL/health" | grep -q '"tmdb":true' && break; sleep 5; done
           curl -fsS "$URL/health"
           echo "URL=$URL" >> "$GITHUB_ENV"
       - name: Tell the website where the relay is

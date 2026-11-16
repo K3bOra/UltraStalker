@@ -31,6 +31,11 @@
 .usp-msg .loader{margin-right:8px}
 @media(max-width:760px){.usp{padding:0}.usp-card{border-radius:0;border-left:0;border-right:0}.usp-stage{max-height:none}.usp-head .usp-btn.vlc{display:none}}
 .player-option.web{border-color:rgba(41,190,105,.5)!important}
+.usp.docked{position:absolute;inset:0;z-index:2;padding:0;background:#000;backdrop-filter:none;border-radius:inherit;overflow:hidden}
+.usp.docked .usp-card{width:100%;height:100%;border:0;border-radius:inherit;background:#000;box-shadow:none;display:flex;flex-direction:column}
+.usp.docked .usp-head{display:none}
+.usp.docked .usp-stage{flex:1;aspect-ratio:auto;max-height:none;height:100%}
+.usp.docked .usp-stage video{object-fit:contain}
 `;
   const style = document.createElement("style");
   style.textContent = css;
@@ -91,11 +96,16 @@
     sub = box.querySelector(".usp-title small");
     vlc = box.querySelector(".usp-btn.vlc");
     box.querySelector(".usp-btn.x").addEventListener("click", close);
-    box.addEventListener("click", (e) => e.target === box && close());
+    box.addEventListener("click", (e) => e.target === box && !box.classList.contains("docked") && close());
     document.addEventListener("keydown", (e) => {
       if (box.classList.contains("hidden")) return;
+      const docked = box.classList.contains("docked");
+      if (docked && /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || "")) return;
       const k = e.key;
-      if (k === "Escape") close();
+      if (k === "Escape") {
+        if (docked) return;
+        close();
+      }
       else if (k === " " && document.activeElement !== video) video.paused ? video.play() : video.pause();
       else if ((k === "ArrowRight" || k === "ArrowLeft") && isFinite(video.duration)) video.currentTime = Math.max(0, video.currentTime + (k === "ArrowRight" ? 10 : -10));
       else if (k === "f" || k === "F") document.fullscreenElement ? document.exitFullscreen() : box.querySelector(".usp-stage").requestFullscreen().catch(() => {});
@@ -185,9 +195,18 @@
     if (box) box.classList.add("hidden");
     document.documentElement.style.overflow = "";
   }
-  async function play(ticket) {
+  /* opts.host: play inside that element (the Live TV screen) instead of the pop-up. */
+  async function play(ticket, opts) {
     build();
     stop();
+    const host = opts && opts.host;
+    if (host) {
+      if (box.parentNode !== host) host.appendChild(box);
+      box.classList.add("docked");
+    } else if (box.classList.contains("docked") || box.parentNode !== document.body) {
+      box.classList.remove("docked");
+      document.body.appendChild(box);
+    }
     const my = alive;
     current = ticket;
     const url = String(ticket.stream || ticket.url || "");
@@ -199,7 +218,7 @@
     if (/^data:/.test(href)) vlc.setAttribute("download", "ultra-stalker.m3u");
     else vlc.removeAttribute("download");
     box.classList.remove("hidden");
-    document.documentElement.style.overflow = "hidden";
+    if (!host) document.documentElement.style.overflow = "hidden";
     show('<span class="loader"></span>Opening stream…');
     let path = "";
     try {
@@ -272,5 +291,11 @@
     a.removeAttribute("href");
     a.onclick = null;
   }
-  window.USPlayer = { play, offer, pending, close, vlcHref };
+  function fullscreen() {
+    if (!box) return;
+    const st = box.querySelector(".usp-stage");
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (st && st.requestFullscreen) st.requestFullscreen().catch(() => {});
+  }
+  window.USPlayer = { play, offer, pending, close, vlcHref, fullscreen, video: () => video };
 })();

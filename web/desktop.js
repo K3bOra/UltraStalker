@@ -37,15 +37,21 @@
       if (t.startsWith("★")) c.classList.add("dk-gold");
       else if (/^(19|20)\d\d$/.test(t)) c.classList.add("dk-year");
     });
+    decorateSeasons();
     const cards = document.querySelectorAll("#seriesOverview .inline-episode:not([data-dk])");
     if (!cards.length) return;
     const bg = document.getElementById("seriesBackdrop");
     const poster = document.getElementById("seriesPoster");
-    const art = bg && bg.dataset.backdropState === "ready" && bg.src ? bg.src : poster && poster.src;
+    const art = (seriesExtra && seriesExtra.backdrop) || (bg && bg.dataset.backdropState === "ready" && bg.src ? bg.src : poster && poster.src);
+    let season = 0;
     cards.forEach((b) => {
       b.dataset.dk = "1";
       if (art) b.style.setProperty("--ep-bg", 'url("' + String(art).replace(/"/g, "%22") + '")');
-      const m = /E(\d+)/.exec((b.querySelector("small") || {}).textContent || "");
+      const code = (b.querySelector("small") || {}).textContent || "";
+      const m = /E(\d+)/.exec(code);
+      const sm = /S(\d+)/.exec(code);
+      if (sm) season = +sm[1];
+      if (m) b.dataset.ep = String(+m[1]);
       const n = document.createElement("span");
       n.className = "dk-ep-n";
       n.textContent = m ? m[1] : "";
@@ -53,7 +59,110 @@
       play.className = "dk-ep-play";
       b.prepend(n, play);
     });
+    episodeStills([...cards], season || 1);
   }
+
+  /* Seasons as poster cards (TMDB season posters, else the series poster). */
+  function decorateSeasons() {
+    const list = (seriesExtra && seriesExtra.seasonsList) || [];
+    const fallback = (seriesExtra && seriesExtra.poster) || ($("seriesPoster") || {}).src || "";
+    document.querySelectorAll("#seriesSeasonStack .series-season-btn").forEach((b) => {
+      const strong = b.querySelector("strong");
+      const m = /(\d+)/.exec((strong && strong.textContent) || "");
+      const n = m ? +m[1] : 0;
+      const info = list.find((x) => x.n === n) || null;
+      const art = (info && info.poster) || fallback;
+      const sig = n + "|" + art;
+      if (b.dataset.dkSeason === sig) return;
+      b.dataset.dkSeason = sig;
+      b.classList.add("dk-season");
+      let pic = b.querySelector(".dk-season-art");
+      if (!pic) {
+        pic = document.createElement("span");
+        pic.className = "dk-season-art";
+        pic.innerHTML = '<i class="dk-season-n"></i>';
+        b.prepend(pic);
+      }
+      pic.style.backgroundImage = art ? 'url("' + String(art).replace(/"/g, "%22") + '")' : "";
+      pic.querySelector(".dk-season-n").textContent = n ? String(n).padStart(2, "0") : "";
+      let yr = b.querySelector(".dk-season-year");
+      if (info && info.year) {
+        if (!yr) {
+          yr = document.createElement("em");
+          yr.className = "dk-season-year";
+          b.appendChild(yr);
+        }
+        yr.textContent = info.year;
+      }
+    });
+  }
+
+  /* TMDB extras: title logo, cast and episode stills. */
+  let seriesExtra = null;
+  const SEASONS = new Map();
+  async function episodeStills(cards, season) {
+    const ex = seriesExtra;
+    if (!ex || !ex.tmdb || !window.USEngine.tmdbGet) return;
+    const key = ex.tmdb + ":" + season;
+    if (!SEASONS.has(key)) SEASONS.set(key, window.USEngine.tmdbGet("tv/" + ex.tmdb + "/season/" + season, { language: "ar" }));
+    const data = await SEASONS.get(key);
+    if (!data || !Array.isArray(data.episodes) || seriesExtra !== ex) return;
+    const byNum = new Map(data.episodes.map((e) => [e.episode_number, e]));
+    cards.forEach((b) => {
+      const e = byNum.get(+b.dataset.ep);
+      if (!e) return;
+      if (e.still_path) b.style.setProperty("--ep-bg", 'url("https://image.tmdb.org/t/p/w500' + e.still_path + '")');
+      const name = String(e.name || "").trim();
+      if (name && !/^(الحلقة|episode)\s*\d+$/i.test(name) && !b.querySelector(".dk-ep-name")) {
+        const t = document.createElement("span");
+        t.className = "dk-ep-name";
+        t.textContent = name;
+        b.querySelector("strong").after(t);
+      }
+    });
+  }
+  function esc(t) {
+    return String(t || "").replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]);
+  }
+  function showExtras(ex) {
+    const stage = $(ex.media === "series" ? "seasonsStage" : "movieStage");
+    if (!stage) return;
+    if (ex.media === "series") {
+      seriesExtra = ex;
+      decorateSeasons();
+    }
+    const info = stage.querySelector(".series-info");
+    const content = stage.querySelector(".series-cinematic-content");
+    stage.querySelectorAll(".dk-logo,.dk-cast").forEach((n) => n.remove());
+    info.classList.remove("dk-has-logo");
+    if (ex.logo) {
+      const img = new Image();
+      img.className = "dk-logo";
+      img.alt = "";
+      img.onload = () => info.classList.add("dk-has-logo");
+      img.onerror = () => img.remove();
+      img.src = ex.logo;
+      info.querySelector("h3").before(img);
+    }
+    const cast = (ex.cast || []).filter((c) => c.name).slice(0, 12);
+    if (cast.length) {
+      const box = document.createElement("div");
+      box.className = "dk-cast";
+      box.innerHTML =
+        '<div class="dk-cast-h">Cast · الأبطال</div><div class="dk-cast-row">' +
+        cast
+          .map(
+            (c) =>
+              `<div class="dk-person"><span class="dk-face">${c.photo ? `<img loading="lazy" src="${esc(c.photo)}" alt="">` : `<i>${esc(c.name.trim()[0] || "")}</i>`}</span><b>${esc(c.name)}</b><small>${esc(c.role)}</small></div>`
+          )
+          .join("") +
+        "</div>";
+      content.appendChild(box);
+    }
+  }
+  document.addEventListener("us-details", (e) => {
+    if (document.body.classList.contains("desk")) showExtras(e.detail || {});
+  });
 
   function build() {
     BROWSE = !!document.getElementById("browseAccount");
@@ -207,6 +316,150 @@
     const el = $(id);
     return el && !el.classList.contains("hidden");
   };
+  /* ------------------------------------------------ Live TV screen */
+  const tv = { on: false, id: "", timer: 0, gen: 0 };
+  function tvBuild() {
+    if ($("dkTv")) return;
+    const stage = $("itemsStage");
+    const panel = document.createElement("div");
+    panel.id = "dkTv";
+    panel.className = "dk-tv";
+    panel.innerHTML =
+      '<div class="dk-tv-screen" id="dkTvScreen"><div class="dk-tv-idle"><img src="brand-logo.webp" alt=""><b>Choose a channel</b><span>اختار قناة من القايمة</span></div></div>' +
+      '<div class="dk-tv-info" id="dkTvInfo">' +
+      '<div class="dk-tv-ch"><span class="dk-tv-logo" id="dkTvLogo"></span><div class="dk-tv-name"><small>LIVE · مباشر</small><b id="dkTvName">—</b></div>' +
+      '<div class="dk-tv-acts"><a class="dk-tv-btn" id="dkTvVlc">▶ VLC</a><button type="button" class="dk-tv-btn" id="dkTvFull" title="Full screen">⛶</button></div></div>' +
+      '<div class="dk-tv-epg" id="dkTvEpg"></div></div>';
+    const list = document.createElement("div");
+    list.id = "dkTvList";
+    list.className = "dk-tv-list";
+    stage.querySelector(".items-head").after(panel);
+    panel.after(list);
+    list.appendChild($("browseItems"));
+    list.appendChild($("itemInfinite"));
+    $("dkTvFull").onclick = () => window.USPlayer.fullscreen();
+    // The screen and the list fit the window: keep the page itself at the top.
+    window.addEventListener("scroll", () => tv.on && window.scrollY > 0 && window.scrollTo(0, 0), { passive: true });
+    // Channels play on the screen instead of opening the player chooser.
+    $("browseItems").addEventListener(
+      "click",
+      (e) => {
+        if (!tv.on) return;
+        const card = e.target.closest(".live-card");
+        if (!card || e.target.closest(".favorite-action")) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        tune(card);
+      },
+      true
+    );
+    $("browseItems").addEventListener(
+      "keydown",
+      (e) => {
+        if (!tv.on || e.key !== "Enter") return;
+        const card = e.target.closest(".live-card");
+        if (!card) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        tune(card);
+      },
+      true
+    );
+    document.addEventListener("keydown", (e) => {
+      if (!tv.on || !tv.id || !/^(ArrowUp|ArrowDown|PageUp|PageDown)$/.test(e.key)) return;
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || "")) return;
+      const cards = [...document.querySelectorAll("#browseItems .live-card")];
+      const i = cards.findIndex((c) => c.dataset.item === tv.id);
+      const next = cards[i + (/Down/.test(e.key) ? 1 : -1)];
+      if (!next) return;
+      e.preventDefault();
+      tune(next);
+    });
+  }
+  function fmtTime(t) {
+    const d = new Date(t * 1000);
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  async function loadEpg(id, gen) {
+    const box = $("dkTvEpg");
+    try {
+      const j = await (await fetch("api/browse/epg?item=" + encodeURIComponent(id), { cache: "no-store" })).json();
+      if (gen !== tv.gen) return;
+      const now = Date.now() / 1000;
+      const rows = (j && j.rows) || [];
+      const cur = rows.find((r) => r.start <= now && r.end > now) || null;
+      const later = rows.filter((r) => r.start >= (cur ? cur.end - 1 : now)).slice(0, 2);
+      if (!cur && !later.length) {
+        box.innerHTML = '<div class="dk-epg-none">No programme guide for this channel · مفيش دليل برامج للقناة دي</div>';
+        return;
+      }
+      const esc2 = (t) => String(t || "").replace(/[<>&"]/g, "");
+      let html = "";
+      if (cur) {
+        const pct = Math.max(0, Math.min(100, ((now - cur.start) / Math.max(1, cur.end - cur.start)) * 100));
+        html += `<div class="dk-epg-now"><div class="dk-epg-row"><span class="dk-epg-tag">NOW · الآن</span><span class="dk-epg-time">${fmtTime(cur.start)} – ${fmtTime(cur.end)}</span></div><b>${esc2(cur.title)}</b>${cur.description ? `<p>${esc2(cur.description).slice(0, 260)}</p>` : ""}<div class="dk-epg-bar"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
+      }
+      if (later.length) html += '<div class="dk-epg-next">' + later.map((r) => `<div><span class="dk-epg-time">${fmtTime(r.start)}</span><b>${esc2(r.title)}</b></div>`).join("") + "</div>";
+      box.innerHTML = html;
+    } catch (_) {
+      if (gen === tv.gen) box.innerHTML = "";
+    }
+  }
+  async function tune(card) {
+    const id = card.dataset.item;
+    if (!id) return;
+    const gen = ++tv.gen;
+    tv.id = id;
+    document.querySelectorAll("#browseItems .live-card.dk-on").forEach((c) => c.classList.remove("dk-on"));
+    card.classList.add("dk-on");
+    const name = card.title || (card.querySelector(".item-title") || {}).textContent || "Channel";
+    $("dkTvName").textContent = name;
+    const pic = card.querySelector("img.live-picon");
+    $("dkTvLogo").innerHTML = pic && pic.complete && pic.naturalWidth ? `<img src="${pic.src}" alt="">` : `<i>${(name.trim()[0] || "TV").toUpperCase()}</i>`;
+    $("dkTv").classList.add("playing");
+    $("dkTvEpg").innerHTML = '<div class="dk-epg-none"><span class="loader"></span></div>';
+    clearInterval(tv.timer);
+    tv.timer = setInterval(() => tv.on && tv.id === id && loadEpg(id, gen), 60000);
+    loadEpg(id, gen);
+    const screen = $("dkTvScreen");
+    try {
+      const j = await (await fetch("api/browse/prepare?item=" + encodeURIComponent(id), { cache: "no-store" })).json();
+      if (gen !== tv.gen) return;
+      if (!j || !j.stream) throw new Error((j && j.error) || "Stream unavailable");
+      j.live = true;
+      j.title = j.title || name;
+      const vlc = $("dkTvVlc");
+      const href = window.USPlayer.vlcHref(j);
+      vlc.href = href;
+      if (/^data:/.test(href)) vlc.setAttribute("download", "ultra-stalker.m3u");
+      window.USPlayer.play(j, { host: screen });
+    } catch (err) {
+      if (gen !== tv.gen) return;
+      window.USPlayer.close();
+      screen.querySelector(".dk-tv-idle b").textContent = "Channel unavailable";
+      screen.querySelector(".dk-tv-idle span").textContent = String((err && err.message) || "القناة مش متاحة دلوقتي");
+      $("dkTv").classList.remove("playing");
+    }
+  }
+  function tvMode(on) {
+    if (on === tv.on) return;
+    tv.on = on;
+    document.body.classList.toggle("dk-tv-mode", on);
+    if (on) window.scrollTo(0, 0);
+    if (!on) {
+      tv.gen++;
+      clearInterval(tv.timer);
+      if (tv.id) window.USPlayer.close();
+      tv.id = "";
+      const panel = $("dkTv");
+      if (panel) {
+        panel.classList.remove("playing");
+        panel.querySelector(".dk-tv-idle b").textContent = "Choose a channel";
+        panel.querySelector(".dk-tv-idle span").textContent = "اختار قناة من القايمة";
+      }
+    }
+  }
+
   function sync() {
     const active = !!$("browseAccount").value;
     document.body.classList.toggle("dk-home", !active);
@@ -228,11 +481,13 @@
     }
     $("dkTitle").textContent = title;
     $("dkSub").textContent = sub;
+    tvMode(active && media === "itv" && visible("itemsStage") && !visible("favoritesStage") && !visible("searchStage"));
   }
 
   function start() {
     build();
     if (!BROWSE) return;
+    tvBuild();
     drawWelcome();
     sync();
     let t = 0;
