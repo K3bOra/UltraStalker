@@ -11,6 +11,8 @@
   const DESK = WIDE.matches && !/[?&]phone=1/.test(location.search);
   WIDE.addEventListener("change", () => location.reload());
   const $ = (id) => document.getElementById(id);
+  const AR = !(window.USLang && !window.USLang.ar);
+  const T = (en, ar) => (AR ? ar : en);
   const ICON = {
     search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>',
     star: '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.9-4.7 4.5 1.2 6.4L12 17.4l-5.7 3.1 1.2-6.4L2.8 9.6l6.4-.9z"/></svg>',
@@ -60,6 +62,34 @@
       b.prepend(n, play);
     });
     episodeStills([...cards], season || 1);
+  }
+
+  /* Category tiles: quality words become small badges, the name gets the space. */
+  const QUALITY = /^(4K|8K|UHD|FHD|HD|SD|HDR|HDR10|DV|DOLBY|ATMOS|AUDIO|VISION|\d{3,4}P|H265|HEVC|H264|60FPS|FPS|VIP|RAW|MULTI|SUB|SUBS|DUB|DUBBED|NEW|TOP)$/i;
+  function decorateCategories() {
+    document.querySelectorAll("#browseCategories .category:not([data-dk])").forEach((el) => {
+      el.dataset.dk = "1";
+      const t = el.querySelector(".category-title");
+      if (!t) return;
+      const raw = t.textContent.trim();
+      const words = raw.split(/\s+/);
+      const tags = [];
+      while (words.length > 1 && (QUALITY.test(words[0].replace(/[|•·\-_:]+$/g, "")) || /^[|•·\-_:]+$/.test(words[0]))) {
+        const w = words.shift().replace(/[|•·\-_:]+$/g, "");
+        if (!w) continue;
+        if (/^(AUDIO|ATMOS|VISION)$/i.test(w) && tags.length && /^DOLBY$/i.test(tags[tags.length - 1])) tags[tags.length - 1] += " " + w.toUpperCase();
+        else tags.push(w.toUpperCase());
+      }
+      const name = words.join(" ").replace(/^[|•·\-_:\s]+/, "") || raw;
+      t.textContent = name === "All" && window.USLang && window.USLang.ar ? "الكل" : name;
+      t.setAttribute("dir", "auto");
+      if (tags.length) {
+        const row = document.createElement("span");
+        row.className = "dk-cat-tags";
+        row.innerHTML = tags.map((x) => `<i>${esc(x)}</i>`).join("");
+        t.before(row);
+      }
+    });
   }
 
   /* Seasons as poster cards (TMDB season posters, else the series poster). */
@@ -149,7 +179,7 @@
       const box = document.createElement("div");
       box.className = "dk-cast";
       box.innerHTML =
-        '<div class="dk-cast-h">Cast · الأبطال</div><div class="dk-cast-row">' +
+        '<div class="dk-cast-h">' + T("Cast", "الأبطال") + '</div><div class="dk-cast-row">' +
         cast
           .map(
             (c) =>
@@ -186,8 +216,8 @@
     el.className = "dk-feature";
     el.innerHTML =
       '<div class="dk-f-bg"><img alt=""><img alt=""></div><div class="dk-f-shade"></div>' +
-      '<div class="dk-f-copy"><small class="dk-f-k">مختارات · FEATURED</small><img class="dk-f-logo" alt=""><h2 class="dk-f-title"></h2>' +
-      '<div class="dk-f-meta"></div><p class="dk-f-plot"></p><div class="dk-f-acts"><button type="button" class="dk-f-go"><i></i><span>شاهد التفاصيل</span></button></div></div>' +
+      '<div class="dk-f-copy"><small class="dk-f-k">' + T("FEATURED", "مختارات") + '</small><img class="dk-f-logo" alt=""><h2 class="dk-f-title"></h2>' +
+      '<div class="dk-f-meta"></div><p class="dk-f-plot"></p><div class="dk-f-acts"><button type="button" class="dk-f-go"><i></i><span>' + T("View details", "شاهد التفاصيل") + '</span></button></div></div>' +
       '<div class="dk-f-dots"></div>';
     const head = $("itemsStage").querySelector(".items-head");
     head.after(el);
@@ -249,7 +279,7 @@
       if (d.year) chips.push(`<span class="y">${d.year}</span>`);
       if (d.rating) chips.push(`<span class="r">★ ${Number(d.rating).toFixed(1)}</span>`);
       (d.genres || []).slice(0, 3).forEach((g) => chips.push(`<span>${esc(g)}</span>`));
-      if (d.runtime) chips.push(`<span>${d.runtime} دقيقة</span>`);
+      if (d.runtime) chips.push(`<span>${d.runtime} ${T("min", "دقيقة")}</span>`);
     }
     el.querySelector(".dk-f-meta").innerHTML = chips.join("");
     el.querySelector(".dk-f-plot").textContent = (d && d.overview) || "";
@@ -281,25 +311,44 @@
     }, 9000);
   }
 
+  function langSwitch() {
+    const el = document.createElement("div");
+    el.className = "dk-lang";
+    el.setAttribute("data-no-tr", "");
+    el.innerHTML = `<button type="button" data-l="ar" class="${AR ? "on" : ""}" title="عربي">ع</button><button type="button" data-l="en" class="${AR ? "" : "on"}" title="English">EN</button>`;
+    el.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-l]");
+      if (b && window.USLang && b.dataset.l !== window.USLang.lang) window.USLang.set(b.dataset.l);
+    });
+    return el;
+  }
+
   function build() {
     BROWSE = !!document.getElementById("browseAccount");
     document.body.classList.add("app", DESK ? "desk" : "ph", BROWSE ? "desk-browse" : "desk-sources");
     const side = document.createElement("aside");
     side.className = "dk-side";
     side.innerHTML =
-      '<a class="dk-brand" href="index.html" title="Ultra Stalker"><img src="brand-logo-gold.webp" alt="Ultra Stalker"><span>من أي مكان · From anywhere</span></a>' +
-      (BROWSE ? '<div class="dk-source" id="dkSource"><div class="dk-label">المصدر <span>Source</span></div></div>' : "") +
+      '<a class="dk-brand" href="index.html" title="Ultra Stalker"><img src="brand-logo-gold.webp" alt="Ultra Stalker"><span>' + T("From anywhere · من أي مكان", "من أي مكان · From anywhere") + '</span></a>' +
+      (BROWSE ? '<div class="dk-source" id="dkSource"><div class="dk-label">' + T("Source <span>المصدر</span>", "المصدر <span>Source</span>") + '</div></div>' : "") +
       '<nav class="dk-nav" id="dkNav">' +
-      NAV.map(([k, en, ar, ic]) => `<button type="button" data-go="${k}"><span class="dk-ic">${ic}</span><span class="dk-tx"><b>${ar}</b><small>${en}</small></span></button>`).join("") +
+      NAV.map(([k, en, ar, ic]) => `<button type="button" data-go="${k}"><span class="dk-ic">${ic}</span><span class="dk-tx"><b>${T(en, ar)}</b><small>${T(ar, en)}</small></span></button>`).join("") +
       "</nav>" +
       '<div class="dk-sep"><i></i></div>' +
       '<nav class="dk-nav dk-tools">' +
-      `<a href="sources.html#connectionPanel" data-sec="connectionPanel"><span class="dk-ic">${ICON.plus}</span><span class="dk-tx"><b>إضافة مصدر</b><small>Add Connection</small></span></a>` +
-      `<a href="sources.html#managerPanel" data-sec="managerPanel"><span class="dk-ic">${ICON.servers}</span><span class="dk-tx"><b>إدارة السيرفرات</b><small>Manage Servers</small></span></a>` +
-      `<a href="sources.html#backupPanel" data-sec="backupPanel"><span class="dk-ic">${ICON.backup}</span><span class="dk-tx"><b>باك اب الرسيفر</b><small>Backup &amp; Restore</small></span></a>` +
+      `<a href="sources.html#connectionPanel" data-sec="connectionPanel"><span class="dk-ic">${ICON.plus}</span><span class="dk-tx"><b>${T("Add Connection", "إضافة مصدر")}</b><small>${T("إضافة مصدر", "Add Connection")}</small></span></a>` +
+      `<a href="sources.html#managerPanel" data-sec="managerPanel"><span class="dk-ic">${ICON.servers}</span><span class="dk-tx"><b>${T("Manage Servers", "إدارة السيرفرات")}</b><small>${T("إدارة السيرفرات", "Manage Servers")}</small></span></a>` +
+      `<a href="sources.html#backupPanel" data-sec="backupPanel"><span class="dk-ic">${ICON.backup}</span><span class="dk-tx"><b>${T("Backup &amp; Restore", "باك اب الرسيفر")}</b><small>${T("باك اب الرسيفر", "Backup &amp; Restore")}</small></span></a>` +
       "</nav>" +
-      '<div class="dk-credit"><small>تصميم وتطوير</small><b>Ahmed L-HadarY</b><span id="dkVer"></span></div>';
+      '<div class="dk-credit"><small>' + T("Design &amp; development", "تصميم وتطوير") + "</small>" + '<b>Ahmed L-HadarY</b><span id="dkVer"></span></div>';
     document.body.appendChild(side);
+    if (!BROWSE) {
+      if (DESK) side.querySelector(".dk-brand").after(langSwitch());
+      else {
+        const hero = document.querySelector(".hero");
+        if (hero) hero.prepend(langSwitch());
+      }
+    }
 
     if (!BROWSE) {
       // Sources & Backup page: the menu goes back to Browse, tools scroll to their panel.
@@ -334,14 +383,15 @@
     top.innerHTML = (DESK ? "" : brandMini) + '<div class="dk-where"><small id="dkKicker">Ultra Stalker</small><h1 id="dkTitle">Browse</h1><span id="dkSub"></span></div><div class="dk-search" id="dkSearch"></div>';
     const shell = document.querySelector("main.shell");
     shell.parentNode.insertBefore(top, shell);
+    top.insertBefore(langSwitch(), $("dkSearch"));
     if (!DESK) top.appendChild($("dkSource"));
     const sb = document.querySelector(".search-box");
     if (sb) {
       $("dkSearch").appendChild(sb);
       const input = $("browseSearch");
-      input.placeholder = "ابحث عن فيلم أو مسلسل…";
+      input.placeholder = T("Search movies and series…", "ابحث عن فيلم أو مسلسل…");
       const sbtn = $("searchBtn");
-      if (sbtn) sbtn.textContent = "بحث";
+      if (sbtn) sbtn.textContent = T("Search", "بحث");
     }
 
     // Welcome wall when no source is chosen: every saved source as a big card.
@@ -403,18 +453,19 @@
     };
     const tools =
       '<div class="dk-hero-tools">' +
-      `<a href="sources.html#connectionPanel"><span>${ICON.plus}</span><b>إضافة مصدر</b></a>` +
-      `<a href="sources.html#managerPanel"><span>${ICON.servers}</span><b>إدارة السيرفرات</b></a>` +
-      `<a href="sources.html#backupPanel"><span>${ICON.backup}</span><b>باك اب الرسيفر</b></a>` +
+      `<a href="sources.html#connectionPanel"><span>${ICON.plus}</span><b>${T("Add Connection", "إضافة مصدر")}</b></a>` +
+      `<a href="sources.html#managerPanel"><span>${ICON.servers}</span><b>${T("Manage Servers", "إدارة السيرفرات")}</b></a>` +
+      `<a href="sources.html#backupPanel"><span>${ICON.backup}</span><b>${T("Backup", "باك اب الرسيفر")}</b></a>` +
       "</div>";
-    const kindsAr = { portal: "بورتال ستالكر", xtream: "Xtream Codes", m3u: "قائمة M3U" };
+    const kindsAr = AR ? { portal: "بورتال ستالكر", xtream: "Xtream Codes", m3u: "قائمة M3U" } : kinds;
     box.innerHTML =
-      '<div class="dk-hero"><div class="dk-hero-copy"><small>ULTRA STALKER · WEB</small><h2>مصادرك<br><span class="gold-text">في أي مكان</span></h2>' +
-      "<p>البث المباشر والأفلام والمسلسلات من سيرفراتك، على الموبايل والكمبيوتر.</p>" +
+      '<div class="dk-hero"><div class="dk-hero-copy"><small>ULTRA STALKER · WEB</small>' +
+      T('<h2>Your sources,<br><span class="gold-text">everywhere.</span></h2>', '<h2>مصادرك<br><span class="gold-text">في أي مكان</span></h2>') +
+      T("<p>Live TV, movies and series from your own servers, on your phone and computer.</p>", "<p>البث المباشر والأفلام والمسلسلات من سيرفراتك، على الموبايل والكمبيوتر.</p>") +
       tools +
       '</div><img src="brand-logo-gold.webp" alt=""></div>' +
       (opts.length
-        ? '<div class="dk-row-h"><h3>البورتالات <span>Portals</span></h3><span>' + opts.length + ' محفوظة · <a href="sources.html#connectionPanel">＋ إضافة</a></span></div>' +
+        ? '<div class="dk-row-h"><h3>' + T("Portals <span>البورتالات</span>", "البورتالات <span>Portals</span>") + "</h3><span>" + opts.length + T(" saved · ", " محفوظة · ") + '<a href="sources.html#connectionPanel">＋ ' + T("Add", "إضافة") + "</a></span></div>" +
           '<div class="dk-sources">' +
           opts
             .map((o) => {
@@ -427,12 +478,14 @@
                 <b>${safe(o.textContent)}</b>
                 <span class="dk-src-host" dir="ltr">${safe(h.host)}</span>
                 ${h.mac ? `<span class="dk-src-id" dir="ltr">${safe(h.mac)}</span>` : ""}
-                <span class="dk-src-go">افتح البورتال <i>‹</i></span></button>`;
+                <span class="dk-src-go">${T("Open portal <i>›</i>", "افتح البورتال <i>‹</i>")}</span></button>`;
             })
             .join("") +
           "</div>"
-        : '<div class="dk-empty"><b>لسه مفيش مصادر</b><span>ضيف بورتال أو Xtream أو M3U، أو ارفع باك اب الرسيفر.</span>' +
-          '<div><a class="dk-btn" href="sources.html#connectionPanel">＋ إضافة مصدر</a><a class="dk-btn ghost" href="sources.html#backupPanel">⇩ ارفع باك اب الرسيفر</a></div></div>');
+        : '<div class="dk-empty">' + T("<b>No saved sources yet</b><span>Add a Portal, Xtream or M3U source, or load a receiver backup.</span>", "<b>لسه مفيش مصادر</b><span>ضيف بورتال أو Xtream أو M3U، أو ارفع باك اب الرسيفر.</span>") +
+          '<div><a class="dk-btn" href="sources.html#connectionPanel">＋ ' + T("Add Connection", "إضافة مصدر") + '</a><a class="dk-btn ghost" href="sources.html#backupPanel">⇩ ' + T("Load receiver backup", "ارفع باك اب الرسيفر") + "</a></div></div>");
+    const hero = box.querySelector(".dk-hero");
+    if (hero) hero.appendChild(langSwitch());
     box.onclick = (e) => {
       const b = e.target.closest(".dk-src");
       if (!b) return;
@@ -454,9 +507,9 @@
     panel.id = "dkTv";
     panel.className = "dk-tv";
     panel.innerHTML =
-      '<div class="dk-tv-screen" id="dkTvScreen"><div class="dk-tv-idle"><img src="brand-logo-gold.webp" alt=""><b>Choose a channel</b><span>اختار قناة من القايمة</span></div></div>' +
+      '<div class="dk-tv-screen" id="dkTvScreen"><div class="dk-tv-idle"><img src="brand-logo-gold.webp" alt=""><b>' + T("Choose a channel", "اختار قناة") + "</b><span>" + T("Pick one from the list", "من القايمة اللي جنبك") + '</span></div></div>' +
       '<div class="dk-tv-info" id="dkTvInfo">' +
-      '<div class="dk-tv-ch"><span class="dk-tv-logo" id="dkTvLogo"></span><div class="dk-tv-name"><small>LIVE · مباشر</small><b id="dkTvName">—</b></div>' +
+      '<div class="dk-tv-ch"><span class="dk-tv-logo" id="dkTvLogo"></span><div class="dk-tv-name"><small>' + T("LIVE", "مباشر") + '</small><b id="dkTvName">—</b></div>' +
       '<div class="dk-tv-acts"><a class="dk-tv-btn" id="dkTvVlc">▶ VLC</a><button type="button" class="dk-tv-btn" id="dkTvFull" title="Full screen">⛶</button></div></div>' +
       '<div class="dk-tv-epg" id="dkTvEpg"></div></div>';
     const list = document.createElement("div");
@@ -519,14 +572,14 @@
       const cur = rows.find((r) => r.start <= now && r.end > now) || null;
       const later = rows.filter((r) => r.start >= (cur ? cur.end - 1 : now)).slice(0, 2);
       if (!cur && !later.length) {
-        box.innerHTML = '<div class="dk-epg-none">No programme guide for this channel · مفيش دليل برامج للقناة دي</div>';
+        box.innerHTML = '<div class="dk-epg-none">' + T("No programme guide for this channel", "مفيش دليل برامج للقناة دي") + "</div>";
         return;
       }
       const esc2 = (t) => String(t || "").replace(/[<>&"]/g, "");
       let html = "";
       if (cur) {
         const pct = Math.max(0, Math.min(100, ((now - cur.start) / Math.max(1, cur.end - cur.start)) * 100));
-        html += `<div class="dk-epg-now"><div class="dk-epg-row"><span class="dk-epg-tag">NOW · الآن</span><span class="dk-epg-time">${fmtTime(cur.start)} – ${fmtTime(cur.end)}</span></div><b>${esc2(cur.title)}</b>${cur.description ? `<p>${esc2(cur.description).slice(0, 260)}</p>` : ""}<div class="dk-epg-bar"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
+        html += `<div class="dk-epg-now"><div class="dk-epg-row"><span class="dk-epg-tag">${T("NOW", "الآن")}</span><span class="dk-epg-time">${fmtTime(cur.start)} – ${fmtTime(cur.end)}</span></div><b>${esc2(cur.title)}</b>${cur.description ? `<p>${esc2(cur.description).slice(0, 260)}</p>` : ""}<div class="dk-epg-bar"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
       }
       if (later.length) html += '<div class="dk-epg-next">' + later.map((r) => `<div><span class="dk-epg-time">${fmtTime(r.start)}</span><b>${esc2(r.title)}</b></div>`).join("") + "</div>";
       box.innerHTML = html;
@@ -565,8 +618,8 @@
     } catch (err) {
       if (gen !== tv.gen) return;
       window.USPlayer.close();
-      screen.querySelector(".dk-tv-idle b").textContent = "Channel unavailable";
-      screen.querySelector(".dk-tv-idle span").textContent = String((err && err.message) || "القناة مش متاحة دلوقتي");
+      screen.querySelector(".dk-tv-idle b").textContent = T("Channel unavailable", "القناة مش متاحة");
+      screen.querySelector(".dk-tv-idle span").textContent = String((err && err.message) || T("Channel unavailable", "القناة مش متاحة دلوقتي"));
       $("dkTv").classList.remove("playing");
     }
   }
@@ -583,8 +636,8 @@
       const panel = $("dkTv");
       if (panel) {
         panel.classList.remove("playing");
-        panel.querySelector(".dk-tv-idle b").textContent = "Choose a channel";
-        panel.querySelector(".dk-tv-idle span").textContent = "اختار قناة من القايمة";
+        panel.querySelector(".dk-tv-idle b").textContent = T("Choose a channel", "اختار قناة");
+        panel.querySelector(".dk-tv-idle span").textContent = T("Pick one from the list", "من القايمة اللي جنبك");
       }
     }
   }
@@ -602,11 +655,11 @@
     const names = { itv: "البث المباشر", vod: "الأفلام", series: "المسلسلات", search: "البحث", fav: "المفضلة" };
     const opt = $("browseAccount").selectedOptions[0];
     $("dkKicker").textContent = active && opt ? opt.textContent : "Ultra Stalker";
-    let title = active ? names[go] : "أهلاً بيك";
-    let sub = active ? ar[go] : "Welcome";
+    let title = active ? T(ar[go], names[go]) : T("Welcome", "أهلاً بيك");
+    let sub = active ? T(names[go], ar[go]) : T("أهلاً بيك", "Welcome");
     if (active && visible("itemsStage")) {
       title = $("itemsTitle").textContent || title;
-      sub = names[go] + " · " + ar[go];
+      sub = T(ar[go] + " · " + names[go], names[go] + " · " + ar[go]);
     }
     $("dkTitle").textContent = title;
     $("dkSub").textContent = sub;
@@ -618,6 +671,8 @@
     build();
     if (!BROWSE) return;
     if (DESK) tvBuild();
+    new MutationObserver(decorateCategories).observe($("browseCategories"), { childList: true });
+    decorateCategories();
     let ft = 0;
     new MutationObserver(() => {
       clearTimeout(ft);

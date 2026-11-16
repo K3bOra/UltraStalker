@@ -1367,7 +1367,7 @@
     A.forEach((w) => B.has(w) && hit++);
     return hit / Math.max(A.size, B.size);
   }
-  const TMDB_CACHE_KEY = "us-tmdb-v2";
+  const TMDB_CACHE_KEY = "us-tmdb-v3";
   let tmdbMem = null;
   function tmdbCache() {
     if (!tmdbMem) {
@@ -1443,6 +1443,8 @@
           const img = d.images || {};
           const clean = (img.backdrops || []).filter((b) => !b.iso_639_1).sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))[0];
           const logos = img.logos || [];
+          // Phones show a tall picture: the poster without its title text when TMDB has one.
+          const tall = (img.posters || []).filter((p) => !p.iso_639_1).sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))[0];
           const logo = logos.find((l) => l.iso_639_1 === "ar") || logos.find((l) => l.iso_639_1 === "en") || logos[0];
           const tr = ((d.translations || {}).translations || []).find((t) => t.iso_639_1 === "en");
           const enOverview = tr && tr.data && tr.data.overview;
@@ -1451,6 +1453,7 @@
             type,
             backdrop: (clean && clean.file_path) || d.backdrop_path ? TMDB_IMG + "w1280" + ((clean && clean.file_path) || d.backdrop_path) : "",
             poster: d.poster_path ? TMDB_IMG + "w500" + d.poster_path : "",
+            portrait: tall ? TMDB_IMG + "w780" + tall.file_path : d.poster_path ? TMDB_IMG + "w780" + d.poster_path : "",
             logo: logo ? TMDB_IMG + "w500" + logo.file_path : "",
             overview: str(d.overview) || str(enOverview),
             genres: (d.genres || []).map((g) => g.name).slice(0, 4),
@@ -1496,6 +1499,7 @@
         if (t) {
           d.tmdb = t;
           if (t.backdrop) d.backdrop = t.backdrop;
+          if (t.portrait) d.portrait = t.portrait;
           if (t.poster && !d.poster) d.poster = t.poster;
           if (!d.overview || d.overview.length < 25) d.overview = t.overview || d.overview;
           if (!d.genres || !d.genres.length) d.genres = t.genres;
@@ -1507,6 +1511,7 @@
       } catch (_) {}
     }
     if (d.backdrop) entry.backdrop = d.backdrop;
+    if (d.portrait) entry.portrait = d.portrait;
     if (d.poster && !c.art(row, entry.media)) entry.poster = d.poster;
     return { entry, d };
   }
@@ -1947,6 +1952,8 @@
       return "";
     }
     const row = entry.item || {};
+    // Phones: a tall picture fits the screen; a wide backdrop would be cut to a slice.
+    if (entry.portrait && window.matchMedia && window.matchMedia("(max-width: 1099px)").matches) return entry.portrait;
     const v = entry.backdrop || row.backdrop_url || row.backdrop || "";
     if (!v) return "";
     try {

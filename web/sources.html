@@ -447,7 +447,7 @@ body.web-premium .launch-half:not(.active):not(.on):not(.selected):focus-visible
 @media (hover:hover){body.web-premium .launch-half:not(.active):not(.on):not(.selected):hover,body.web-premium .filebox:not(.active):not(.on):not(.selected):hover,body.web-premium .deep-stat:not(.active):not(.on):not(.selected):hover{transform:translateY(-2px)!important;box-shadow:0 22px 44px -22px rgba(var(--ra),.42),0 10px 34px -18px rgba(var(--rc),.30),inset 0 1px 0 rgba(255,255,255,.10)!important;filter:brightness(1.06)}}
 @media (prefers-reduced-motion:reduce){body.web-premium .glass:not(.active):not(.on):not(.selected),body.web-premium .launch-half:not(.active):not(.on):not(.selected),body.web-premium .filebox:not(.active):not(.on):not(.selected),body.web-premium .deep-stat:not(.active):not(.on):not(.selected){transition:none!important}}
 </style>
-<link rel="stylesheet" href="sources.css?v=8"><link rel="stylesheet" href="fonts.css?v=8"><link rel="stylesheet" href="theme.css?v=8"><link rel="stylesheet" href="desktop.css?v=8"><script src="config.js?v=8"></script><script src="hash.js?v=8"></script><script src="engine.js?v=8"></script><script src="backup.js?v=8"></script><script src="desktop.js?v=8"></script>
+<link rel="stylesheet" href="sources.css?v=9"><link rel="stylesheet" href="fonts.css?v=9"><link rel="stylesheet" href="theme.css?v=9"><link rel="stylesheet" href="desktop.css?v=9"><script src="i18n.js?v=9"></script><script src="config.js?v=9"></script><script src="hash.js?v=9"></script><script src="engine.js?v=9"></script><script src="backup.js?v=9"></script><script src="desktop.js?v=9"></script>
 </head>
 <body class="web-premium web-cleaner-premium">
 <div class="ambient"><div class="orb a"></div><div class="orb b"></div><div class="scan"></div></div>
@@ -457,8 +457,8 @@ body.web-premium .launch-half:not(.active):not(.on):not(.selected):focus-visible
  <header class="hero">
   <div class="logo-wrap"><img class="logo-img" alt="Ultra Stalker" src="brand-logo-gold.webp"></div>
   <div class="kicker">Sources &amp; Backup</div>
-  <h1>سيرفراتك في أي مكان</h1>
-  <p>ضيف وعدّل سيرفرات البورتال والـ Xtream والـ M3U، وانقلها بين الموقع والرسيفر بملف باك اب.</p>
+  <h1>Your servers, everywhere.</h1>
+  <p>Add and edit Portal, Xtream and M3U servers, then move them between this site and your receiver with a backup file.</p>
  </header>
 
  <main class="shell">
@@ -509,19 +509,19 @@ body.web-premium .launch-half:not(.active):not(.on):not(.selected):focus-visible
   </section>
 
   <section class="glass connection-panel backup-panel" id="backupPanel">
-    <div class="connection-head"><div><h2>باك اب الرسيفر <small>Backup &amp; Restore</small></h2><p>ارفع ملف الباك اب اللي عمله الرسيفر، أو احفظ سيرفرات الموقع والمفضلة في ملف الرسيفر يقدر يرجّعه.</p></div><div class="badge" id="backupBadge"><span class="dot"></span><span id="backupBadgeText">…</span></div></div>
+    <div class="connection-head"><div><h2>Backup &amp; Restore <small lang="ar" dir="rtl">باك اب الرسيفر</small></h2><p>Load the backup file your receiver made, or save this site's servers and Favorites as a backup the receiver can restore.</p></div><div class="badge" id="backupBadge"><span class="dot"></span><span id="backupBadgeText">…</span></div></div>
     <div class="backup-grid">
       <div class="backup-card">
         <span class="launch-half-kicker">FROM THE RECEIVER · من الرسيفر</span>
-        <strong>ارفع باك اب الرسيفر</strong>
-        <p>على الرسيفر: Settings › Storage &amp; Maintenance › Backup &amp; Restore › Create portable backup. انسخ الملف <code>ultrastalker-backup-….zip</code> من <code>/media/hdd/UltraStalker/Backup</code> واختاره هنا. هيحل محل السيرفرات والمفضلة اللي على الموقع.</p>
-        <label class="btn green" for="backupFile">＋ اختار ملف الباك اب</label><input id="backupFile" type="file" accept=".zip,application/zip" hidden>
+        <strong>Load receiver backup</strong>
+        <p>On the receiver: Settings › Storage &amp; Maintenance › Backup &amp; Restore › Create portable backup. Copy the file <code>ultrastalker-backup-….zip</code> from <code>/media/hdd/UltraStalker/Backup</code> and choose it here. It replaces the servers and Favorites saved on this site.</p>
+        <label class="btn green" for="backupFile">＋ Choose backup file</label><input id="backupFile" type="file" accept=".zip,application/zip" hidden>
       </div>
       <div class="backup-card">
         <span class="launch-half-kicker">TO THE RECEIVER · للرسيفر</span>
-        <strong>احفظ باك اب للرسيفر</strong>
-        <p>بينزّل ملف <code>ultrastalker-backup-….zip</code> فيه السيرفرات والمفضلة اللي على الموقع. حطه في <code>/media/hdd/UltraStalker/Backup</code>، وبعدين على الرسيفر افتح Backup &amp; Restore › Restore backup.</p>
-        <button type="button" class="btn" id="backupSaveBtn">⇩ احفظ ملف الباك اب</button>
+        <strong>Save backup for the receiver</strong>
+        <p>Downloads <code>ultrastalker-backup-….zip</code> with the servers and Favorites from this site. Put it in <code>/media/hdd/UltraStalker/Backup</code>, then on the receiver open Backup &amp; Restore › Restore backup.</p>
+        <button type="button" class="btn" id="backupSaveBtn">⇩ Save backup file</button>
       </div>
     </div>
     <div class="connection-result" id="backupResult" aria-live="polite">Checking this browser…</div>
@@ -706,6 +706,6 @@ $('managerSaveBtn').addEventListener('click', async () => {
 });
 loadManager();
 </script>
-<script src="sources.js?v=8"></script>
+<script src="sources.js?v=9"></script>
 </body>
 </html>
