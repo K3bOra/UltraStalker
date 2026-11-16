@@ -1520,6 +1520,35 @@
     store.setFavorites(list);
     return { ok: true, item: body.item, favorite };
   };
+  /* Now / next for one live channel (Stalker get_short_epg, Xtream get_short_epg). */
+  API["browse/epg"] = async (url) => {
+    const entry = cached(q(url, "item"));
+    const p = findProfile(entry.account);
+    const c = client(p);
+    const row = entry.item || {};
+    const now = Math.floor(Date.now() / 1000);
+    const dec = (v) => {
+      try {
+        return decodeURIComponent(escape(atob(String(v || ""))));
+      } catch (_) {
+        return str(v);
+      }
+    };
+    let rows = [];
+    try {
+      if (c instanceof Stalker) {
+        const js = await c.call({ type: "itv", action: "get_short_epg", ch_id: String(row.id || row.ch_id || ""), size: "4", JsHttpRequest: "1-xml" });
+        rows = Stalker.rows(js).map((e) => ({ title: str(e.name || e.title), start: Number(e.start_timestamp) || 0, end: Number(e.stop_timestamp) || 0, description: str(e.descr || e.description) }));
+      } else if (c instanceof Xtream && row.stream_id) {
+        const js = await c.api("get_short_epg", { stream_id: String(row.stream_id), limit: "4" }, "epg:" + row.stream_id + ":" + Math.floor(now / 300));
+        rows = ((js && js.epg_listings) || []).map((e) => ({ title: dec(e.title), start: Number(e.start_timestamp) || 0, end: Number(e.stop_timestamp) || 0, description: dec(e.description) }));
+      }
+    } catch (_) {
+      rows = [];
+    }
+    rows = rows.filter((e) => e.title && e.end > now - 60).sort((a, b) => a.start - b.start);
+    return { ok: true, now, rows };
+  };
   API["browse/local"] = () => {
     throw new WebError("The Local library lives on the receiver's HDD and is only available on the receiver.", 404);
   };
@@ -1786,6 +1815,10 @@
     canonicalMac,
     parseTextImports,
     resetClients: () => CLIENTS.clear(),
+    entry: (token) => cached(token),
+    adopt: (entry) => remember(entry.account, entry.media, entry.item, { parent: entry.parent || "", category: entry.category || "", category_title: entry.category_title || "" }),
+    accountId,
+    findProfile,
     playHeaders,
   };
 

@@ -1,0 +1,150 @@
+/* Ultra Stalker Web — computer layout (body.desk, set by desktop.js on wide screens).
+   Same materials as the receiver page — deep green glass, Palestinian edge — laid out
+   like Ultra Quran: a menu on the right, the content filling the rest of the screen. */
+body.desk{--side:304px;--gap:26px;--edge:linear-gradient(140deg,rgba(245,243,237,.55),rgba(39,196,106,.95) 30%,rgba(16,98,54,.6) 55%,rgba(214,44,58,.9) 80%,rgba(8,12,9,.9));
+  overflow-x:hidden;background:radial-gradient(1200px 700px at 105% -10%,rgba(214,44,58,.16),transparent 60%),radial-gradient(1100px 800px at -10% 110%,rgba(30,170,92,.18),transparent 60%),linear-gradient(180deg,#020705,#06110b 50%,#020705)!important}
+body.desk:before,body.desk:after{display:none!important}
+body.desk .wrap{width:auto!important;max-width:none!important;margin:0 calc(var(--side) + var(--gap) * 2) 0 var(--gap)!important;padding:var(--gap) 0 60px!important}
+body.desk .hero,body.desk .home-launches,body.desk .footer,body.desk .browse-controls .section-head,body.desk .portal-home-row,
+body.desk .control-grid,body.desk .utility-row{display:none!important}
+body.desk .browse-controls{display:block!important;height:0;overflow:visible}
+
+/* ---------------------------------------------------------------- menu (right) */
+.dk-side{position:fixed;z-index:60;top:var(--gap);bottom:var(--gap);right:var(--gap);width:var(--side);display:flex;flex-direction:column;gap:14px;padding:22px 18px 18px;border-radius:30px;border:3px solid transparent;
+  background:linear-gradient(170deg,rgba(7,27,16,.96),rgba(3,12,8,.97) 55%,rgba(40,9,15,.9)) padding-box,var(--edge) border-box;box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.04);overflow-y:auto;scrollbar-width:none}
+.dk-side::-webkit-scrollbar{display:none}
+.dk-brand{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;padding:2px 0 10px;position:relative}
+.dk-brand img{width:100%;max-width:250px;height:auto;filter:drop-shadow(0 8px 26px rgba(34,181,97,.28))}
+.dk-brand span{font-size:9.5px;letter-spacing:.22em;white-space:nowrap;text-transform:uppercase;color:#8fb09b;font-weight:850}
+.dk-brand:after{content:"";position:absolute;bottom:0;left:18%;right:18%;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#27c46a 30%,#f2f0ea 50%,#d92f40 70%,transparent)}
+.dk-label{display:flex;justify-content:space-between;align-items:baseline;margin:2px 4px 7px;font-size:10px;font-weight:850;letter-spacing:.13em;text-transform:uppercase;color:#88a894}
+.dk-label span{letter-spacing:0;font-size:11px;color:#6f8f7b}
+.dk-source .source-field{margin:0}
+.dk-source .source-field>label,.dk-source .source-field-head{display:none!important}
+.dk-source .select{height:56px!important;min-height:56px!important;font-size:14px!important;border-radius:17px!important}
+.dk-source .source-field:after{bottom:16px!important}
+.dk-source .source-kind-badge{display:none!important}
+.dk-source.flash .select{animation:dkflash .9s ease}
+@keyframes dkflash{0%,100%{box-shadow:none}30%,70%{box-shadow:0 0 0 3px rgba(39,196,106,.55),0 0 28px rgba(39,196,106,.35)}}
+
+.dk-nav{display:flex;flex-direction:column;gap:6px}
+.dk-nav>button,.dk-nav>a{appearance:none;display:flex;align-items:center;gap:13px;width:100%;min-height:58px;padding:8px 12px;border-radius:18px;border:2px solid transparent;background:transparent;color:#e8f2eb;text-decoration:none;font:inherit;text-align:left;cursor:pointer;transition:background .18s ease,transform .18s ease,border-color .18s ease}
+.dk-nav>button:hover,.dk-nav>a:hover{background:rgba(39,196,106,.07);transform:translateX(-2px)}
+.dk-ic{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(150deg,rgba(9,34,20,.95),rgba(4,14,9,.95)) padding-box,linear-gradient(135deg,rgba(244,242,235,.16),rgba(39,190,102,.45),rgba(200,42,56,.35)) border-box;border:2px solid transparent}
+.dk-ic img{width:34px;height:26px;object-fit:contain}
+.dk-ic svg{width:21px;height:21px;fill:none;stroke:#bfe8cd;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dk-tx{display:flex;flex-direction:column;min-width:0}
+.dk-tx b{font-size:15px;font-weight:780;letter-spacing:-.01em}
+.dk-tx small{font-size:11.5px;color:#83a08d;direction:rtl;text-align:left}
+.dk-nav>button.on{background:linear-gradient(135deg,rgba(26,140,76,.92),rgba(10,72,40,.92) 60%,rgba(118,22,34,.78)) padding-box,linear-gradient(135deg,rgba(245,243,237,.5),rgba(52,214,120,.9),rgba(218,48,62,.75)) border-box;border-color:transparent;box-shadow:0 12px 32px rgba(10,110,55,.28),inset 0 1px rgba(255,255,255,.12)}
+.dk-nav>button.on .dk-ic{background:rgba(2,10,6,.45);border-color:rgba(255,255,255,.18)}
+.dk-nav>button.on small{color:#cfeedb}
+.dk-tools>a{min-height:50px}
+.dk-tools .dk-ic{width:38px;height:38px;border-radius:12px}
+.dk-tools .dk-tx b{font-size:13.5px}
+.dk-sep{display:flex;justify-content:center;padding:2px 0}
+.dk-sep i{width:62%;height:1px;background:linear-gradient(90deg,transparent,rgba(39,196,106,.45),rgba(217,47,64,.4),transparent)}
+.dk-credit{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:3px;padding:14px 12px 12px;border-radius:20px;border:2px solid transparent;text-align:center;background:linear-gradient(170deg,rgba(9,30,19,.9),rgba(4,12,8,.95)) padding-box,linear-gradient(135deg,rgba(244,242,235,.14),rgba(39,190,102,.38),rgba(200,42,56,.3)) border-box}
+.dk-credit small{font-size:10px;color:#7f9c89;letter-spacing:.04em}
+.dk-credit b{font-size:17px;letter-spacing:.02em;background:linear-gradient(90deg,#f4f1e9,#5fe39a 55%,#ff7b86);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dk-credit span{font-size:10px;color:#5f7d6a}
+
+/* ---------------------------------------------------------------- top bar */
+.dk-top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:0 0 20px;padding:0 4px}
+.dk-where{min-width:0}
+.dk-where small{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7fa58c;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+.dk-where h1{margin:4px 0 2px;font-size:clamp(30px,2.6vw,44px);line-height:1.05;letter-spacing:-.035em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+.dk-where span{font-size:13px;color:#8aa794}
+.dk-search{flex:0 1 560px}
+.dk-search .search-box{grid-template-columns:minmax(0,1fr) auto!important}
+.dk-search .search-input{min-height:54px!important;border-radius:18px!important;font-size:15px!important;padding:0 18px!important}
+.dk-search .utility-btn{min-height:54px!important;border-radius:18px!important;padding:0 26px!important;font-size:13px!important}
+
+/* ---------------------------------------------------------------- content */
+body.desk .shell{border-radius:30px!important}
+body.desk .inner{padding:26px 28px 30px!important}
+body.desk .statusbar{margin:0 0 16px!important;padding-top:0!important;border-top:0!important;font-size:13px}
+body.desk .categories{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))!important;gap:14px!important}
+body.desk .category{min-height:78px!important;padding:14px 18px!important;border-radius:20px!important;transition:transform .16s ease,filter .16s ease}
+body.desk .category:hover{transform:translateY(-2px);filter:brightness(1.08)}
+body.desk .category-title{font-size:15px!important}
+body.desk .items-head{margin-bottom:20px!important}
+body.desk .items-head h3{font-size:26px!important}
+body.desk .items.poster-grid,body.desk .poster-grid{grid-template-columns:repeat(auto-fill,minmax(188px,1fr))!important;gap:24px 20px!important}
+body.desk .poster-card{border-radius:20px!important;transition:transform .2s ease,box-shadow .2s ease,filter .2s ease!important}
+body.desk .poster-card:hover{transform:translateY(-6px) scale(1.015)!important;box-shadow:0 22px 44px rgba(0,0,0,.45),0 0 0 1px rgba(52,214,120,.25)!important;filter:brightness(1.06)}
+body.desk .poster-card .item-title{font-size:14px!important}
+body.desk .items.live-grid{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))!important;gap:14px!important}
+body.desk .live-card{min-height:112px!important;transition:transform .16s ease}
+body.desk .live-card:hover{transform:translateY(-2px)}
+body.desk .search-gateway{grid-template-columns:repeat(2,minmax(0,560px))!important}
+body.desk .favorites-tabs{max-width:900px}
+body.desk .series-cinematic,body.desk .series-cinematic-content{min-height:520px!important}
+body.desk .series-cinematic-content{grid-template-columns:230px minmax(0,1fr)!important;gap:34px!important;padding:110px 44px 40px!important}
+body.desk .series-detail-poster{width:230px!important;border-radius:22px!important}
+body.desk .series-info h3{font-size:clamp(36px,3.4vw,58px)!important}
+body.desk .series-overview{max-width:900px!important;font-size:14.5px!important}
+body.desk .seasons-panel{padding:26px 30px!important}
+
+/* ---------------------------------------------------------------- welcome (no source chosen) */
+.dk-welcome{display:none}
+body.desk.dk-home .dk-welcome{display:block}
+body.desk.dk-home main.shell{display:none!important}
+.dk-hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,42%);align-items:center;gap:30px;min-height:330px;padding:40px 46px;border-radius:32px;overflow:hidden;border:3px solid transparent;
+  background:radial-gradient(600px 300px at 85% 20%,rgba(214,44,58,.22),transparent 70%),radial-gradient(700px 360px at 10% 110%,rgba(39,196,106,.22),transparent 70%),linear-gradient(160deg,rgba(7,28,16,.97),rgba(3,12,8,.98)) padding-box,var(--edge) border-box;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.dk-hero:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(70,185,114,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(70,185,114,.05) 1px,transparent 1px);background-size:38px 38px;mask-image:radial-gradient(circle at 70% 40%,#000,transparent 70%);pointer-events:none}
+.dk-hero-copy{position:relative}
+.dk-hero-copy small{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#8fb29b;font-weight:850}
+.dk-hero-copy h2{margin:10px 0 12px;font-size:clamp(38px,3.6vw,62px);line-height:1;letter-spacing:-.045em}
+.dk-hero-copy p{margin:0;color:#a9c0b1;font-size:15px;line-height:1.65;max-width:620px}
+.dk-hero-copy p.ar{direction:rtl;text-align:left;margin-top:8px;color:#8fae9a}
+.dk-hero>img{position:relative;width:100%;height:auto;filter:drop-shadow(0 18px 50px rgba(34,181,97,.3))}
+.dk-row-h{display:flex;align-items:baseline;justify-content:space-between;margin:34px 6px 14px}
+.dk-row-h h3{margin:0;font-size:24px;letter-spacing:-.02em}.dk-row-h h3 span{font-size:14px;color:#7f9c89;margin-left:10px;font-weight:600}
+.dk-row-h>span{color:#7f9c89;font-size:12px}
+.dk-sources{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.dk-src{appearance:none;position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:150px;padding:20px 22px;border-radius:24px;border:3px solid transparent;color:#f3f8f5;font:inherit;text-align:left;cursor:pointer;overflow:hidden;
+  background:linear-gradient(155deg,rgba(7,26,15,.97),rgba(3,11,7,.98) 60%,rgba(48,11,17,.55)) padding-box,linear-gradient(135deg,rgba(244,242,235,.2),rgba(39,190,102,.55),rgba(200,42,56,.45)) border-box;transition:transform .18s ease,box-shadow .18s ease}
+.dk-src:hover{transform:translateY(-4px);box-shadow:0 22px 50px rgba(0,0,0,.4),0 0 0 1px rgba(52,214,120,.3)}
+.dk-src b{font-size:20px;letter-spacing:-.02em;line-height:1.2}
+.dk-src-k{font-size:10px;font-weight:850;letter-spacing:.14em;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:rgba(39,196,106,.14);color:#9fe0b8;border:1px solid rgba(39,196,106,.3)}
+.dk-src.xtream .dk-src-k{background:rgba(214,44,58,.14);color:#ffb1b9;border-color:rgba(214,44,58,.35)}
+.dk-src.m3u .dk-src-k{background:rgba(242,240,234,.1);color:#ece9df;border-color:rgba(242,240,234,.25)}
+.dk-src-go{margin-top:auto;font-size:12px;font-weight:800;color:#7fd8a2}
+.dk-empty{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:30px;padding:46px;border-radius:28px;border:2px dashed rgba(42,177,99,.25);text-align:center}
+.dk-empty b{font-size:22px}.dk-empty span{color:#8fa999;direction:rtl}
+.dk-empty div{display:flex;gap:12px;margin-top:8px}
+.dk-btn{display:inline-flex;align-items:center;min-height:50px;padding:0 22px;border-radius:16px;font-weight:800;font-size:14px;color:#fff;text-decoration:none;border:2px solid transparent;background:linear-gradient(135deg,rgba(22,127,68,.92),rgba(10,72,40,.9) 62%,rgba(105,20,31,.78)) padding-box,linear-gradient(135deg,rgba(245,243,237,.35),rgba(45,202,111,.85),rgba(211,45,59,.7)) border-box}
+.dk-btn.ghost{background:linear-gradient(rgba(4,14,9,.92),rgba(4,14,9,.92)) padding-box,linear-gradient(135deg,rgba(245,243,237,.2),rgba(39,190,102,.5),rgba(200,42,56,.4)) border-box}
+
+@media (max-width:1380px){body.desk{--side:272px;--gap:20px}.dk-nav>button,.dk-nav>a{min-height:52px}.dk-ic{width:40px;height:40px}.dk-hero{grid-template-columns:1fr}.dk-hero>img{max-width:420px}}
+@media (max-height:820px){.dk-brand img{max-width:200px}.dk-nav>button{min-height:48px}.dk-ic{width:38px;height:38px}.dk-tools>a{min-height:44px}.dk-credit{padding:10px}}
+
+/* The top bar already says where you are. */
+body.desk #itemsTitle,body.desk #itemsSub{display:none!important}
+body.desk .items-head{align-items:center!important}
+/* Movement on hover (the receiver page switches transitions off). */
+body.desk .poster-card,body.desk .category,body.desk .live-card,.dk-src,.dk-nav>button,.dk-nav>a{transition:transform .2s ease,box-shadow .2s ease,filter .2s ease,background .2s ease!important}
+/* The page's glowing edge is drawn by .shell:before; keep it on the content card. */
+body.desk .shell{position:relative!important}
+/* Live channels: compact rows, logo beside the name. */
+body.desk .items.live-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))!important}
+body.desk .live-card{display:grid!important;grid-template-columns:76px minmax(0,1fr)!important;align-items:center!important;gap:16px!important;min-height:100px!important;padding:12px 16px!important;text-align:left!important}
+body.desk .live-card .live-picon-frame{width:76px!important;height:76px!important;margin:0!important}
+body.desk .live-copy{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;min-height:0!important;gap:8px!important;text-align:left!important}
+body.desk .live-copy .item-title{font-size:15px!important;text-align:left!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
+body.desk .live-copy .item-actions{margin:0!important;justify-content:flex-start!important;width:auto!important;display:flex!important}
+
+/* ---------------------------------------------------------------- Sources & Backup page */
+body.desk-sources .wrap{padding-top:var(--gap)!important}
+body.desk-sources .topbar{display:none!important}
+body.desk-sources .hero{display:block!important;text-align:left!important;padding:6px 6px 22px!important}
+body.desk-sources .hero .logo-wrap{display:none!important}
+body.desk-sources .hero h1{font-size:clamp(34px,3vw,52px)!important;margin:8px 0 8px!important}
+body.desk-sources .hero p{margin:0!important}
+body.desk-sources .shell{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start;background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+body.desk-sources .shell:before{display:none!important}
+body.desk-sources #browsePanel{display:none!important}
+body.desk-sources #backupPanel{grid-column:1/-1}
+body.desk-sources .glass{margin:0!important}
+.dk-tools>a.on{background:rgba(39,196,106,.1);border-color:rgba(39,196,106,.35)}

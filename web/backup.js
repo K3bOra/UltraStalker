@@ -9,6 +9,7 @@
           The receiver checks it like any of its own backups and restores it. */
 (function () {
   "use strict";
+  const HERE = ((document.currentScript && document.currentScript.src) || location.href).replace(/[^/]*$/, "");
   const E = () => window.USEngine;
   const ALLOWED = new Set([
     "profiles.json", "disabled_profiles.json", "settings.json", "recent_searches.json", "smart_engines.json",
@@ -47,13 +48,13 @@ CREATE TABLE IF NOT EXISTS portal_state(portal_key TEXT PRIMARY KEY,payload TEXT
     return loaded[src];
   }
   async function zipLib() {
-    await script("vendor/fflate.min.js");
+    await script(HERE + "vendor/fflate.min.js");
     return window.fflate;
   }
   let sqlPromise = null;
   async function sqlLib() {
-    await script("vendor/sql-wasm.js");
-    if (!sqlPromise) sqlPromise = window.initSqlJs({ locateFile: (f) => "vendor/" + f });
+    await script(HERE + "vendor/sql-wasm.js");
+    if (!sqlPromise) sqlPromise = window.initSqlJs({ locateFile: (f) => HERE + "vendor/" + f });
     return sqlPromise;
   }
 
