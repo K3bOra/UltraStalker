@@ -29,6 +29,32 @@
   ];
 
   let BROWSE = false;
+  // Cinematic details: mark rating / year chips and give episode cards artwork.
+  function decorateDetails() {
+    document.querySelectorAll(".series-cinematic .series-chip:not([data-dk])").forEach((c) => {
+      c.dataset.dk = "1";
+      const t = c.textContent.trim();
+      if (t.startsWith("★")) c.classList.add("dk-gold");
+      else if (/^(19|20)\d\d$/.test(t)) c.classList.add("dk-year");
+    });
+    const cards = document.querySelectorAll("#seriesOverview .inline-episode:not([data-dk])");
+    if (!cards.length) return;
+    const bg = document.getElementById("seriesBackdrop");
+    const poster = document.getElementById("seriesPoster");
+    const art = bg && bg.dataset.backdropState === "ready" && bg.src ? bg.src : poster && poster.src;
+    cards.forEach((b) => {
+      b.dataset.dk = "1";
+      if (art) b.style.setProperty("--ep-bg", 'url("' + String(art).replace(/"/g, "%22") + '")');
+      const m = /E(\d+)/.exec((b.querySelector("small") || {}).textContent || "");
+      const n = document.createElement("span");
+      n.className = "dk-ep-n";
+      n.textContent = m ? m[1] : "";
+      const play = document.createElement("span");
+      play.className = "dk-ep-play";
+      b.prepend(n, play);
+    });
+  }
+
   function build() {
     BROWSE = !!document.getElementById("browseAccount");
     document.body.classList.add("desk", BROWSE ? "desk-browse" : "desk-sources");
@@ -220,6 +246,10 @@
     }).observe($("browseAccount"), { childList: true });
     $("browseAccount").addEventListener("change", sync);
     $("itemsTitle") && new MutationObserver(sync).observe($("itemsTitle"), { childList: true, characterData: true, subtree: true });
+    ["seasonsStage", "movieStage"].forEach((id) => {
+      const el = $(id);
+      if (el) new MutationObserver(decorateDetails).observe(el, { childList: true, subtree: true });
+    });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();
