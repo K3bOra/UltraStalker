@@ -54,8 +54,20 @@
     msg.classList.toggle("err", !!err);
     msg.style.display = html ? "flex" : "none";
   }
+  let current = "";
+  const esc = (t) => String(t || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   function fail(detail) {
-    show("This stream could not play inside the browser." + (detail ? "<br><small>" + detail + "</small>" : "") + "<br>Try VLC or MX Player from the Play button.", true);
+    show("This stream could not play inside the browser." + (detail ? "<br><small>" + esc(detail) + "</small>" : "") + "<br>Try VLC or MX Player from the Play button.", true);
+    // Ask the relay why, so the message says what the portal or stream server answered.
+    const url = current;
+    if (!url || !/\/play\//.test(url)) return;
+    fetch(url, { headers: { Range: "bytes=0-0" }, cache: "no-store" })
+      .then(async (r) => {
+        if (url !== current) return;
+        const why = r.ok ? "The server sends a format this browser can't play." : (await r.text()).slice(0, 160) || "Server answered " + r.status;
+        show("This stream could not play inside the browser.<br><small>" + esc(why) + "</small><br>Try VLC or MX Player from the Play button.", true);
+      })
+      .catch(() => {});
   }
   function stop() {
     try {
@@ -108,6 +120,7 @@
     build();
     stop();
     const url = String(ticket.stream || ticket.url || "");
+    current = url;
     const headers = ticket.headers || {};
     title.textContent = ticket.title || "Ultra Stalker";
     sub.textContent = ticket.live ? "Live • playing in this browser" : "Playing in this browser";

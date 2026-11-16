@@ -523,53 +523,179 @@
       const ep = this.endpoint || portalEndpoints(this.p.portal)[0] || "";
       return ep.replace(/server\/load\.php$|portal\.php$/i, "");
     }
-    async categories(media) {
-      const action = media === "itv" ? "get_genres" : "get_categories";
-      const js = await this.call({ type: media, action, JsHttpRequest: "1-xml" });
-      return Stalker.rows(js)
-        .map((r) => ({ id: str(r.id ?? r.category_id ?? r.genre_id), title: str(r.title || r.name || r.category_name || r.alias) }))
-        .filter((r) => r.id !== "" && r.title && !/^(adult|for adults)$/i.test(r.title));
+    /* Folders, pages, search and seasons ask the portal exactly the way the receiver
+       does (client_mixin_catalogue.py / client_mixin_series.py), so portals answer
+       the site the same way they answer Ultra Stalker. */
+    async categoryRows(media, action) {
+      for (const sortby of [false, true]) {
+        const params = { type: media, action, JsHttpRequest: "1-xml" };
+        if (sortby) params.sortby = "number";
+        const js = await this.call(params);
+        const rows = Stalker.rows(js);
+        if (rows.length || Array.isArray(js)) return rows;
+      }
+      return [];
     }
-    async page(media, category, page, extra = {}) {
-      const params = Object.assign({ type: media, action: "get_ordered_list", p: String(page), JsHttpRequest: "1-xml" }, extra);
-      if (media === "itv") Object.assign(params, { genre: category, force_ch_link_check: "", fav: "0", sortby: "number", hd: "0" });
-      else Object.assign(params, { category, genre: category, sortby: "added" });
-      const js = await this.call(params);
-      const rows = Stalker.rows(js);
-      const total = Number((js && (js.total_items ?? js.total)) || 0);
-      const per = Number((js && js.max_page_items) || rows.length || 14);
+    async categories(media) {
+      const label = (r) => str(r.title || r.name || r.category_name || r.genre_name || r.label || r.alias);
+      let rows = [];
+      if (media === "itv") {
+        rows = await this.categoryRows("itv", "get_genres");
+        // Some portals answer get_genres with short routing labels (AR, AR, AR…); their real folders are in get_categories.
+        const counts = {};
+        rows.forEach((r) => { const k = label(r).toLowerCase(); if (k) counts[k] = (counts[k] || 0) + 1; });
+        if (rows.length >= 8 && Object.entries(counts).some(([k, n]) => n >= 3 && k.length <= 4)) {
+          const alt = await this.categoryRows("itv", "get_categories").catch(() => []);
+          if (new Set(alt.map(label)).size > new Set(rows.map(label)).size) rows = alt;
+        }
+      } else {
+        rows = await this.categoryRows(media, "get_categories");
+        if (!rows.length) rows = await this.categoryRows(media, "get_genres");
+      }
+      return rows
+        .map((r) => ({ id: str(r.id ?? r.category_id ?? r.genre_id), title: label(r) }))
+        .filter((r) => r.id !== "" && r.title);
+    }
+    listParams(media, category, page) {
+      const params = { type: media, action: "get_ordered_list", p: String(page), JsHttpRequest: "1-xml" };
+      if (media === "itv") Object.assign(params, { genre: category, force_ch_link_check: "0" });
+      else if (media === "vod") params.category = category;
+      else Object.assign(params, { movie_id: "0", season_id: "0", episode_id: "0", category });
+      return params;
+    }
+    async page(media, category, page) {
+      let js, rows = [];
+      for (const sortby of [false, true]) {
+        const params = this.listParams(media, category, page);
+        if (sortby) params.sortby = "number";
+        js = await this.call(params);
+        rows = Stalker.rows(js);
+        if (rows.length) break;
+      }
+      const meta = js && typeof js === "object" && !Array.isArray(js) ? js : {};
+      const total = Number(meta.total_items || meta.total || 0) || 0;
+      const per = Number(meta.max_page_items || meta.page_size || rows.length || 1) || 1;
       return { rows, total, hasNext: rows.length > 0 && (total ? page * per < total : rows.length >= per) };
     }
     async search(media, q) {
-      const out = [];
-      for (let p = 1; p <= 3; p++) {
-        const js = await this.call({ type: media, action: "get_ordered_list", search: q, p: String(p), sortby: "added", JsHttpRequest: "1-xml" });
+      // Like the receiver: the first search key that gets rows is used, then every row is checked against the words.
+      const ident = (r) => str(r.id || r.series_id || r.movie_id || r.cmd || r.name);
+      let key = null, first = null;
+      for (const k of ["search", "search_str", "name"]) {
+        try {
+          const params = this.listParams(media, "*", 1);
+          params[k] = q;
+          const js = await this.call(params);
+          if (Stalker.rows(js).length) {
+            key = k;
+            first = js;
+            break;
+          }
+        } catch (_) {}
+      }
+      if (!key) return [];
+      const needle = str(q).toLowerCase(), words = normTitle(q).split(" ").filter(Boolean);
+      const out = [], seen = new Set();
+      let js = first;
+      for (let p = 1; p <= 4; p++) {
+        if (p > 1) {
+          const params = this.listParams(media, "*", p);
+          params[key] = q;
+          try {
+            js = await this.call(params);
+          } catch (_) {
+            break;
+          }
+        }
         const rows = Stalker.rows(js);
-        out.push(...rows);
-        const total = Number((js && js.total_items) || 0), per = Number((js && js.max_page_items) || 14);
-        if (!rows.length || !total || p * per >= total) break;
+        let fresh = 0;
+        for (const r of rows) {
+          const k = ident(r);
+          if (seen.has(k)) continue;
+          seen.add(k);
+          fresh++;
+          const hay = str(r.name || r.title) + " " + str(r.o_name) + " " + str(r.description || r.descr);
+          const norm = normTitle(hay);
+          if (hay.toLowerCase().includes(needle) || words.every((w) => norm.includes(w))) out.push(r);
+        }
+        const total = Number((js && js.total_items) || 0), per = Number((js && js.max_page_items) || rows.length || 1);
+        if (!rows.length || !fresh || (total && seen.size >= total) || (!total && rows.length < per)) break;
       }
       return out;
     }
     seriesId(item) {
-      return item.series_id ?? item.id ?? item.movie_id;
+      return item.series_id || item.id || item.movie_id;
+    }
+    static rowIdentity(row, index) {
+      const ep = row.episode_id || row.episode;
+      if (!empty(ep)) return "episode|" + str(row.season || row.season_number || row.season_id) + "|" + str(ep) + "|" + str(row.id);
+      const n = Stalker.seasonNumber(row, "");
+      if (!empty(n)) return "season|" + str(n);
+      if (!empty(row.season_id)) return "season_id|" + str(row.season_id);
+      if (!empty(row.id)) return "id|" + str(row.id);
+      return "row|" + str(row.name || row.title) + "|" + index;
+    }
+    static mergeRows(...lists) {
+      const merged = new Map();
+      for (const list of lists) {
+        (list || []).forEach((row, i) => {
+          if (!row || typeof row !== "object") return;
+          const k = Stalker.rowIdentity(row, i);
+          const prev = merged.get(k);
+          if (!prev) merged.set(k, Object.assign({}, row));
+          else for (const [f, v] of Object.entries(row)) if (!(v == null || v === "" || (Array.isArray(v) && !v.length))) prev[f] = v;
+        });
+      }
+      return [...merged.values()];
+    }
+    static suspicious(rows) {
+      if (!rows.length) return true;
+      if (rows.some((r) => r.episode_id || r.episode)) return false;
+      const nums = [];
+      rows.forEach((r, i) => {
+        let t = str(Stalker.seasonNumber(r, i + 1));
+        if (t.includes(":")) t = t.split(":").pop();
+        const n = parseInt(t, 10);
+        if (Number.isFinite(n)) nums.push(n);
+      });
+      if (!nums.length) return false;
+      const u = [...new Set(nums)].sort((a, b) => a - b);
+      if (u[0] > 1) return true;
+      return u.length !== u[u.length - 1] - u[0] + 1;
+    }
+    async seriesRowsOnce(seriesId, page) {
+      const params = { type: "series", action: "get_ordered_list", movie_id: String(seriesId), season_id: "0", episode_id: "0", JsHttpRequest: "1-xml" };
+      if (page != null) Object.assign(params, { p: String(page), page: String(page) });
+      return Stalker.rows(await this.call(params));
     }
     async seriesRows(seriesId) {
-      let rows = [];
-      for (const type of ["series", "vod"]) {
+      const fresh = await this.seriesRowsOnce(seriesId);
+      let combined = Stalker.mergeRows(fresh);
+      if (Stalker.suspicious(fresh)) {
         try {
-          const js = await this.call({ type, action: "get_ordered_list", movie_id: String(seriesId), season_id: "0", episode_id: "0", p: "1", JsHttpRequest: "1-xml" });
-          rows = Stalker.rows(js);
-          const total = Number((js && js.total_items) || 0), per = Number((js && js.max_page_items) || rows.length || 14);
-          for (let p = 2; rows.length && total > rows.length && p <= 10 && (p - 1) * per < total; p++) {
-            const more = Stalker.rows(await this.call({ type, action: "get_ordered_list", movie_id: String(seriesId), season_id: "0", episode_id: "0", p: String(p), JsHttpRequest: "1-xml" }));
-            if (!more.length) break;
-            rows.push(...more);
-          }
+          combined = Stalker.mergeRows(combined, await this.seriesRowsOnce(seriesId));
         } catch (_) {}
-        if (rows.length) break;
+        let seen = combined.length;
+        for (let page = 1; page < 5; page++) {
+          let rows;
+          try {
+            rows = await this.seriesRowsOnce(seriesId, page);
+          } catch (_) {
+            break;
+          }
+          if (!rows.length) break;
+          const merged = Stalker.mergeRows(combined, rows);
+          if (merged.length <= seen) break;
+          combined = merged;
+          seen = combined.length;
+          if (!Stalker.suspicious(combined)) break;
+        }
       }
-      return rows;
+      // Seasons carry their episode list; rows without one are other titles some portals add to later pages.
+      if (combined.some((r) => Array.isArray(r.series) && r.series.length)) {
+        combined = combined.filter((r) => (Array.isArray(r.series) && r.series.length) || (Array.isArray(r.episodes) && r.episodes.length) || str(r.id).includes(":"));
+      }
+      return combined;
     }
     static seasonNumber(season, fallback) {
       const sid = str(season && (season.id || season.season_id));
@@ -1248,6 +1374,9 @@
       const number = s.season || i + 1;
       return { id, title: str(s.name) || "Season " + number, number: String(number), episode_count: eps };
     });
+    // Like the receiver: seasons from 1 upward, then Season 0 / specials, then unnumbered ones.
+    const order = (x) => { const n = parseInt(x.number, 10); return Number.isFinite(n) ? (n >= 1 ? n : n === 0 ? 1e6 : 2e6) : 3e6; };
+    out.sort((a, b) => order(a) - order(b));
     return { ok: true, count: out.length, seasons: out };
   };
 

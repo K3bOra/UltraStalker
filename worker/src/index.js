@@ -296,10 +296,12 @@ async function portalCall(d, params, token, env) {
 }
 /* Ask the portal for a fresh stream link; sign in again if the saved session ended. */
 async function stalkerLink(d, env) {
+  let why = "";
   const tryLink = async (token, series) => {
     const params = Object.assign({}, d.create, series != null ? { series: String(series) } : {});
     const js = await portalCall(d, params, token, env);
     const value = js && typeof js === "object" ? js.cmd || js.url || js.link : js;
+    if (js && typeof js === "object" && js.error) why = String(js.error).slice(0, 120);
     const clean = stripPlayer(value, d.mac);
     return /^(https?|rtmp|rtsp):\/\//i.test(clean) && !/\/\/(localhost|127\.0\.0\.1)[:/]/i.test(clean) ? clean : "";
   };
@@ -318,7 +320,7 @@ async function stalkerLink(d, env) {
     }
   }
   if (!link && d.fallback) link = d.fallback;
-  if (!link) throw new Error("The portal did not give a stream link");
+  if (!link) throw new Error("The portal did not give a stream link" + (why ? " (" + why + ")" : ""));
   return link;
 }
 
@@ -346,6 +348,30 @@ async function makeTicket(request, origin, env) {
   }
 }
 
+/* A movie is read in many pieces (players jump to the end of the file, seek, retry).
+   Asking the portal for a new link for every piece makes many portals cut the
+   previous one, so a link is kept and reused while it keeps working; when the
+   stream server refuses it, a fresh one is asked for at once. Live links are
+   kept only briefly because they are usually good for one connection. */
+const LINKS = new Map();
+function linkCache(ticket, d) {
+  const key = ticket.slice(-48);
+  const ttl = d.create && d.create.type === "itv" ? 20e3 : 3 * 3600e3;
+  return {
+    get() {
+      const hit = LINKS.get(key);
+      return hit && Date.now() - hit.at < ttl ? hit.link : "";
+    },
+    set(link) {
+      if (LINKS.size > 500) LINKS.delete(LINKS.keys().next().value);
+      LINKS.set(key, { link, at: Date.now() });
+    },
+    drop() {
+      LINKS.delete(key);
+    },
+  };
+}
+
 async function play(request, ticket, env) {
   const open = cors("*");
   let d;
@@ -354,29 +380,37 @@ async function play(request, ticket, env) {
   } catch (_) {
     return new Response("This link expired. Open it again from Ultra Stalker.", { status: 403, headers: open });
   }
-  let target, headers;
-  try {
-    if (d.mode === "stalker") {
-      target = await stalkerLink(d, env);
-      headers = d.streamHeaders || {};
-    } else {
-      target = d.u;
-      headers = d.h || {};
-    }
-  } catch (e) {
-    return new Response(String(e.message || e), { status: 502, headers: open });
-  }
+  const headers = d.mode === "stalker" ? d.streamHeaders || {} : d.h || {};
   const h = cleanHeaders(headers);
   for (const name of PASS_REQ) {
     const v = request.headers.get(name);
     if (v) h.set(name, v);
   }
-  let res, final;
-  try {
-    ({ res, final } = await fetchFollow(target, { method: request.method === "HEAD" ? "HEAD" : "GET", headers: h }, env));
-  } catch (e) {
-    return new Response("Stream server unreachable", { status: 502, headers: open });
+  const init = { method: request.method === "HEAD" ? "HEAD" : "GET", headers: h };
+  const cache = d.mode === "stalker" ? linkCache(ticket, d) : null;
+  let res, final, target, problem = "";
+  for (let round = 0; round < 2; round++) {
+    const reused = cache && round === 0 ? cache.get() : "";
+    try {
+      target = d.mode === "stalker" ? reused || (await stalkerLink(d, env)) : d.u;
+    } catch (e) {
+      return new Response(String(e.message || e), { status: 502, headers: open });
+    }
+    try {
+      ({ res, final } = await fetchFollow(target, init, env));
+    } catch (e) {
+      res = null;
+      problem = "Stream server unreachable";
+    }
+    if (res && res.status < 400) {
+      if (cache) cache.set(target);
+      break;
+    }
+    if (res) problem = "Stream server answered " + res.status;
+    if (cache) cache.drop();
+    if (!cache) break; // a plain link has no fresh copy to ask for
   }
+  if (!res) return new Response(problem, { status: 502, headers: open });
   const out = new Headers(open);
   for (const name of PASS_RES) {
     const v = res.headers.get(name);
