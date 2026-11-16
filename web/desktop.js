@@ -1,14 +1,14 @@
-/* Ultra Stalker Web — computer layout.
+/* Ultra Stalker Web — the app shell (phone and computer).
 
-   On wide screens the receiver's Browse page becomes a full-screen app: a premium
-   menu on the right (like Ultra Quran), the content using the whole width, and
-   big poster walls you scroll through. The page's own elements are moved, not
-   copied, so all of the receiver page's code keeps working unchanged. Phones keep
-   the original layout. */
+   Computer (1100px and wider): a menu on the right, a top bar, the content using
+   the whole width, and the Live TV screen.
+   Phone and tablet: a top bar with the source picker and a tab bar at the bottom.
+   The receiver page's own elements are moved, not copied, so all of its code keeps
+   working unchanged. */
 (function () {
   "use strict";
   const WIDE = window.matchMedia("(min-width: 1100px)");
-  if (!WIDE.matches || /[?&]phone=1/.test(location.search)) return;
+  const DESK = WIDE.matches && !/[?&]phone=1/.test(location.search);
   WIDE.addEventListener("change", () => location.reload());
   const $ = (id) => document.getElementById(id);
   const ICON = {
@@ -21,9 +21,9 @@
   };
   const NAV = [
     ["portals", "Portals", "البورتالات", '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>'],
-    ["itv", "Live TV", "البث المباشر", '<img src="ui/live.png" alt="">'],
-    ["vod", "Movies", "الأفلام", '<img src="ui/movies.png" alt="">'],
-    ["series", "Series", "المسلسلات", '<img src="ui/series.png" alt="">'],
+    ["itv", "Live TV", "البث المباشر", '<img src="ui/gold/live.png" alt="">'],
+    ["vod", "Movies", "الأفلام", '<img src="ui/gold/movies.png" alt="">'],
+    ["series", "Series", "المسلسلات", '<img src="ui/gold/series.png" alt="">'],
     ["search", "Search", "البحث", ICON.search],
     ["fav", "Favorites", "المفضلة", ICON.star],
   ];
@@ -160,28 +160,145 @@
       content.appendChild(box);
     }
   }
+  function openItemId(media) {
+    try {
+      // The receiver page keeps the open movie / series in these globals.
+      // eslint-disable-next-line no-undef
+      if (media === "series") return typeof activeSeries !== "undefined" && activeSeries ? String(activeSeries.id) : "";
+      // eslint-disable-next-line no-undef
+      return typeof activeMovie !== "undefined" && activeMovie ? String(activeMovie.id) : "";
+    } catch (_) {
+      return "";
+    }
+  }
   document.addEventListener("us-details", (e) => {
-    if (document.body.classList.contains("desk")) showExtras(e.detail || {});
+    const ex = e.detail || {};
+    if (ex.item && ex.item !== openItemId(ex.media)) return; // details fetched for the featured banner
+    showExtras(ex);
   });
+
+  /* ------------------------------------------------ featured banner over poster walls */
+  const feat = { key: "", ids: [], i: 0, timer: 0, data: new Map(), hold: false };
+  function featBuild() {
+    if ($("dkFeature")) return $("dkFeature");
+    const el = document.createElement("section");
+    el.id = "dkFeature";
+    el.className = "dk-feature";
+    el.innerHTML =
+      '<div class="dk-f-bg"><img alt=""><img alt=""></div><div class="dk-f-shade"></div>' +
+      '<div class="dk-f-copy"><small class="dk-f-k">مختارات · FEATURED</small><img class="dk-f-logo" alt=""><h2 class="dk-f-title"></h2>' +
+      '<div class="dk-f-meta"></div><p class="dk-f-plot"></p><div class="dk-f-acts"><button type="button" class="dk-f-go"><i></i><span>شاهد التفاصيل</span></button></div></div>' +
+      '<div class="dk-f-dots"></div>';
+    const head = $("itemsStage").querySelector(".items-head");
+    head.after(el);
+    el.addEventListener("mouseenter", () => (feat.hold = true));
+    el.addEventListener("mouseleave", () => (feat.hold = false));
+    el.querySelector(".dk-f-go").onclick = () => {
+      const card = document.querySelector(`#browseItems .poster-card[data-item="${CSS.escape(feat.ids[feat.i] || "")}"]`);
+      if (card) (card.querySelector(".item-title") || card).click();
+    };
+    el.querySelector(".dk-f-dots").onclick = (e) => {
+      const d = e.target.closest("i[data-i]");
+      if (d) featShow(+d.dataset.i);
+    };
+    return el;
+  }
+  async function featData(id) {
+    if (feat.data.has(id)) return feat.data.get(id);
+    const job = fetch("api/browse/details?item=" + encodeURIComponent(id), { cache: "no-store" })
+      .then((r) => r.json())
+      .catch(() => null);
+    feat.data.set(id, job);
+    return job;
+  }
+  async function featShow(i) {
+    const el = $("dkFeature");
+    if (!el || !feat.ids.length) return;
+    feat.i = (i + feat.ids.length) % feat.ids.length;
+    const id = feat.ids[feat.i];
+    const key = feat.key;
+    const d = await featData(id);
+    if (key !== feat.key || feat.ids[feat.i] !== id) return;
+    const ex = (window.USEngine.extras && window.USEngine.extras(id)) || {};
+    const back = window.USEngine.backdrop(id);
+    const art = back || window.USEngine.art(id, document.body.dataset.media) || "";
+    const imgs = el.querySelectorAll(".dk-f-bg img");
+    const front = imgs[0].classList.contains("on") ? imgs[1] : imgs[0];
+    const other = front === imgs[0] ? imgs[1] : imgs[0];
+    front.classList.toggle("soft", !back);
+    front.onload = () => {
+      front.classList.add("on");
+      other.classList.remove("on");
+    };
+    if (art) front.src = art;
+    const copy = el.querySelector(".dk-f-copy");
+    copy.classList.remove("in");
+    void copy.offsetWidth;
+    copy.classList.add("in");
+    const logo = el.querySelector(".dk-f-logo");
+    const title = el.querySelector(".dk-f-title");
+    title.textContent = (d && d.title) || (document.querySelector(`#browseItems [data-item="${CSS.escape(id)}"] .item-title`) || {}).textContent || "";
+    logo.classList.remove("on");
+    if (ex.logo) {
+      logo.onload = () => logo.classList.add("on");
+      logo.src = ex.logo;
+    } else logo.removeAttribute("src");
+    el.classList.toggle("has-logo", !!ex.logo);
+    const chips = [];
+    if (d) {
+      if (d.year) chips.push(`<span class="y">${d.year}</span>`);
+      if (d.rating) chips.push(`<span class="r">★ ${Number(d.rating).toFixed(1)}</span>`);
+      (d.genres || []).slice(0, 3).forEach((g) => chips.push(`<span>${esc(g)}</span>`));
+      if (d.runtime) chips.push(`<span>${d.runtime} دقيقة</span>`);
+    }
+    el.querySelector(".dk-f-meta").innerHTML = chips.join("");
+    el.querySelector(".dk-f-plot").textContent = (d && d.overview) || "";
+    el.querySelector(".dk-f-dots").innerHTML = feat.ids.map((_, k) => `<i data-i="${k}" class="${k === feat.i ? "on" : ""}"></i>`).join("");
+    // Warm the next one so the change is instant.
+    if (feat.ids.length > 1) featData(feat.ids[(feat.i + 1) % feat.ids.length]);
+  }
+  function featSync() {
+    const media = document.body.dataset.media;
+    const on = !!$("browseAccount").value && (media === "vod" || media === "series") && visible("itemsStage");
+    const cards = on ? [...document.querySelectorAll("#browseItems .poster-card[data-item]")] : [];
+    const el = $("dkFeature");
+    if (!cards.length) {
+      if (el) el.classList.add("hidden");
+      feat.key = "";
+      clearInterval(feat.timer);
+      return;
+    }
+    const ids = cards.slice(0, 5).map((c) => c.dataset.item);
+    const key = media + "|" + ids.join(",");
+    if (key === feat.key) return;
+    feat.key = key;
+    feat.ids = ids;
+    featBuild().classList.remove("hidden");
+    featShow(0);
+    clearInterval(feat.timer);
+    feat.timer = setInterval(() => {
+      if (!feat.hold && !document.hidden && feat.ids.length > 1 && visible("itemsStage")) featShow(feat.i + 1);
+    }, 9000);
+  }
 
   function build() {
     BROWSE = !!document.getElementById("browseAccount");
-    document.body.classList.add("desk", BROWSE ? "desk-browse" : "desk-sources");
+    document.body.classList.add("app", DESK ? "desk" : "ph", BROWSE ? "desk-browse" : "desk-sources");
     const side = document.createElement("aside");
     side.className = "dk-side";
     side.innerHTML =
-      '<a class="dk-brand" href="index.html" title="Ultra Stalker"><img src="brand-logo.webp" alt="Ultra Stalker"><span>From anywhere · من أي مكان</span></a>' +
-      (BROWSE ? '<div class="dk-source" id="dkSource"><div class="dk-label">Saved source <span>المصدر</span></div></div>' : "") +
+      '<a class="dk-brand" href="index.html" title="Ultra Stalker"><img src="brand-logo-gold.webp" alt="Ultra Stalker"><span>من أي مكان · From anywhere</span></a>' +
+      (BROWSE ? '<div class="dk-source" id="dkSource"><div class="dk-label">المصدر <span>Source</span></div></div>' : "") +
       '<nav class="dk-nav" id="dkNav">' +
-      NAV.map(([k, en, ar, ic]) => `<button type="button" data-go="${k}"><span class="dk-ic">${ic}</span><span class="dk-tx"><b>${en}</b><small>${ar}</small></span></button>`).join("") +
+      NAV.map(([k, en, ar, ic]) => `<button type="button" data-go="${k}"><span class="dk-ic">${ic}</span><span class="dk-tx"><b>${ar}</b><small>${en}</small></span></button>`).join("") +
       "</nav>" +
       '<div class="dk-sep"><i></i></div>' +
       '<nav class="dk-nav dk-tools">' +
-      `<a href="sources.html#connectionPanel" data-sec="connectionPanel"><span class="dk-ic">${ICON.plus}</span><span class="dk-tx"><b>Add Connection</b><small>إضافة مصدر</small></span></a>` +
-      `<a href="sources.html#managerPanel" data-sec="managerPanel"><span class="dk-ic">${ICON.servers}</span><span class="dk-tx"><b>Manage Servers</b><small>إدارة السيرفرات</small></span></a>` +
-      `<a href="sources.html#backupPanel" data-sec="backupPanel"><span class="dk-ic">${ICON.backup}</span><span class="dk-tx"><b>Backup &amp; Restore</b><small>باك اب الرسيفر</small></span></a>` +
+      `<a href="sources.html#connectionPanel" data-sec="connectionPanel"><span class="dk-ic">${ICON.plus}</span><span class="dk-tx"><b>إضافة مصدر</b><small>Add Connection</small></span></a>` +
+      `<a href="sources.html#managerPanel" data-sec="managerPanel"><span class="dk-ic">${ICON.servers}</span><span class="dk-tx"><b>إدارة السيرفرات</b><small>Manage Servers</small></span></a>` +
+      `<a href="sources.html#backupPanel" data-sec="backupPanel"><span class="dk-ic">${ICON.backup}</span><span class="dk-tx"><b>باك اب الرسيفر</b><small>Backup &amp; Restore</small></span></a>` +
       "</nav>" +
-      '<div class="dk-credit"><small>Design &amp; development · تصميم وتطوير</small><b>Ahmed L-HadarY</b><span id="dkVer"></span></div>';
+      '<div class="dk-credit"><small>تصميم وتطوير</small><b>Ahmed L-HadarY</b><span id="dkVer"></span></div>';
     document.body.appendChild(side);
 
     if (!BROWSE) {
@@ -204,23 +321,27 @@
       markTool();
       return;
     }
-    // The source picker moves into the menu.
+    // The source picker moves into the menu (computer) or the top bar (phone).
     const field = document.querySelector(".source-field");
     if (field) $("dkSource").appendChild(field);
+    const brandMini = '<a class="ph-brand" href="index.html"><img src="ui/gold/emblem.png" alt="Ultra Stalker"></a>';
     const ver = document.querySelector(".footer");
     if (ver) $("dkVer").textContent = ver.textContent.replace(/^Ultra Stalker\s*·\s*/, "");
 
     // A top bar over the content: where you are, and a wide search.
     const top = document.createElement("header");
     top.className = "dk-top";
-    top.innerHTML = '<div class="dk-where"><small id="dkKicker">Ultra Stalker</small><h1 id="dkTitle">Browse</h1><span id="dkSub"></span></div><div class="dk-search" id="dkSearch"></div>';
+    top.innerHTML = (DESK ? "" : brandMini) + '<div class="dk-where"><small id="dkKicker">Ultra Stalker</small><h1 id="dkTitle">Browse</h1><span id="dkSub"></span></div><div class="dk-search" id="dkSearch"></div>';
     const shell = document.querySelector("main.shell");
     shell.parentNode.insertBefore(top, shell);
+    if (!DESK) top.appendChild($("dkSource"));
     const sb = document.querySelector(".search-box");
     if (sb) {
       $("dkSearch").appendChild(sb);
       const input = $("browseSearch");
-      input.placeholder = "Search movies and series…  ·  ابحث عن فيلم أو مسلسل";
+      input.placeholder = "ابحث عن فيلم أو مسلسل…";
+      const sbtn = $("searchBtn");
+      if (sbtn) sbtn.textContent = "بحث";
     }
 
     // Welcome wall when no source is chosen: every saved source as a big card.
@@ -237,6 +358,7 @@
         $("sourceHomeBtn").click();
         return;
       }
+      document.body.classList.toggle("ph-search", go === "search");
       if (go === "search") {
         const i = $("browseSearch");
         i.focus();
@@ -268,7 +390,7 @@
     const sel = $("browseAccount");
     const opts = [...sel.options].filter((o) => o.value);
     const kinds = { portal: "Stalker Portal", xtream: "Xtream Codes", m3u: "M3U Playlist" };
-    const icons = { portal: "ui/live.png", xtream: "ui/movies.png", m3u: "ui/series.png" };
+    const icons = { portal: "ui/gold/live.png", xtream: "ui/gold/movies.png", m3u: "ui/gold/series.png" };
     const host = (id) => {
       try {
         const p = window.USEngine.findProfile(id);
@@ -279,13 +401,20 @@
         return { host: "", mac: "" };
       }
     };
+    const tools =
+      '<div class="dk-hero-tools">' +
+      `<a href="sources.html#connectionPanel"><span>${ICON.plus}</span><b>إضافة مصدر</b></a>` +
+      `<a href="sources.html#managerPanel"><span>${ICON.servers}</span><b>إدارة السيرفرات</b></a>` +
+      `<a href="sources.html#backupPanel"><span>${ICON.backup}</span><b>باك اب الرسيفر</b></a>` +
+      "</div>";
+    const kindsAr = { portal: "بورتال ستالكر", xtream: "Xtream Codes", m3u: "قائمة M3U" };
     box.innerHTML =
-      '<div class="dk-hero"><div class="dk-hero-copy"><small>Ultra Stalker · Web</small><h2>Your sources, everywhere.</h2>' +
-      '<p>Live TV, movies and series from your own Portal, Xtream and M3U servers — on any computer.</p>' +
-      '<p class="ar">مصادرك في أي مكان: البث المباشر والأفلام والمسلسلات من سيرفراتك على أي كمبيوتر.</p></div>' +
-      '<img src="brand-logo.webp" alt=""></div>' +
+      '<div class="dk-hero"><div class="dk-hero-copy"><small>ULTRA STALKER · WEB</small><h2>مصادرك<br><span class="gold-text">في أي مكان</span></h2>' +
+      "<p>البث المباشر والأفلام والمسلسلات من سيرفراتك، على الموبايل والكمبيوتر.</p>" +
+      tools +
+      '</div><img src="brand-logo-gold.webp" alt=""></div>' +
       (opts.length
-        ? '<div class="dk-row-h"><h3>Portals <span>البورتالات</span></h3><span>' + opts.length + " saved · <a href=\"sources.html#connectionPanel\">＋ Add</a></span></div>" +
+        ? '<div class="dk-row-h"><h3>البورتالات <span>Portals</span></h3><span>' + opts.length + ' محفوظة · <a href="sources.html#connectionPanel">＋ إضافة</a></span></div>' +
           '<div class="dk-sources">' +
           opts
             .map((o) => {
@@ -294,16 +423,16 @@
               const safe = (t) => String(t || "").replace(/[<>&"]/g, "");
               return `<button type="button" class="dk-src ${k}" data-v="${o.value}">
                 <span class="dk-src-art"><img src="${icons[k] || icons.portal}" alt=""></span>
-                <span class="dk-src-k">${kinds[k] || "Portal"}</span>
+                <span class="dk-src-k">${kindsAr[k] || kinds[k] || "Portal"}</span>
                 <b>${safe(o.textContent)}</b>
                 <span class="dk-src-host" dir="ltr">${safe(h.host)}</span>
                 ${h.mac ? `<span class="dk-src-id" dir="ltr">${safe(h.mac)}</span>` : ""}
-                <span class="dk-src-go">Open portal <i>›</i></span></button>`;
+                <span class="dk-src-go">افتح البورتال <i>‹</i></span></button>`;
             })
             .join("") +
           "</div>"
-        : '<div class="dk-empty"><b>No saved sources yet</b><span>لسه مفيش مصادر. ضيف بورتال أو Xtream أو M3U، أو ارفع باك اب الرسيفر.</span>' +
-          '<div><a class="dk-btn" href="sources.html#connectionPanel">＋ Add Connection</a><a class="dk-btn ghost" href="sources.html#backupPanel">⇩ Load receiver backup</a></div></div>');
+        : '<div class="dk-empty"><b>لسه مفيش مصادر</b><span>ضيف بورتال أو Xtream أو M3U، أو ارفع باك اب الرسيفر.</span>' +
+          '<div><a class="dk-btn" href="sources.html#connectionPanel">＋ إضافة مصدر</a><a class="dk-btn ghost" href="sources.html#backupPanel">⇩ ارفع باك اب الرسيفر</a></div></div>');
     box.onclick = (e) => {
       const b = e.target.closest(".dk-src");
       if (!b) return;
@@ -325,7 +454,7 @@
     panel.id = "dkTv";
     panel.className = "dk-tv";
     panel.innerHTML =
-      '<div class="dk-tv-screen" id="dkTvScreen"><div class="dk-tv-idle"><img src="brand-logo.webp" alt=""><b>Choose a channel</b><span>اختار قناة من القايمة</span></div></div>' +
+      '<div class="dk-tv-screen" id="dkTvScreen"><div class="dk-tv-idle"><img src="brand-logo-gold.webp" alt=""><b>Choose a channel</b><span>اختار قناة من القايمة</span></div></div>' +
       '<div class="dk-tv-info" id="dkTvInfo">' +
       '<div class="dk-tv-ch"><span class="dk-tv-logo" id="dkTvLogo"></span><div class="dk-tv-name"><small>LIVE · مباشر</small><b id="dkTvName">—</b></div>' +
       '<div class="dk-tv-acts"><a class="dk-tv-btn" id="dkTvVlc">▶ VLC</a><button type="button" class="dk-tv-btn" id="dkTvFull" title="Full screen">⛶</button></div></div>' +
@@ -469,25 +598,31 @@
     else if (visible("searchStage")) go = "search";
     document.querySelectorAll("#dkNav button").forEach((b) => b.classList.toggle("on", active ? b.dataset.go === go : b.dataset.go === "portals"));
     document.body.dataset.media = media;
-    const names = { itv: "Live TV", vod: "Movies", series: "Series", search: "Search", fav: "Favorites" };
-    const ar = { itv: "البث المباشر", vod: "الأفلام", series: "المسلسلات", search: "البحث", fav: "المفضلة" };
+    const ar = { itv: "Live TV", vod: "Movies", series: "Series", search: "Search", fav: "Favorites" };
+    const names = { itv: "البث المباشر", vod: "الأفلام", series: "المسلسلات", search: "البحث", fav: "المفضلة" };
     const opt = $("browseAccount").selectedOptions[0];
     $("dkKicker").textContent = active && opt ? opt.textContent : "Ultra Stalker";
-    let title = active ? names[go] : "Welcome";
-    let sub = active ? ar[go] : "أهلاً بيك";
+    let title = active ? names[go] : "أهلاً بيك";
+    let sub = active ? ar[go] : "Welcome";
     if (active && visible("itemsStage")) {
       title = $("itemsTitle").textContent || title;
       sub = names[go] + " · " + ar[go];
     }
     $("dkTitle").textContent = title;
     $("dkSub").textContent = sub;
-    tvMode(active && media === "itv" && visible("itemsStage") && !visible("favoritesStage") && !visible("searchStage"));
+    featSync();
+    tvMode(DESK && active && media === "itv" && visible("itemsStage") && !visible("favoritesStage") && !visible("searchStage"));
   }
 
   function start() {
     build();
     if (!BROWSE) return;
-    tvBuild();
+    if (DESK) tvBuild();
+    let ft = 0;
+    new MutationObserver(() => {
+      clearTimeout(ft);
+      ft = setTimeout(featSync, 120);
+    }).observe($("browseItems"), { childList: true });
     drawWelcome();
     sync();
     let t = 0;

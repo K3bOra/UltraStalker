@@ -19,9 +19,12 @@ import sys
 import tarfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from goldify import recolor_html  # noqa: E402  (black & gold theme)
+
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "web"
-WEB_VERSION = 7  # bump with any change to web/*.js or the pages (cache busting)
+WEB_VERSION = 8  # bump with any change to web/*.js or the pages (cache busting)
 PLUGIN_DIR = "usr/lib/enigma2/python/Plugins/Extensions/UltraStalker/"
 
 
@@ -65,7 +68,10 @@ def sub(text, old, new, count=1, regex=False, label=""):
 def relative_paths(html):
     # /api/..., /ui/..., /brand-logo.png and the poster placeholders become page-relative.
     html = re.sub(r"""(["'(])/(api/|ui/|brand-logo\.png|poster-movie\.png|poster-series\.png)""", r"\1\2", html)
-    return html.replace("ui/page_background.png", "ui/page_background.jpg").replace("brand-logo.png", "brand-logo.webp")
+    html = html.replace("ui/page_background.png", "ui/page_background.jpg").replace("brand-logo.png", "brand-logo-gold.webp")
+    # Black & gold: gold logo, gold section icons, gold-mapped colours.
+    html = re.sub(r"ui/(live|movies|series|favorites|folder)\.png", r"ui/gold/\1.png", html)
+    return recolor_html(html)
 
 
 def head_scripts(names):
@@ -79,11 +85,44 @@ META = (
 )
 
 
+STYLES = "".join('<link rel="stylesheet" href="%s?v=%d">' % (n, WEB_VERSION) for n in ("fonts.css", "theme.css", "desktop.css"))
+
+
+# Arabic labels for the visible parts of the Browse page (the user reads Arabic).
+ARABIC = [
+    ("function mediaName(media=browseMedia){return media==='itv'?'Live':media==='vod'?'Movies':'Series'}",
+     "function mediaName(media=browseMedia){return media==='itv'?'البث المباشر':media==='vod'?'الأفلام':'المسلسلات'}"),
+    ("' categories • '+mediaName(media)", "' قسم • '+mediaName(media)"),
+    ("(loadedItemCount+' of '+total+' loaded'):(loadedItemCount+' loaded')", "(loadedItemCount+' من '+total):(String(loadedItemCount))"),
+    ("note.textContent=mediaName()+' folder'", "note.textContent='قسم · '+mediaName()"),
+    ("(count+' Episode'+(count===1?'':'s')):'Episodes'", "(count+' حلقة'):'حلقات'"),
+    ("title.textContent='Episode '+ep", "title.textContent='الحلقة '+ep"),
+    ("+' episode'+(Number(Array.isArray(rows)?rows.length:0)===1?'':'s')", "+' حلقة'+''"),
+    ("‹ Categories", "‹ الأقسام"), ("‹ Back", "‹ رجوع"), ("‹ Seasons", "‹ المواسم"),
+    (">Choose Player<", ">اختار المشغل<"), (">Play here<", ">شغّل هنا<"), (">In this browser<", ">جوه المتصفح<"),
+    (">Native Player<", ">مشغل الجهاز<"), ("<span>Play</span>", "<span>تشغيل</span>"), ("<span>Favorite</span>", "<span>مفضلة</span>"),
+    ("Choose a saved source…", "اختار مصدر…"), ("Loading series information…", "بنجهز معلومات المسلسل…"),
+    ("Loading movie information…", "بنجهز معلومات الفيلم…"), ("End of this category", "خلصت القايمة"),
+    ("Loading seasons…", "بنجيب المواسم…"), ("No seasons returned", "مفيش مواسم"),
+    ("' • preparing stream…'", "' • بنجهز البث…'"),
+    ("‹ Browse", "‹ رجوع"),
+    ("' saved item'+(rows.length===1?'':'s')", "' محفوظ'+''"),
+]
+
+
+def arabic_labels(h):
+    for old, new in ARABIC:
+        if old not in h:
+            raise SystemExit("Arabic label not found: %r" % old[:60])
+        h = h.replace(old, new)
+    return h
+
+
 def build_browse(src, release):
     h = src
     h = sub(h, '<link rel="icon" type="image/png" href="/brand-logo.png">',
             '<link rel="icon" type="image/png" href="icons/icon-192.png">\n' + META)
-    h = sub(h, "</head>", '<link rel="stylesheet" href="desktop.css?v=%d">' % WEB_VERSION
+    h = sub(h, "</head>", STYLES
             + head_scripts(["config.js", "hash.js", "engine.js", "player.js", "desktop.js"]) + "\n</head>")
     h = sub(h, "Palestinian identity • mobile browser", "Palestinian identity • from anywhere")
     h = sub(h, "Browse saved Portal, Xtream and M3U sources plus the receiver's Local library from your phone. "
@@ -141,10 +180,10 @@ def build_browse(src, release):
     h = sub(h, "setPlayerReady(native,j.stream,'_blank');", "setPlayerReady(native,j.stream,'_blank');USPlayer.offer(j);")
     h = sub(h, "setPlayerReady(vlc,'/api/browse/vlc?item='+encodeURIComponent(row.id),'_blank')",
             "setPlayerReady(vlc,'data:audio/x-mpegurl;charset=utf-8,'+encodeURIComponent('#EXTM3U\\n#EXTINF:-1,'+(j.title||'Ultra Stalker')+'\\n'+j.stream+'\\n'),'_self');vlc.setAttribute('download','ultra-stalker.m3u')")
-    h = sub(h, "(j.local?' • LAN • choose a player':' • choose a player')", "' • choose a player'")
+    h = sub(h, "(j.local?' • LAN • choose a player':' • choose a player')", "' • اختار المشغل'")
     h = sub(h, "rows.length?'Choose a saved source to load categories.':'No saved sources found.'",
             "rows.length?'Choose a saved source to load categories.':'No saved sources yet. Add a connection or load a receiver backup above.'")
-    return relative_paths(h)
+    return relative_paths(arabic_labels(h))
 
 
 def build_sources(src, release):
@@ -152,15 +191,15 @@ def build_sources(src, release):
     h = sub(h, '<link rel="icon" type="image/png" href="/brand-logo.png">',
             '<link rel="icon" type="image/png" href="icons/icon-192.png">\n' + META)
     h = sub(h, "<title>Ultra Stalker • Playlist Cleaner</title>", "<title>Ultra Stalker • Sources &amp; Backup</title>")
-    h = sub(h, "</head>", '<link rel="stylesheet" href="sources.css?v=%d"><link rel="stylesheet" href="desktop.css?v=%d">' % (WEB_VERSION, WEB_VERSION)
+    h = sub(h, "</head>", '<link rel="stylesheet" href="sources.css?v=%d">' % WEB_VERSION + STYLES
             + head_scripts(["config.js", "hash.js", "engine.js", "backup.js", "desktop.js"]) + "\n</head>")
     h = sub(h, 'href="/" style="min-height:38px', 'href="index.html" style="min-height:38px')
     h = sub(h, "Local processing • private by design", "Saved in this browser • private")
     h = sub(h, "__US_WEB_RELEASE__", release)
     h = sub(h, '<div class="kicker">Playlist Intelligence</div>', '<div class="kicker">Sources &amp; Backup</div>')
-    h = sub(h, "<h1>Clean once. Keep only what works.</h1>", "<h1>Your servers, everywhere.</h1>")
+    h = sub(h, "<h1>Clean once. Keep only what works.</h1>", "<h1>سيرفراتك في أي مكان</h1>")
     h = sub(h, "<p>Drop one mixed file. Ultra Stalker detects, cleans, groups and prepares Portal, Xtream and M3U entries before deep validation.</p>",
-            "<p>Add and edit Portal, Xtream and M3U servers, then move them between this site and your receiver with a backup file.</p>")
+            "<p>ضيف وعدّل سيرفرات البورتال والـ Xtream والـ M3U، وانقلها بين الموقع والرسيفر بملف باك اب.</p>")
 
     main = re.search(r'<main class="shell">.*?</main>', h, flags=re.S)
     if not main:
@@ -192,23 +231,23 @@ def build_sources(src, release):
     )
     backup = (
         '<section class="glass connection-panel backup-panel" id="backupPanel">\n'
-        '    <div class="connection-head"><div><h2>Backup &amp; Restore <small lang="ar" dir="rtl">باك اب وريستور</small></h2>'
-        '<p>Load the backup file your receiver made, or save this site\'s servers and Favorites as a backup the receiver can restore.</p></div>'
+        '    <div class="connection-head"><div><h2>باك اب الرسيفر <small>Backup &amp; Restore</small></h2>'
+        '<p>ارفع ملف الباك اب اللي عمله الرسيفر، أو احفظ سيرفرات الموقع والمفضلة في ملف الرسيفر يقدر يرجّعه.</p></div>'
         '<div class="badge" id="backupBadge"><span class="dot"></span><span id="backupBadgeText">…</span></div></div>\n'
         '    <div class="backup-grid">\n'
         '      <div class="backup-card">\n'
         '        <span class="launch-half-kicker">FROM THE RECEIVER · من الرسيفر</span>\n'
-        '        <strong>Load receiver backup</strong>\n'
-        '        <p>On the receiver: Settings › Storage &amp; Maintenance › Backup &amp; Restore › Create portable backup. Copy the file '
-        '<code>ultrastalker-backup-….zip</code> from <code>/media/hdd/UltraStalker/Backup</code> and choose it here. It replaces the servers and Favorites saved on this site.</p>\n'
-        '        <label class="btn green" for="backupFile">＋ Choose backup file</label><input id="backupFile" type="file" accept=".zip,application/zip" hidden>\n'
+        '        <strong>ارفع باك اب الرسيفر</strong>\n'
+        '        <p>على الرسيفر: Settings › Storage &amp; Maintenance › Backup &amp; Restore › Create portable backup. انسخ الملف '
+        '<code>ultrastalker-backup-….zip</code> من <code>/media/hdd/UltraStalker/Backup</code> واختاره هنا. هيحل محل السيرفرات والمفضلة اللي على الموقع.</p>\n'
+        '        <label class="btn green" for="backupFile">＋ اختار ملف الباك اب</label><input id="backupFile" type="file" accept=".zip,application/zip" hidden>\n'
         '      </div>\n'
         '      <div class="backup-card">\n'
         '        <span class="launch-half-kicker">TO THE RECEIVER · للرسيفر</span>\n'
-        '        <strong>Save backup for the receiver</strong>\n'
-        '        <p>Downloads <code>ultrastalker-backup-….zip</code> with the servers and Favorites from this site. Put it in '
-        '<code>/media/hdd/UltraStalker/Backup</code>, then on the receiver open Backup &amp; Restore › Restore backup.</p>\n'
-        '        <button type="button" class="btn" id="backupSaveBtn">⇩ Save backup file</button>\n'
+        '        <strong>احفظ باك اب للرسيفر</strong>\n'
+        '        <p>بينزّل ملف <code>ultrastalker-backup-….zip</code> فيه السيرفرات والمفضلة اللي على الموقع. حطه في '
+        '<code>/media/hdd/UltraStalker/Backup</code>، وبعدين على الرسيفر افتح Backup &amp; Restore › Restore backup.</p>\n'
+        '        <button type="button" class="btn" id="backupSaveBtn">⇩ احفظ ملف الباك اب</button>\n'
         '      </div>\n'
         '    </div>\n'
         '    <div class="connection-result" id="backupResult" aria-live="polite">Checking this browser…</div>\n'

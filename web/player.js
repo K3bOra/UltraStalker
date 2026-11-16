@@ -14,23 +14,23 @@
   const css = `
 .usp{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(1,6,4,.88);backdrop-filter:blur(14px);padding:18px}
 .usp.hidden{display:none}
-.usp-card{position:relative;width:min(1320px,100%);border-radius:24px;overflow:hidden;border:3px solid transparent;background:linear-gradient(155deg,rgba(6,22,13,.98),rgba(4,13,9,.98) 58%,rgba(45,10,16,.6)) padding-box,linear-gradient(135deg,rgba(245,243,237,.48),rgba(34,190,100,.95) 30%,rgba(20,104,59,.58) 52%,rgba(214,43,57,.88) 77%,rgba(8,12,9,.92)) border-box;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+.usp-card{position:relative;width:min(1320px,100%);border-radius:24px;overflow:hidden;border:3px solid transparent;background:linear-gradient(155deg,rgba(16,14,10,.98),rgba(10,8,6,.98) 58%,rgba(31,27,20,.6)) padding-box,linear-gradient(135deg,rgba(245,243,237,.48),rgba(201,153,41,.95) 30%,rgba(110,84,24,.58) 52%,rgba(155,105,56,.88) 77%,rgba(11,10,7,.92)) border-box;box-shadow:0 30px 90px rgba(0,0,0,.6)}
 .usp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 12px 18px}
-.usp-title{min-width:0}.usp-title strong{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f4faf6}.usp-title small{display:block;color:#86a491;font-size:11px;margin-top:3px}
+.usp-title{min-width:0}.usp-title strong{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fbf9f3}.usp-title small{display:block;color:#ceb374;font-size:11px;margin-top:3px}
 .usp-btns{display:flex;gap:8px;flex:none}
-.usp-btn{appearance:none;height:40px;min-width:40px;padding:0 14px;border-radius:999px;border:2px solid transparent;color:#fff;font:inherit;font-size:12px;font-weight:800;line-height:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(rgba(3,12,8,.9),rgba(3,12,8,.9)) padding-box,linear-gradient(135deg,rgba(245,243,237,.3),rgba(41,190,103,.7),rgba(210,44,58,.56)) border-box}
+.usp-btn{appearance:none;height:40px;min-width:40px;padding:0 14px;border-radius:999px;border:2px solid transparent;color:#fff;font:inherit;font-size:12px;font-weight:800;line-height:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(rgba(8,7,5,.9),rgba(8,7,5,.9)) padding-box,linear-gradient(135deg,rgba(245,243,237,.3),rgba(201,155,48,.7),rgba(152,104,56,.56)) border-box}
 .usp-btn.x{font-size:22px;padding:0;width:40px}
 .usp-stage{position:relative;background:#000;aspect-ratio:16/9;max-height:calc(100vh - 140px);width:100%}
 .usp-stage video{width:100%;height:100%;display:block;background:#000}
-.usp-msg{position:absolute;inset:0;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;color:#cfe0d4;font-size:14px;line-height:1.7;pointer-events:none}
+.usp-msg{position:absolute;inset:0;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;color:#eadfc5;font-size:14px;line-height:1.7;pointer-events:none}
 .usp-msg.err{background:rgba(0,0,0,.74);pointer-events:auto}
 .usp-msg b{font-size:17px;color:#fff}
-.usp-msg .ar{direction:rtl;font-size:15px;color:#f2dfe1}
-.usp-msg small{color:#9fb5a8;font-size:12px;max-width:640px}
+.usp-msg .ar{direction:rtl;font-size:15px;color:#dabfa4}
+.usp-msg small{color:#dac595;font-size:12px;max-width:640px}
 .usp-acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .usp-msg .loader{margin-right:8px}
 @media(max-width:760px){.usp{padding:0}.usp-card{border-radius:0;border-left:0;border-right:0}.usp-stage{max-height:none}.usp-head .usp-btn.vlc{display:none}}
-.player-option.web{border-color:rgba(41,190,105,.5)!important}
+.player-option.web{border-color:rgba(201,155,48,.5)!important}
 .usp.docked{position:absolute;inset:0;z-index:2;padding:0;background:#000;backdrop-filter:none;border-radius:inherit;overflow:hidden}
 .usp.docked .usp-card{width:100%;height:100%;border:0;border-radius:inherit;background:#000;box-shadow:none;display:flex;flex-direction:column}
 .usp.docked .usp-head{display:none}
