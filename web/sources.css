@@ -1,0 +1,13 @@
+/* Ultra Stalker Web — additions to the receiver's Manage Servers page. */
+.manager-actions{grid-template-columns:1fr auto!important}
+.manager-actions .btn.danger{min-width:120px}
+.backup-panel h2 small{display:inline-block;margin-inline-start:8px;font-size:13px;color:#9fc3ab;font-weight:700}
+.backup-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 12px}
+.backup-card{display:flex;flex-direction:column;gap:9px;padding:17px;border-radius:20px;border:2px solid transparent;background:linear-gradient(155deg,rgba(6,22,13,.92),rgba(4,13,9,.94)) padding-box,linear-gradient(135deg,rgba(245,243,237,.18),rgba(39,184,100,.5),rgba(198,42,56,.36)) border-box}
+.backup-card strong{font-size:17px;color:#f2f8f4}
+.backup-card p{margin:0;color:#9db5a6;font-size:12.5px;line-height:1.6}
+.backup-card code{font-size:11px;color:#c9e9d4;background:rgba(39,184,100,.1);border-radius:6px;padding:1px 5px;word-break:break-all}
+.backup-card .btn{margin-top:auto;justify-content:center}
+.backup-card .launch-half-kicker{font-size:10px;letter-spacing:.12em;color:#86ad94;font-weight:850}
+#backupResult{white-space:pre-line}
+@media(max-width:760px){.backup-grid{grid-template-columns:1fr}.manager-actions{grid-template-columns:1fr!important}}

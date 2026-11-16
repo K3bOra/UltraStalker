@@ -1,0 +1,52 @@
+name: Deploy the website relay (Cloudflare Worker)
+
+on:
+  push:
+    branches: [main]
+    paths: ["worker/**", ".github/workflows/web-relay.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: web-relay
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the Cloudflare secrets
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in Settings > Secrets and variables > Actions (see worker/README.md)."
+            exit 1
+          fi
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Deploy
+        working-directory: worker
+        run: |
+          npx --yes wrangler@3 deploy 2>&1 | tee deploy.log
+          URL=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          if [ -z "$URL" ]; then
+            echo "::error::No workers.dev address. Open Workers & Pages in the Cloudflare dashboard once to choose a workers.dev subdomain, then run this again."
+            exit 1
+          fi
+          for i in 1 2 3 4 5 6; do curl -fsS "$URL/health" && break; sleep 5; done
+          echo "URL=$URL" >> "$GITHUB_ENV"
+      - name: Tell the website where the relay is
+        run: |
+          printf 'window.US_WEB_CONFIG = { relay: "%s" };\n' "$URL" > web/config.js
+          git add web/config.js
+          if git diff --cached --quiet; then echo "address unchanged"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Website relay address"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done

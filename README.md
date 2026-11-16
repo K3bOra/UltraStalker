@@ -16,6 +16,10 @@
 
 **Your media. Beautifully connected.** Live TV, movies, series and your local library — built for Enigma2.
 
+<p dir="rtl"><a href="https://k3bora.github.io/UltraStalker/web/"><b>🌐 الترا ستالكر من المتصفح</b></a>: مصادرك من أي مكان، وتقدر ترفع الباك اب بتاع الرسيفر أو تنزّل باك اب للرسيفر.</p>
+
+[**🌐 Ultra Stalker on the web**](https://k3bora.github.io/UltraStalker/web/): your sources from anywhere, with receiver backup and restore.
+
 <p dir="rtl"><a href="#whats-new">الجديد</a> · <a href="#tour">الصور</a> · <a href="#features">المميزات</a> · <a href="#compatibility">التوافق</a> · <a href="#install">التثبيت</a> · <a href="#faq">الأسئلة</a></p>
 
 [What's new](#whats-new) · [Tour](#tour) · [Features](#features) · [Compatibility](#compatibility) · [Install](#install) · [FAQ](#faq)

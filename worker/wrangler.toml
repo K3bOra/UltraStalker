@@ -1,0 +1,5 @@
+name = "ultrastalker-web"
+main = "src/index.js"
+# 2024-09-02 or later lets fetch() reach custom ports such as :8080 (most portals use one).
+compatibility_date = "2025-06-01"
+workers_dev = true
