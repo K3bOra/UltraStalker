@@ -104,14 +104,14 @@
       const { name, tags } = splitName(t.textContent);
       t.textContent = name === "All" && AR ? "الكل" : name;
       t.setAttribute("dir", "auto");
-      const code = tags.find((x) => /^[A-Z]{2,3}$/.test(x) && !QUALITY.test(x));
       const mono = document.createElement("span");
       mono.className = "dk-cat-mono";
-      mono.textContent = code || (name === "All" ? "✦" : (t.textContent.trim().match(/[\p{L}\p{N}]/u) || ["•"])[0].toUpperCase());
+      const sec = { itv: "live", vod: "movies", series: "series" }[(document.querySelector(".type.active") || {}).dataset?.media] || "live";
+      mono.innerHTML = `<img src="ui/gold/${sec}.png" alt="">`;
       el.prepend(mono);
       const row = document.createElement("span");
       row.className = "dk-cat-tags";
-      row.innerHTML = tags.filter((x) => x !== code).map((x) => `<i>${esc(x)}</i>`).join("");
+      row.innerHTML = tags.map((x) => `<i>${esc(x)}</i>`).join("");
       if (row.innerHTML) t.after(row);
       const chev = document.createElement("span");
       chev.className = "dk-cat-chev";

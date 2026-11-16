@@ -4,7 +4,7 @@
    ink   #050505 #0b0a09 #121110 #1a1816 #24211d   (warm blacks)
    gold  #f8e7a1 #e9c766 #d4af37 #b8902f #7a5a1c   (metallic ramp)
    text  #f6f0e2 / muted #a8a092 / dim #6f685c
-   type  Arabic: Cairo · Latin display: Playfair Display · Latin body: IBM Plex Sans
+   type  Arabic: Cairo · Latin: IBM Plex Sans (one family for the whole page)
    radius cards 22 · buttons 14 · pills 999      spacing 4-pt grid */
 :root{
   --ink:#050505;--ink-1:#0b0a09;--ink-2:#121110;--ink-3:#1a1816;--ink-4:#24211d;
@@ -12,7 +12,7 @@
   --text:#f6f0e2;--muted:#a8a092;--dim:#6f685c;--line:rgba(255,232,170,.10);--line-2:rgba(255,232,170,.18);
   --gold-grad:linear-gradient(135deg,#fbeeb5 0%,#e3bf5a 28%,#b08427 58%,#f0d27c 82%,#9c7020 100%);
   --gold-edge:linear-gradient(140deg,rgba(255,240,190,.55),rgba(212,175,55,.75) 30%,rgba(120,88,28,.35) 60%,rgba(240,205,120,.6) 85%,rgba(60,44,14,.5));
-  --display:"US Cairo","Playfair Display",Georgia,serif;
+  --display:"US Cairo","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
   --body:"US Cairo","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 html,body,button,input,select,textarea{font-family:var(--body)!important}
@@ -445,3 +445,10 @@ body.app #browseItems .live-card.has-epg{padding-top:10px!important;padding-bott
 body.app #browseItems .live-card:not(.has-epg) .live-copy{grid-template-areas:"title fav"!important}
 body.ph .dk-ptabs button{font-size:13.5px;gap:7px;padding:0 6px;white-space:nowrap}
 body.ph .dk-ptabs button img{display:none}
+
+/* category rows: the section icon instead of a letter */
+body.ph #browseCategories .dk-cat-mono img{width:30px;height:22px;object-fit:contain}
+body.app .dk-cat-tags i{white-space:nowrap}
+/* one Latin family everywhere */
+body.app .dk-src b,body.app .dk-where h1,body.app .dk-hero h2,body.app .dk-row-h h3,body.app .series-info h3,body.app .dk-f-title,body.app .dk-tv-name b,body.app .dk-credit b{font-weight:700!important;letter-spacing:-.01em!important}
+body.ph #browseCategories .dk-cat-tags{flex-wrap:wrap!important;overflow:visible!important}
