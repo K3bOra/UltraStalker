@@ -97,6 +97,8 @@
   }
   function viaRelay(url, headers) {
     try {
+      const base = window.USEngine.relayBase();
+      if (base && url.indexOf(base + "/") === 0) return url;
       return window.USEngine.relayUrl(url, headers);
     } catch (_) {
       return url;
@@ -143,7 +145,7 @@
           ts.load();
         }
       } else {
-        video.src = /^https:/i.test(url) && !Object.keys(headers).length ? url : viaRelay(url, headers);
+        video.src = (/^https:/i.test(url) && !Object.keys(headers).length) || ticket.ticket ? url : viaRelay(url, headers);
       }
       const p = video.play();
       if (p && p.catch) p.catch(() => show("Press ▶ to start"));

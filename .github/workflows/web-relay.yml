@@ -21,25 +21,30 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check the Cloudflare secrets
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
             echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in Settings > Secrets and variables > Actions (see worker/README.md)."
             exit 1
           fi
-      - uses: actions/setup-node@v4
-        with: { node-version: "20" }
+      - uses: actions/setup-node@v5
+        with: { node-version: "22" }
       - name: Deploy
         working-directory: worker
         run: |
           npx --yes wrangler@3 deploy 2>&1 | tee deploy.log
+          # Key that seals play tickets: made once, kept across deploys.
+          if ! npx --yes wrangler@3 secret list 2>/dev/null | grep -q '"RELAY_KEY"'; then
+            openssl rand -hex 32 | npx --yes wrangler@3 secret put RELAY_KEY
+          fi
           URL=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log | head -1)
           if [ -z "$URL" ]; then
             echo "::error::No workers.dev address. Open Workers & Pages in the Cloudflare dashboard once to choose a workers.dev subdomain, then run this again."
             exit 1
           fi
-          for i in 1 2 3 4 5 6; do curl -fsS "$URL/health" && break; sleep 5; done
+          for i in 1 2 3 4 5 6 7 8; do curl -fsS "$URL/health" | grep -q '"tickets":true' && break; sleep 5; done
+          curl -fsS "$URL/health"
           echo "URL=$URL" >> "$GITHUB_ENV"
       - name: Tell the website where the relay is
         run: |

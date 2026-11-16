@@ -215,6 +215,201 @@ async function relay(request, url, origin, env) {
   return new Response(request.method === "HEAD" ? null : res.body, { status: res.status, headers: out });
 }
 
+/* ------------------------------------------------------------------ play tickets
+
+   Stalker portals hand out stream links that work once, for a short time, and often
+   only for the address that asked for them. A link made by the website and opened
+   later by VLC, Outplayer or the page's own player is often refused.
+
+   So the website never hands players a portal link. It asks POST /ticket (from the
+   site only) for a sealed ticket describing *how* to get the link, and players open
+   GET /play/<ticket>.<ext>. Every time a player opens it (also retries, seeking and
+   reconnects), this Worker asks the portal for a fresh link and streams it from the
+   same place it asked from. Tickets are encrypted with RELAY_KEY and last 24 hours. */
+
+const TICKET_HOURS = 24;
+let keyCache = null;
+async function ticketKey(env) {
+  if (keyCache) return keyCache;
+  const hex = String((env && env.RELAY_KEY) || "");
+  if (!/^[0-9a-f]{64}$/i.test(hex)) throw new Error("RELAY_KEY missing");
+  const raw = new Uint8Array(hex.match(/../g).map((b) => parseInt(b, 16)));
+  keyCache = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]);
+  return keyCache;
+}
+function b64urlBytes(bytes) {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function bytesB64url(text) {
+  const s = String(text || "").replace(/-/g, "+").replace(/_/g, "/");
+  const bin = atob(s + (s.length % 4 ? "=".repeat(4 - (s.length % 4)) : ""));
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+}
+async function seal(data, env) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const body = new TextEncoder().encode(JSON.stringify(Object.assign({ exp: Date.now() + TICKET_HOURS * 3600e3 }, data)));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await ticketKey(env), body));
+  const out = new Uint8Array(12 + ct.length);
+  out.set(iv);
+  out.set(ct, 12);
+  return b64urlBytes(out);
+}
+async function unseal(ticket, env) {
+  const raw = bytesB64url(ticket);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(0, 12) }, await ticketKey(env), raw.slice(12));
+  const data = JSON.parse(new TextDecoder().decode(plain));
+  if (!data || Number(data.exp) < Date.now()) throw new Error("expired");
+  return data;
+}
+function extOf(url) {
+  try {
+    const m = new URL(url).pathname.match(/\.(m3u8|ts|mp4|mkv|avi|m4v|mov|webm|mp3|aac)$/i);
+    return m ? m[1].toLowerCase() : "ts";
+  } catch (_) {
+    return "ts";
+  }
+}
+
+function stripPlayer(v, mac) {
+  let t = String(v || "").trim().replace(/^["']|["']$/g, "");
+  const first = t.split(" ")[0].toLowerCase();
+  if (first === "ffmpeg" || first === "auto") t = t.slice(first.length).trim();
+  const m = t.match(/(https?|rtmp|rtsp):\/\/\S+/i);
+  if (m) t = m[0];
+  if (mac) t = t.replace(/%mac%/gi, mac);
+  return t;
+}
+async function portalCall(d, params, token, env) {
+  const url = d.endpoint + (d.endpoint.includes("?") ? "&" : "?") + new URLSearchParams(params).toString();
+  const headers = cleanHeaders(Object.assign({}, d.headers, token ? { Authorization: "Bearer " + token } : {}));
+  const { res } = await fetchFollow(url, { method: "GET", headers }, env);
+  const text = await res.text();
+  let obj = null;
+  try {
+    obj = JSON.parse(text.replace(/^\uFEFF/, ""));
+  } catch (_) {
+    obj = null;
+  }
+  return obj && typeof obj === "object" && "js" in obj ? obj.js : obj;
+}
+/* Ask the portal for a fresh stream link; sign in again if the saved session ended. */
+async function stalkerLink(d, env) {
+  const tryLink = async (token, series) => {
+    const params = Object.assign({}, d.create, series != null ? { series: String(series) } : {});
+    const js = await portalCall(d, params, token, env);
+    const value = js && typeof js === "object" ? js.cmd || js.url || js.link : js;
+    const clean = stripPlayer(value, d.mac);
+    return /^(https?|rtmp|rtsp):\/\//i.test(clean) && !/\/\/(localhost|127\.0\.0\.1)[:/]/i.test(clean) ? clean : "";
+  };
+  const attempt = async (token) => {
+    let link = await tryLink(token, null);
+    if (!link && d.altSeries != null) link = await tryLink(token, d.altSeries);
+    return link;
+  };
+  let link = d.token ? await attempt(d.token).catch(() => "") : "";
+  if (!link && d.handshake) {
+    const hs = await portalCall(d, d.handshake, "", env);
+    const token = hs && hs.token ? String(hs.token) : "";
+    if (token) {
+      if (d.profile) await portalCall(d, d.profile, token, env).catch(() => null);
+      link = await attempt(token).catch(() => "");
+    }
+  }
+  if (!link && d.fallback) link = d.fallback;
+  if (!link) throw new Error("The portal did not give a stream link");
+  return link;
+}
+
+async function makeTicket(request, origin, env) {
+  let body;
+  try {
+    const text = await request.text();
+    if (text.length > 24000) throw new Error("too big");
+    body = JSON.parse(text);
+  } catch (_) {
+    return json({ error: "bad ticket request" }, 400, origin);
+  }
+  const mode = body && body.mode;
+  if (mode === "direct") {
+    if (!/^https?:\/\//i.test(String(body.u || ""))) return json({ error: "bad url" }, 400, origin);
+  } else if (mode === "stalker") {
+    if (!/^https?:\/\//i.test(String(body.endpoint || "")) || !body.create) return json({ error: "bad portal" }, 400, origin);
+  } else return json({ error: "bad mode" }, 400, origin);
+  try {
+    const ticket = await seal(body, env);
+    const ext = String(body.ext || (mode === "direct" ? extOf(body.u) : "ts")).replace(/[^a-z0-9]/gi, "").slice(0, 5) || "ts";
+    return json({ ok: true, url: new URL(request.url).origin + "/play/" + ticket + "." + ext }, 200, origin);
+  } catch (e) {
+    return json({ error: "tickets are not set up: " + String(e.message || e) }, 500, origin);
+  }
+}
+
+async function play(request, ticket, env) {
+  const open = cors("*");
+  let d;
+  try {
+    d = await unseal(ticket, env);
+  } catch (_) {
+    return new Response("This link expired. Open it again from Ultra Stalker.", { status: 403, headers: open });
+  }
+  let target, headers;
+  try {
+    if (d.mode === "stalker") {
+      target = await stalkerLink(d, env);
+      headers = d.streamHeaders || {};
+    } else {
+      target = d.u;
+      headers = d.h || {};
+    }
+  } catch (e) {
+    return new Response(String(e.message || e), { status: 502, headers: open });
+  }
+  const h = cleanHeaders(headers);
+  for (const name of PASS_REQ) {
+    const v = request.headers.get(name);
+    if (v) h.set(name, v);
+  }
+  let res, final;
+  try {
+    ({ res, final } = await fetchFollow(target, { method: request.method === "HEAD" ? "HEAD" : "GET", headers: h }, env));
+  } catch (e) {
+    return new Response("Stream server unreachable", { status: 502, headers: open });
+  }
+  const out = new Headers(open);
+  for (const name of PASS_RES) {
+    const v = res.headers.get(name);
+    if (v) out.set(name, v);
+  }
+  out.set("Cache-Control", "no-store");
+  const type = res.headers.get("content-type") || "";
+  if (request.method !== "HEAD" && res.ok && looksLikePlaylist(final, type)) {
+    const text = await res.text();
+    if (text.trimStart().startsWith("#EXTM3U")) {
+      const self = new URL(request.url).origin;
+      const lines = [];
+      for (const line of text.split(/\r?\n/)) {
+        const t = line.trim();
+        const wrap = async (uri) => {
+          const abs = new URL(uri, final).toString();
+          return self + "/play/" + (await seal({ mode: "direct", u: abs, h: headers }, env)) + "." + extOf(abs);
+        };
+        if (!t) lines.push(line);
+        else if (t.startsWith("#")) {
+          const m = line.match(/URI="([^"]+)"/);
+          lines.push(m ? line.replace(m[0], 'URI="' + (await wrap(m[1])) + '"') : line);
+        } else lines.push(await wrap(t));
+      }
+      out.delete("content-length");
+      out.set("content-type", "application/vnd.apple.mpegurl");
+      return new Response(lines.join("\n"), { status: res.status, headers: out });
+    }
+    return new Response(text, { status: res.status, headers: out });
+  }
+  return new Response(request.method === "HEAD" ? null : res.body, { status: res.status, headers: out });
+}
+
 export default {
   // env.ALLOW_PRIVATE is only set for local testing (wrangler dev --var ALLOW_PRIVATE:1).
   async fetch(request, env) {
@@ -223,9 +418,13 @@ export default {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: origin ? 204 : 403, headers: cors(origin) });
     }
-    if (url.pathname === "/health") return json({ ok: true, service: "ultrastalker-web" }, 200, origin);
+    if (url.pathname === "/health") return json({ ok: true, service: "ultrastalker-web", tickets: /^[0-9a-f]{64}$/i.test(String((env && env.RELAY_KEY) || "")) }, 200, origin);
+    // Players (VLC, Outplayer, MX, the page) open tickets without an Origin header.
+    const pm = url.pathname.match(/^\/play\/([A-Za-z0-9_-]+)(?:\.[a-z0-9]{1,5})?$/i);
+    if (pm && (request.method === "GET" || request.method === "HEAD")) return play(request, pm[1], env);
     if (!origin) return json({ error: "This relay only works for the Ultra Stalker website." }, 403, "");
     if (url.pathname === "/p" && ["GET", "HEAD", "POST"].includes(request.method)) return relay(request, url, origin, env);
+    if (url.pathname === "/ticket" && request.method === "POST") return makeTicket(request, origin, env);
     return json({ error: "not found" }, 404, origin);
   },
 };

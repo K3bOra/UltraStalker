@@ -37,7 +37,48 @@
       return fallback;
     }
   };
-  const save = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+  const STATE_KEYS = ["profiles", "text", "disabled", "favs"];
+  function idbOpen() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open("ultrastalker-web", 1);
+      req.onupgradeneeded = () => req.result.createObjectStore("kv");
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  let mirrorTimer = null;
+  function mirror() {
+    clearTimeout(mirrorTimer);
+    mirrorTimer = setTimeout(async () => {
+      try {
+        const snap = {};
+        for (const k of STATE_KEYS) snap[k] = localStorage.getItem(K[k]);
+        snap.saved_at = Date.now();
+        const db = await idbOpen();
+        db.transaction("kv", "readwrite").objectStore("kv").put(snap, "state");
+      } catch (_) {}
+    }, 150);
+  }
+  const save = (key, value) => {
+    localStorage.setItem(key, JSON.stringify(value));
+    if (key !== K.relay) mirror();
+  };
+  /* Browsers sometimes clear localStorage on their own; bring the last copy back from IndexedDB. */
+  const ready = (async () => {
+    try {
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    } catch (_) {}
+    try {
+      if (STATE_KEYS.some((k) => localStorage.getItem(K[k]) !== null)) return;
+      const db = await idbOpen();
+      const snap = await new Promise((resolve) => {
+        const r = db.transaction("kv", "readonly").objectStore("kv").get("state");
+        r.onsuccess = () => resolve(r.result || null);
+        r.onerror = () => resolve(null);
+      });
+      if (snap) for (const k of STATE_KEYS) if (snap[k] != null) localStorage.setItem(K[k], snap[k]);
+    } catch (_) {}
+  })();
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // ?relay=<address> (for testing) is remembered in this browser; ?relay=default forgets it.
@@ -654,6 +695,42 @@
       if (directOk) return directFallback;
       throw new WebError("Portal did not return a playable link", 502);
     }
+    /* How to get this item's stream, for the relay's /play tickets: the relay asks the
+       portal for a fresh link every time a player opens it (see worker/src/index.js). */
+    async ticket(row, media, seriesNumber, altSeries) {
+      await this.authorize();
+      let raw = str(row.cmd || row.command || row.url);
+      if (media !== "itv") raw = await this.vodMediaCommand(row, media);
+      raw = raw.replace(/^["']|["']$/g, "");
+      if (!raw) throw new WebError("This item has no stream", 404);
+      const streamHeaders = { "User-Agent": UA };
+      const base = {
+        mode: "stalker", endpoint: this.endpoint, headers: this.headers(""), token: this.token, mac: this.mac,
+        handshake: { type: "stb", action: "handshake", token: "", JsHttpRequest: "1-xml" },
+        profile: this.profileParams(true), streamHeaders,
+      };
+      if (media === "itv") {
+        const meta = ["use_http_tmp_link", "use_load_balancing", "disable_ad"].some((k) => k in row);
+        const force = Stalker.flag(row.force_ch_link_check);
+        const low = raw.toLowerCase();
+        const needs = meta ? Stalker.flag(row.use_http_tmp_link) || Stalker.flag(row.use_load_balancing) || force
+          : force || low.includes("localhost") || low.includes("///") || low.includes("/ch/") || !low.includes("http");
+        const direct = this.cleanLive(raw);
+        if (!needs && direct) return { mode: "direct", u: direct, h: streamHeaders, ext: /\.m3u8/i.test(direct) ? "m3u8" : "ts" };
+        return Object.assign(base, {
+          create: { type: "itv", action: "create_link", cmd: raw, series: "0", forced_storage: "0", disable_ad: Stalker.flag(row.disable_ad) ? "1" : "0", download: "0", force_ch_link_check: force ? "1" : "0", JsHttpRequest: "1-xml" },
+          fallback: direct, ext: /m3u8/i.test(raw) ? "m3u8" : "ts",
+        });
+      }
+      const directFallback = Stalker.stripWrapper(raw);
+      const directOk = /^(https?|rtmp|rtsp):\/\//i.test(directFallback) && !/localhost|\/\/\//i.test(raw);
+      const extm = (raw.split("?")[0].match(/\.(mp4|mkv|avi|m4v|mov|ts|m3u8|mpg)$/i) || [])[1];
+      return Object.assign(base, {
+        create: { type: "vod", action: "create_link", cmd: raw, series: empty(seriesNumber) ? "" : String(seriesNumber), forced_storage: "", disable_ad: "0", download: "0", force_ch_link_check: "0", JsHttpRequest: "1-xml" },
+        altSeries: empty(altSeries) || String(altSeries) === String(seriesNumber) ? undefined : String(altSeries),
+        fallback: directOk ? directFallback : "", ext: extm && extm.toLowerCase() !== "mpg" ? extm.toLowerCase() : "mp4",
+      });
+    }
     async accountInfo() {
       for (const type of ["account_info", "account"]) {
         try {
@@ -1194,30 +1271,39 @@
     const row = entry.item;
     let url;
     if (c instanceof Stalker) {
+      let epNum, alt;
       if (entry.media === "episode") {
-        const epNum = row.id ?? row.episode_id ?? row.series ?? row.number;
-        let parentSeries = null;
+        epNum = row.id ?? row.episode_id ?? row.series ?? row.number;
         try {
           const season = cached(entry.parent);
-          parentSeries = cached(season.parent).item;
+          alt = c.seriesId(cached(season.parent).item);
         } catch (_) {}
-        try {
-          url = await c.link(row, "series", epNum);
-        } catch (e) {
-          const alt = parentSeries && c.seriesId(parentSeries);
-          if (empty(alt) || String(alt) === String(epNum)) throw e;
-          url = await c.link(row, "series", alt);
-        }
-      } else url = await c.link(row, entry.media);
-    } else url = await c.link(row);
+      }
+      const t = await c.ticket(row, entry.media === "episode" ? "series" : entry.media, epNum, alt);
+      return { entry, profile: p, url: await mintTicket(t), ticket: true };
+    }
+    url = await c.link(row);
     return { entry, profile: p, url };
+  }
+  async function mintTicket(data) {
+    const base = relayBase();
+    if (!base) throw new WebError("The website relay is not set up yet.", 503);
+    let res;
+    try {
+      res = await fetch(base + "/ticket", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data), cache: "no-store", __usNative: true });
+    } catch (_) {
+      throw new WebError("The website relay is unreachable", 502);
+    }
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.url) throw new WebError(j.error || "Could not prepare the stream", res.status || 502);
+    return j.url;
   }
   function playHeaders(profile) {
     return profileKind(profile) === "portal" ? { "User-Agent": UA } : {};
   }
   API["browse/prepare"] = async (url) => {
     const token = q(url, "item");
-    const { entry, profile, url: stream } = await resolve(token);
+    const { entry, profile, url: stream, ticket } = await resolve(token);
     const row = entry.item;
     const title = str(row.name || row.title) || "Ultra Stalker stream";
     return {
@@ -1228,7 +1314,8 @@
       media_type: entry.media,
       live: entry.media === "itv",
       local: false,
-      headers: playHeaders(profile),
+      headers: ticket ? {} : playHeaders(profile),
+      ticket: !!ticket,
     };
   };
   API["browse/vlc"] = async (url) => {
@@ -1484,6 +1571,7 @@
     }
     const hit = apiPath(input);
     if (!hit || !API[hit.name]) return nativeFetch(input, init);
+    await ready;
     let body = null;
     if (init && init.body) {
       try {
@@ -1553,7 +1641,8 @@
   });
 
   window.USEngine = {
-    version: 1,
+    version: 2,
+    ready,
     relayBase,
     relayUrl,
     art,
