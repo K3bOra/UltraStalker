@@ -64,32 +64,151 @@
     episodeStills([...cards], season || 1);
   }
 
-  /* Category tiles: quality words become small badges, the name gets the space. */
-  const QUALITY = /^(4K|8K|UHD|FHD|HD|SD|HDR|HDR10|DV|DOLBY|ATMOS|AUDIO|VISION|\d{3,4}P|H265|HEVC|H264|60FPS|FPS|VIP|RAW|MULTI|SUB|SUBS|DUB|DUBBED|NEW|TOP)$/i;
+  /* Provider names often use stylised letters (ᵁᴴᴰ ᴿᴬᵂ ⁶⁰ᶠᵖˢ) that render as spaced-out
+     glyphs: fold them to plain letters, then turn quality words into small badges. */
+  const QUALITY = /^(4K|8K|UHD|FHD|QHD|HD|SD|HDR|HDR10|DV|DOLBY|ATMOS|AUDIO|VISION|\d{3,4}P|H\.?265|HEVC|H\.?264|\d{2,3}FPS|FPS|VIP|RAW|MULTI|SUBS?|DUB|DUBBED|NEW|TOP|BACKUP|LOW|LQ|HQ)$/i;
+  function plain(t) {
+    return String(t || "").normalize("NFKC").replace(/[\u2000-\u200b\u2028\u2029]/g, " ").replace(/\s+/g, " ").trim();
+  }
+  function splitName(raw) {
+    let text = plain(raw);
+    const tags = [];
+    // "UK| GENERAL", "8K | SPORT": short codes before a bar are tags.
+    const bar = text.match(/^([A-Za-z0-9 ]{1,12})\s*[|│┃]\s*(.+)$/);
+    if (bar && bar[1].trim().split(/\s+/).every((w) => w.length <= 4)) {
+      bar[1].trim().split(/\s+/).forEach((w) => tags.push(w.toUpperCase()));
+      text = bar[2];
+    }
+    const words = text.split(/\s+/).flatMap((w) => (/^[A-Za-z0-9]+\/[A-Za-z0-9/]+$/.test(w) ? w.split("/") : [w]));
+    const keep = [];
+    const isTag = (w) => QUALITY.test(w.replace(/[|•·:,]+$/g, ""));
+    words.forEach((w, i) => {
+      const clean = w.replace(/[|•·:,]+$/g, "");
+      if (!/[\p{L}\p{N}]/u.test(clean)) return; // lone symbols ☼ ★ ###
+      // quality words count as tags at the start or the end of the name
+      const edge = keep.length === 0 || words.slice(i + 1).every((x) => isTag(x) || !/[\p{L}\p{N}]/u.test(x));
+      if (isTag(clean) && edge && words.length > 1) {
+        const up = clean.toUpperCase();
+        if (/^(AUDIO|ATMOS|VISION)$/.test(up) && /^DOLBY$/.test(tags[tags.length - 1] || "")) tags[tags.length - 1] += " " + up;
+        else if (!tags.includes(up)) tags.push(up);
+      } else keep.push(clean);
+    });
+    const name = keep.join(" ").replace(/^#+\s*|\s*#+$/g, "").trim();
+    return name ? { name, tags } : { name: plain(raw), tags: [] };
+  }
   function decorateCategories() {
     document.querySelectorAll("#browseCategories .category:not([data-dk])").forEach((el) => {
       el.dataset.dk = "1";
       const t = el.querySelector(".category-title");
       if (!t) return;
-      const raw = t.textContent.trim();
-      const words = raw.split(/\s+/);
-      const tags = [];
-      while (words.length > 1 && (QUALITY.test(words[0].replace(/[|•·\-_:]+$/g, "")) || /^[|•·\-_:]+$/.test(words[0]))) {
-        const w = words.shift().replace(/[|•·\-_:]+$/g, "");
-        if (!w) continue;
-        if (/^(AUDIO|ATMOS|VISION)$/i.test(w) && tags.length && /^DOLBY$/i.test(tags[tags.length - 1])) tags[tags.length - 1] += " " + w.toUpperCase();
-        else tags.push(w.toUpperCase());
-      }
-      const name = words.join(" ").replace(/^[|•·\-_:\s]+/, "") || raw;
-      t.textContent = name === "All" && window.USLang && window.USLang.ar ? "الكل" : name;
+      const { name, tags } = splitName(t.textContent);
+      t.textContent = name === "All" && AR ? "الكل" : name;
       t.setAttribute("dir", "auto");
-      if (tags.length) {
-        const row = document.createElement("span");
-        row.className = "dk-cat-tags";
-        row.innerHTML = tags.map((x) => `<i>${esc(x)}</i>`).join("");
-        t.before(row);
+      const code = tags.find((x) => /^[A-Z]{2,3}$/.test(x) && !QUALITY.test(x));
+      const mono = document.createElement("span");
+      mono.className = "dk-cat-mono";
+      mono.textContent = code || (name === "All" ? "✦" : (t.textContent.trim().match(/[\p{L}\p{N}]/u) || ["•"])[0].toUpperCase());
+      el.prepend(mono);
+      const row = document.createElement("span");
+      row.className = "dk-cat-tags";
+      row.innerHTML = tags.filter((x) => x !== code).map((x) => `<i>${esc(x)}</i>`).join("");
+      if (row.innerHTML) t.after(row);
+      const chev = document.createElement("span");
+      chev.className = "dk-cat-chev";
+      chev.textContent = AR ? "‹" : "›";
+      el.appendChild(chev);
+    });
+  }
+  /* Programme guide on channel rows: what's on now, with a progress bar. */
+  const EPG = new Map(); // id -> { t, now }
+  const epgQueue = [];
+  let epgBusy = 0;
+  const epgSeen = new WeakSet();
+  const epgIO = "IntersectionObserver" in window ? new IntersectionObserver((list) => list.forEach((e) => e.isIntersecting && wantEpg(e.target)), { rootMargin: "200px 0px" }) : null;
+  function epgLine(card, now) {
+    let box = card.querySelector(".dk-live-epg");
+    if (!now) {
+      if (box) box.remove();
+      card.classList.remove("has-epg");
+      return;
+    }
+    if (!box) {
+      box = document.createElement("div");
+      box.className = "dk-live-epg";
+      box.innerHTML = '<span class="dk-le-t"></span><span class="dk-le-tm"></span><i class="dk-le-bar"><b></b></i>';
+      const copy = card.querySelector(".live-copy") || card;
+      copy.appendChild(box);
+    }
+    card.classList.add("has-epg");
+    const sec = Date.now() / 1000;
+    const pct = Math.max(0, Math.min(100, ((sec - now.start) / Math.max(1, now.end - now.start)) * 100));
+    box.querySelector(".dk-le-t").textContent = now.title;
+    box.querySelector(".dk-le-t").setAttribute("dir", "auto");
+    box.querySelector(".dk-le-tm").textContent = fmtTime(now.start) + " – " + fmtTime(now.end);
+    box.querySelector(".dk-le-bar b").style.width = pct.toFixed(1) + "%";
+  }
+  function wantEpg(card) {
+    const id = card.dataset.item;
+    if (!id) return;
+    const hit = EPG.get(id);
+    if (hit && Date.now() - hit.t < 5 * 60000 && (!hit.now || hit.now.end * 1000 > Date.now())) return epgLine(card, hit.now);
+    if (card.dataset.epgQ) return;
+    card.dataset.epgQ = "1";
+    epgQueue.push(card);
+    pumpEpg();
+  }
+  function pumpEpg() {
+    while (epgBusy < 3 && epgQueue.length) {
+      const card = epgQueue.shift();
+      if (!card.isConnected) continue;
+      epgBusy++;
+      const id = card.dataset.item;
+      fetch("api/browse/epg?item=" + encodeURIComponent(id), { cache: "no-store" })
+        .then((r) => r.json())
+        .then((j) => {
+          const sec = Date.now() / 1000;
+          const now = ((j && j.rows) || []).find((r) => r.start <= sec && r.end > sec) || null;
+          EPG.set(id, { t: Date.now(), now });
+          if (card.isConnected) epgLine(card, now);
+        })
+        .catch(() => EPG.set(id, { t: Date.now(), now: null }))
+        .finally(() => {
+          delete card.dataset.epgQ;
+          epgBusy--;
+          pumpEpg();
+        });
+    }
+  }
+  function watchEpg() {
+    if (!epgIO || document.body.dataset.media !== "itv") return;
+    document.querySelectorAll("#browseItems .live-card[data-item]").forEach((c) => {
+      if (epgSeen.has(c)) return;
+      epgSeen.add(c);
+      epgIO.observe(c);
+    });
+  }
+  setInterval(() => {
+    if (document.hidden) return;
+    document.querySelectorAll("#browseItems .live-card.has-epg").forEach((c) => {
+      const hit = EPG.get(c.dataset.item);
+      if (hit && hit.now) {
+        if (hit.now.end * 1000 <= Date.now()) {
+          EPG.delete(c.dataset.item);
+          wantEpg(c);
+        } else epgLine(c, hit.now);
       }
     });
+  }, 30000);
+
+  function cleanItemTitles() {
+    document.querySelectorAll("#browseItems .item-title:not([data-n])").forEach((t) => {
+      t.dataset.n = "1";
+      const v = plain(t.textContent).replace(/^#+\s*|\s*#+$/g, "");
+      if (v && v !== t.textContent) t.textContent = v;
+      t.setAttribute("dir", "auto");
+    });
+    const it = $("itemsTitle");
+    if (it && /[\u1d00-\u1dbf\u2070-\u209f]/.test(it.textContent)) it.textContent = plain(it.textContent);
   }
 
   /* Seasons as poster cards (TMDB season posters, else the series poster). */
@@ -451,6 +570,13 @@
         return { host: "", mac: "" };
       }
     };
+    const counts = { portal: 0, xtream: 0 };
+    opts.forEach((o) => (counts[String(o.dataset.kind || "portal") === "portal" ? "portal" : "xtream"] += 1));
+    let group = "portal";
+    try {
+      group = localStorage.getItem("us-web-ptab") || "";
+    } catch (_) {}
+    if (group !== "portal" && group !== "xtream") group = counts.portal || !counts.xtream ? "portal" : "xtream";
     const tools =
       '<div class="dk-hero-tools">' +
       `<a href="sources.html#connectionPanel"><span>${ICON.plus}</span><b>${T("Add Connection", "إضافة مصدر")}</b></a>` +
@@ -466,27 +592,39 @@
       '</div><img src="brand-logo-gold.webp" alt=""></div>' +
       (opts.length
         ? '<div class="dk-row-h"><h3>' + T("Portals <span>البورتالات</span>", "البورتالات <span>Portals</span>") + "</h3><span>" + opts.length + T(" saved · ", " محفوظة · ") + '<a href="sources.html#connectionPanel">＋ ' + T("Add", "إضافة") + "</a></span></div>" +
-          '<div class="dk-sources">' +
+          `<div class="dk-ptabs" role="tablist"><button type="button" data-g="portal" class="${group === "portal" ? "on" : ""}"><img src="ui/gold/live.png" alt=""><b>${T("Stalker Portal", "بورتال ستالكر")}</b><i>${counts.portal}</i></button>` +
+          `<button type="button" data-g="xtream" class="${group === "xtream" ? "on" : ""}"><img src="ui/gold/movies.png" alt=""><b>${T("Xtream / M3U", "Xtream / M3U")}</b><i>${counts.xtream}</i></button></div>` +
+          `<div class="dk-sources" data-show="${group}">` +
           opts
             .map((o) => {
               const k = String(o.dataset.kind || "portal");
               const h = host(o.value);
               const safe = (t) => String(t || "").replace(/[<>&"]/g, "");
-              return `<button type="button" class="dk-src ${k}" data-v="${o.value}">
+              return `<button type="button" class="dk-src ${k}" data-v="${o.value}" data-g="${k === "portal" ? "portal" : "xtream"}">
                 <span class="dk-src-art"><img src="${icons[k] || icons.portal}" alt=""></span>
                 <span class="dk-src-k">${kindsAr[k] || kinds[k] || "Portal"}</span>
                 <b>${safe(o.textContent)}</b>
                 <span class="dk-src-host" dir="ltr">${safe(h.host)}</span>
                 ${h.mac ? `<span class="dk-src-id" dir="ltr">${safe(h.mac)}</span>` : ""}
-                <span class="dk-src-go">${T("Open portal <i>›</i>", "افتح البورتال <i>‹</i>")}</span></button>`;
+                <span class="dk-src-go">${T("Open portal <i>›</i>", "افتح البورتال <i>‹</i>")}</span><span class="dk-src-chev">${AR ? "‹" : "›"}</span></button>`;
             })
             .join("") +
+          `<div class="dk-src-none">${T("Nothing saved here yet.", "مفيش مصادر هنا لسه.")} <a href="sources.html#connectionPanel">＋ ${T("Add", "إضافة")}</a></div>` +
           "</div>"
         : '<div class="dk-empty">' + T("<b>No saved sources yet</b><span>Add a Portal, Xtream or M3U source, or load a receiver backup.</span>", "<b>لسه مفيش مصادر</b><span>ضيف بورتال أو Xtream أو M3U، أو ارفع باك اب الرسيفر.</span>") +
           '<div><a class="dk-btn" href="sources.html#connectionPanel">＋ ' + T("Add Connection", "إضافة مصدر") + '</a><a class="dk-btn ghost" href="sources.html#backupPanel">⇩ ' + T("Load receiver backup", "ارفع باك اب الرسيفر") + "</a></div></div>");
     const hero = box.querySelector(".dk-hero");
     if (hero) hero.appendChild(langSwitch());
     box.onclick = (e) => {
+      const tab = e.target.closest(".dk-ptabs button[data-g]");
+      if (tab) {
+        box.querySelectorAll(".dk-ptabs button").forEach((x) => x.classList.toggle("on", x === tab));
+        box.querySelector(".dk-sources").dataset.show = tab.dataset.g;
+        try {
+          localStorage.setItem("us-web-ptab", tab.dataset.g);
+        } catch (_) {}
+        return;
+      }
       const b = e.target.closest(".dk-src");
       if (!b) return;
       sel.value = b.dataset.v;
@@ -677,6 +815,8 @@
     new MutationObserver(() => {
       clearTimeout(ft);
       ft = setTimeout(featSync, 120);
+      cleanItemTitles();
+      watchEpg();
     }).observe($("browseItems"), { childList: true });
     drawWelcome();
     sync();
