@@ -914,3 +914,17 @@ html body.app .favorite-tab:nth-child(2):not(#_):not(#__){--tint:rgba(226,192,12
 html body.app .favorite-tab:nth-child(3):not(#_):not(#__){--tint:rgba(170,130,100,.30)}
 html body.app .dk-rc.sk:not(#_),html body.app .dk-rc-art:not(#_){background-size:auto,34% auto,auto!important}
 body.app .dk-row-h h3 span{display:none!important}
+
+/* ===== v8 background art: black silk with champagne-gold threads (static, one fixed layer) ===== */
+html body.app:before{display:none!important}
+#usAura:not(#_):not(#__){background:#09090a url("ui/bg-art.webp") center/cover no-repeat!important}
+body.ph #usAura:not(#_):not(#__){background:#09090a url("ui/bg-art-tall.webp") center top/cover no-repeat!important}
+#usAura i,#usAura .rays,#usAura .dust,#usAura:after{display:none!important}
+#usAura:before{background:radial-gradient(140% 100% at 50% 45%,transparent 60%,rgba(0,0,0,.35) 100%)!important}
+/* the art shows through the glass a little more */
+body.app{--glass:linear-gradient(165deg,rgba(40,36,30,.58),rgba(18,16,14,.76) 36%,rgba(11,10,9,.86)) padding-box,linear-gradient(150deg,rgba(246,231,196,.40),rgba(207,169,95,.14) 32%,rgba(240,222,180,.05) 64%,rgba(207,169,95,.30)) border-box}
+/* rail titles: the gold diamond sits on the reading side in Arabic and English */
+body.desk .dk-rail-h h3:before{margin:0 12px 2px 0!important;margin-inline:0 12px!important}
+#usAura:before{background:linear-gradient(rgba(6,6,7,.22),rgba(6,6,7,.22)),radial-gradient(140% 100% at 50% 45%,transparent 60%,rgba(0,0,0,.35) 100%)!important}
+body.app .dk-rc-t,body.app .dk-rc-m,body.app .dk-rail-h h3,body.app .dk-row-h,body.app .dk-hero-sum,body.app #favoritesStage .items-head{text-shadow:0 1px 10px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.6)}
+html body.desk #dkWelcome.dk-compact .dk-src-find:not(#_){background:rgba(10,9,8,.72)!important}
