@@ -743,7 +743,8 @@ body.usp-direct #playerSheet{display:none!important}
     }
     const log = (current._log || []).concat(STEP_LABEL[step()] + ": " + describe(detail));
     show('<div class="usp-spin"></div><small>Checking the stream…</small>');
-    const server = /^https?:/i.test(url) ? await probe(/\/play\/[^?]+$/.test(url) ? url + "?fresh=probe" + Date.now().toString(36) : url) : "";
+    const via = String(current._src || url).replace(/[?&]fresh=[^&]*$/, "");
+    const server = /^https?:/i.test(via) ? await probe(/\/play\/[^?]+$/.test(via) ? via + "?fresh=probe" + Date.now().toString(36) : via) : "";
     if (my !== alive) return;
     if (/web page|empty reply|HTTP 4\d\d|HTTP 5\d\d|no answer/.test(server)) {
       en = "The stream server didn't send video to the website (it may only allow its own apps or one connection at a time).";
@@ -824,6 +825,21 @@ body.usp-direct #playerSheet{display:none!important}
     document.documentElement.style.overflow = "";
   }
 
+  function streamExt(ticket) {
+    const url = String(ticket.stream || ticket.url || "");
+    let ext = "";
+    try {
+      const u = new URL(url);
+      let inner = u.searchParams.get("u");
+      const path = (inner ? new URL(inner).pathname : u.pathname).toLowerCase();
+      const m = path.match(/\.([a-z0-9]{2,4})$/);
+      ext = m ? m[1] : "";
+      const q = (inner || url).match(/[?&](?:extension|output|type)=(ts|m3u8|hls|mp4|mkv)/i);
+      if (!ext && q) ext = q[1].toLowerCase() === "hls" ? "m3u8" : q[1].toLowerCase();
+    } catch (_) {}
+    if (!ext || !/^(ts|m3u8|mp4|mkv|m4v|mov|webm|avi|flv|mpg|mpeg)$/.test(ext)) ext = ticket.live ? "ts" : "mp4";
+    return ext;
+  }
   async function startEngine(ticket, src, my, soft) {
     await lib(HERE + "vendor/libmedia/avplayer.js");
     if (my !== alive) return;
@@ -849,7 +865,9 @@ body.usp-direct #playerSheet{display:none!important}
     eng.on("ended", () => my === alive && (ticket.live ? reconnect("ended") : refresh()));
     eng.on("firstVideoRendered", () => my === alive && onStarted());
     eng.on("firstAudioRendered", () => my === alive && setTimeout(() => my === alive && onStarted(), 1500));
-    await eng.load(src, { isLive: !!ticket.live });
+    // The engine picks its demuxer from the file extension; relay links (/p?u=…) have
+    // none, so tell it what the original link was (ts, m3u8, mp4, mkv…).
+    await eng.load(src, { isLive: !!ticket.live, ext: streamExt(ticket) });
     if (my !== alive) return;
     A.setFit(store.get("us-fit", "fit") === "fill" ? "fill" : "fit");
     A.applyVol();
@@ -998,6 +1016,7 @@ body.usp-direct #playerSheet{display:none!important}
     // Give the previous connection a moment to close: many lines allow one stream at a time.
     if (o._again && ticket.live) await new Promise((r) => setTimeout(r, 700));
     if (my !== alive) return;
+    ticket._src = src;
     try {
       if (how === "engine" || how === "soft") await startEngine(ticket, src, my, how === "soft");
       else await startNative(ticket, src, my);
