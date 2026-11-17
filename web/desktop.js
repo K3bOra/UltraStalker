@@ -931,9 +931,14 @@
       `<a href="sources.html#managerPanel"><span>${ICON.servers}</span><b>${T("Manage Servers", "إدارة السيرفرات")}</b></a>` +
       `<a href="sources.html#backupPanel"><span>${ICON.backup}</span><b>${T("Backup", "باك اب الرسيفر")}</b></a>` +
       "</div>";
+    let lastSrc = "";
+    try {
+      lastSrc = localStorage.getItem("us-web-last-src") || "";
+    } catch (_) {}
     const kindsAr = AR ? { portal: "بورتال ستالكر", xtream: "Xtream Codes", m3u: "قائمة M3U" } : kinds;
     box.innerHTML =
       '<div class="dk-hero"><div class="dk-hero-copy"><small>ULTRA STALKER · WEB</small>' +
+      `<div class="dk-hero-sum"><b>Your sources, <span class="gold-text">everywhere.</span></b><span><i>${opts.length}</i> sources<em></em><i>${counts.portal}</i> Stalker portals<em></em><i>${counts.xtream}</i> Xtream / M3U</span></div>` +
       T('<h2>Your sources,<br><span class="gold-text">everywhere.</span></h2>', '<h2>مصادرك<br><span class="gold-text">في أي مكان</span></h2>') +
       T("<p>Live TV, movies and series from your own servers, on your phone and computer.</p>", "<p>البث المباشر والأفلام والمسلسلات من سيرفراتك، على الموبايل والكمبيوتر.</p>") +
       tools +
@@ -950,7 +955,19 @@
               const k = String(o.dataset.kind || "portal");
               const h = host(o.value);
               const safe = (t) => String(t || "").replace(/[<>&"]/g, "");
-              return `<button type="button" class="dk-src ${k}" data-v="${o.value}" data-g="${k === "portal" ? "portal" : "xtream"}">
+              // "Portal 4 · 204.52.191.254" shows as "Portal 4": the address is on the line below.
+              let shown = String(o.textContent || "").trim();
+              if (h.host) shown = shown.replace(new RegExp("\\s*[·•\\-|]\\s*" + h.host.split(":")[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(:\\d+)?\\s*$"), "") || shown;
+              const words = plain(shown).replace(/[^\p{L}\p{N} ]/gu, " ").trim().split(/\s+/).filter(Boolean);
+              const mono = ((words[0] || "?")[0] + (words.length > 1 ? (/^\d+$/.test(words[1]) ? words[1].slice(0, 2) : words[1][0]) : (words[0] || "")[1] || "")).toUpperCase();
+              let hash = 0;
+              for (const ch of shown) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+              const last = o.value === lastSrc;
+              return `<button type="button" class="dk-src ${k}${last ? " dk-last" : ""}" data-v="${o.value}" data-g="${k === "portal" ? "portal" : "xtream"}">
+                <span class="dk-src-av" data-t="${hash % 6}">${safe(mono)}</span>
+                <span class="dk-src-name">${safe(shown)}</span>
+                <span class="dk-src-meta"><span>${safe(h.host)}</span>${h.mac ? `<code>${safe(h.mac)}</code>` : ""}</span>
+                <span class="dk-src-arrow" aria-hidden="true">›</span>${last ? '<span class="dk-src-last">LAST OPENED</span>' : ""}
                 <span class="dk-src-art"><img src="${icons[k] || icons.portal}" alt=""></span>
                 <span class="dk-src-k">${kindsAr[k] || kinds[k] || "Portal"}</span>
                 <b>${safe(o.textContent)}</b>
@@ -984,6 +1001,9 @@
       }
       const b = e.target.closest(".dk-src");
       if (!b) return;
+      try {
+        localStorage.setItem("us-web-last-src", b.dataset.v);
+      } catch (_) {}
       sel.value = b.dataset.v;
       sel.dispatchEvent(new Event("change"));
     };

@@ -826,3 +826,56 @@ html body.app .series-season-empty:not(#_):not(#__),html body.app .series-season
 html body.ph .series-cinematic .series-chip:not(#_):not(#__){height:30px!important;padding:0 13px!important;font-size:12px!important}
 html body.ph .series-cinematic .favorite-action:not(#_):not(#__),html body.ph .series-cinematic .movie-play-btn:not(#_):not(#__){height:48px!important;font-size:14px!important}
 html body.app .series-cinematic .detail-back:not(#_):not(#__){height:40px!important;padding:0 16px!important;border-radius:999px!important;font-size:13px!important;font-weight:600!important;color:#f6e7bd!important;border:1px solid transparent!important;background:linear-gradient(160deg,rgba(40,29,12,.85),rgba(12,9,6,.85)) padding-box,linear-gradient(130deg,rgba(255,236,180,.6),rgba(212,175,55,.2) 50%,rgba(255,226,150,.45)) border-box!important;box-shadow:0 10px 24px -14px rgba(0,0,0,.95)!important}
+
+/* =====================================================================
+   v6 Portals screen (computer) — cinematic header, segmented tabs,
+   monogram cards with a personal tint, last-opened ribbon
+   ===================================================================== */
+.dk-src-av,.dk-src-name,.dk-src-meta,.dk-src-arrow,.dk-src-last,.dk-hero-sum{display:none}
+/* header */
+html body.desk #dkWelcome.dk-compact .dk-hero:not(#_):not(#__){flex-direction:row!important;padding:22px 28px!important;border-radius:28px!important;border:1px solid transparent!important;background:radial-gradient(520px 200px at 0% 0%,rgba(245,198,92,.22),transparent 70%),radial-gradient(600px 220px at 100% 120%,rgba(214,128,60,.16),transparent 70%),repeating-linear-gradient(115deg,rgba(255,226,150,.035) 0 1px,transparent 1px 14px),linear-gradient(160deg,rgba(40,29,13,.92),rgba(12,9,6,.94) 60%) padding-box,linear-gradient(120deg,rgba(255,236,180,.7),rgba(212,175,55,.2) 35%,rgba(212,175,55,.08) 65%,rgba(255,226,150,.5)) border-box!important;box-shadow:0 30px 60px -36px rgba(0,0,0,.95),inset 0 1px rgba(255,240,200,.08)!important}
+html body.desk #dkWelcome.dk-compact .dk-hero>img{order:-1;height:78px!important}
+html body.desk #dkWelcome.dk-compact .dk-hero-copy:not(#_){flex:1;justify-content:space-between!important;flex-direction:row!important}
+body.desk #dkWelcome.dk-compact .dk-hero-sum{display:flex;flex-direction:column;gap:6px;margin-left:18px;padding-left:24px;border-left:1px solid rgba(255,226,150,.18)}
+body.desk #dkWelcome.dk-compact .dk-hero-sum b{font-family:var(--display);font-size:26px;font-weight:700;color:#fff7e2;letter-spacing:-.01em;line-height:1.15}
+body.desk #dkWelcome.dk-compact .dk-hero-sum>span{display:flex;align-items:center;gap:8px;font-size:13px;color:#b9aa88}
+body.desk #dkWelcome.dk-compact .dk-hero-sum i{font-style:normal;font-weight:700;color:#f3d58a}
+body.desk #dkWelcome.dk-compact .dk-hero-sum em{width:4px;height:4px;border-radius:50%;background:rgba(243,213,138,.5);margin:0 4px}
+html body.desk #dkWelcome.dk-compact .dk-hero-tools:not(#_){gap:10px!important}
+html body.desk #dkWelcome.dk-compact .dk-hero-tools a:not(#_){height:46px!important;padding:0 18px 0 8px!important;border-radius:999px!important;font-weight:600!important;background:rgba(255,226,150,.05)!important;border:1px solid rgba(255,226,150,.2)!important}
+html body.desk #dkWelcome.dk-compact .dk-hero-tools a:first-child:not(#_){color:#1a1306!important;border-color:transparent!important;background:linear-gradient(135deg,#fdf0bd,#e6c25a 40%,#b0812a 75%,#f2d685)!important;box-shadow:0 12px 26px -12px rgba(240,196,90,.85)!important}
+html body.desk #dkWelcome.dk-compact .dk-hero-tools a:first-child:not(#_) span{background:#1a1306!important;color:#f3c552!important}
+html body.desk #dkWelcome.dk-compact .dk-hero-tools a:not(#_) span{width:32px;height:32px;border-radius:50%!important}
+/* title row + tabs + search */
+body.desk #dkWelcome.dk-compact .dk-row-h h3 span{display:none}
+body.desk #dkWelcome.dk-compact .dk-row-h h3{font-size:24px!important}
+html body.desk #dkWelcome.dk-compact .dk-ptabs:not(#_):not(#__){background:none!important;border:0!important;padding:0!important;gap:10px!important;margin:0 0 20px!important}
+html body.desk #dkWelcome.dk-compact .dk-ptabs>button:not(#_){height:46px!important;padding:0 18px 0 14px!important;border-radius:999px!important;gap:10px!important;font-size:14px!important;font-weight:600!important;color:#d9cba8!important;border:1px solid rgba(255,226,150,.16)!important;background:rgba(255,226,150,.04)!important;box-shadow:none!important}
+html body.desk #dkWelcome.dk-compact .dk-ptabs>button img{opacity:.8!important}
+html body.desk #dkWelcome.dk-compact .dk-ptabs>button.on:not(#_){color:#1a1306!important;border-color:transparent!important;background:linear-gradient(135deg,#fdf0bd,#e6c25a 40%,#b0812a 75%,#f2d685)!important;box-shadow:0 12px 26px -12px rgba(240,196,90,.8)!important}
+html body.desk #dkWelcome.dk-compact .dk-ptabs>button.on img{filter:brightness(0) saturate(100%);opacity:.75!important}
+html body.desk #dkWelcome.dk-compact .dk-ptabs>button.on i{background:#1a1306!important;color:#f3c552!important}
+html body.desk #dkWelcome.dk-compact .dk-src-find:not(#_){height:46px!important;border-radius:999px!important;padding:0 18px!important;width:min(360px,32vw)!important;background:rgba(0,0,0,.25)!important;border-color:rgba(255,226,150,.18)!important}
+/* cards */
+html body.desk #dkWelcome.dk-compact .dk-sources:not(#_):not(#__){grid-template-columns:repeat(auto-fill,minmax(330px,1fr))!important;gap:16px!important}
+html body.desk #dkWelcome.dk-compact .dk-src:not(#_):not(#__){overflow:hidden;min-height:104px!important;grid-template-columns:58px minmax(0,1fr) 36px!important;grid-template-areas:"av name arrow" "av meta arrow"!important;column-gap:16px!important;row-gap:5px!important;padding:18px 18px 18px 18px!important;border-radius:22px!important;background:radial-gradient(160px 100px at 0% 0%,rgba(255,226,150,.10),transparent 70%),linear-gradient(145deg,rgba(46,33,15,.62),rgba(17,13,8,.86) 55%,rgba(11,8,5,.92)) padding-box,linear-gradient(135deg,rgba(255,232,170,.42),rgba(212,175,55,.10) 40%,rgba(212,175,55,.04) 70%,rgba(255,226,150,.22)) border-box!important;box-shadow:0 18px 36px -26px rgba(0,0,0,.95),inset 0 1px rgba(255,240,200,.06)!important}
+html body.desk #dkWelcome.dk-compact .dk-src:not(#_):not(#__):hover{transform:translateY(-3px)!important;background:radial-gradient(180px 110px at 0% 0%,rgba(255,226,150,.16),transparent 70%),linear-gradient(145deg,rgba(60,43,18,.7),rgba(20,15,9,.88) 55%,rgba(12,9,6,.92)) padding-box,linear-gradient(135deg,#fff1c2,rgba(230,185,76,.55) 40%,rgba(212,175,55,.15) 70%,rgba(255,226,150,.5)) border-box!important;box-shadow:0 24px 44px -24px rgba(0,0,0,.95),0 0 36px -14px rgba(240,196,90,.55)!important}
+body.desk #dkWelcome.dk-compact .dk-src>b,body.desk #dkWelcome.dk-compact .dk-src-host,body.desk #dkWelcome.dk-compact .dk-src-art,html body.desk #dkWelcome.dk-compact .dk-src-go:not(#_),body.desk #dkWelcome.dk-compact .dk-src-k,body.desk #dkWelcome.dk-compact .dk-src-id,body.desk #dkWelcome.dk-compact .dk-src-chev{display:none!important}
+body.desk #dkWelcome.dk-compact .dk-src-av{grid-area:av;display:grid;place-items:center;width:58px;height:58px;border-radius:18px;font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.02em;color:#1a1306;background:var(--av);box-shadow:0 10px 22px -10px rgba(0,0,0,.9),inset 0 1px rgba(255,255,255,.55),inset 0 -6px 12px rgba(0,0,0,.18)}
+body.desk #dkWelcome.dk-compact .dk-src-av[data-t="0"]{--av:linear-gradient(140deg,#fdf0bd,#e6c25a 45%,#9a6c22)}
+body.desk #dkWelcome.dk-compact .dk-src-av[data-t="1"]{--av:linear-gradient(140deg,#ffe0a8,#ea9e45 45%,#8a4f17)}
+body.desk #dkWelcome.dk-compact .dk-src-av[data-t="2"]{--av:linear-gradient(140deg,#f8d3bf,#cf8664 45%,#6e3b26)}
+body.desk #dkWelcome.dk-compact .dk-src-av[data-t="3"]{--av:linear-gradient(140deg,#fff4da,#dcc48f 45%,#7c6a3e)}
+body.desk #dkWelcome.dk-compact .dk-src-av[data-t="4"]{--av:linear-gradient(140deg,#efcd98,#b07a3e 45%,#5a3a17)}
+body.desk #dkWelcome.dk-compact .dk-src-av[data-t="5"]{--av:linear-gradient(140deg,#ffe896,#e3aa30 45%,#7a5310)}
+body.desk #dkWelcome.dk-compact .dk-src-name{grid-area:name;display:block;align-self:end;min-width:0;font-family:var(--display);font-size:17px;font-weight:600;color:#fff6e3;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.desk #dkWelcome.dk-compact .dk-src-meta{grid-area:meta;display:flex;align-items:center;gap:8px;align-self:start;min-width:0;font-size:12.5px;color:#b9aa88;white-space:nowrap}
+body.desk #dkWelcome.dk-compact .dk-src-meta>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+body.desk #dkWelcome.dk-compact .dk-src-meta code{flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;letter-spacing:.02em;color:#d9c79c;padding:2px 7px;border-radius:7px;background:rgba(255,226,150,.07);border:1px solid rgba(255,226,150,.14);max-width:150px;overflow:hidden;text-overflow:ellipsis}
+body.desk #dkWelcome.dk-compact .dk-src-arrow{grid-area:arrow;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;font-size:22px;line-height:1;color:#f0c45a;border:1px solid rgba(255,226,150,.22);background:rgba(0,0,0,.2);transition:background .2s,color .2s,transform .2s}
+body.desk #dkWelcome.dk-compact .dk-src:hover .dk-src-arrow{color:#1a1306;border-color:transparent;background:linear-gradient(135deg,#fdf0bd,#e6c25a 45%,#b0812a);transform:translateX(2px)}
+body.desk #dkWelcome.dk-compact .dk-src-last{display:block;position:absolute;top:0;right:22px;padding:3px 10px 4px;border-radius:0 0 9px 9px;font-size:9px;font-weight:800;letter-spacing:.14em;color:#1a1306;background:linear-gradient(135deg,#fdf0bd,#e6c25a 45%,#b0812a)}
+html body.desk #dkWelcome.dk-compact .dk-src.dk-last:not(#_):not(#__){background:radial-gradient(200px 120px at 0% 0%,rgba(255,226,150,.18),transparent 70%),linear-gradient(145deg,rgba(64,46,19,.72),rgba(20,15,9,.88) 55%,rgba(12,9,6,.92)) padding-box,linear-gradient(135deg,#fff1c2,rgba(230,185,76,.6) 40%,rgba(212,175,55,.2) 70%,rgba(255,226,150,.55)) border-box!important}
+html body.desk #dkWelcome.dk-compact .dk-hero-tools a:first-child:not(#_) span svg{stroke:#f3c552!important;color:#f3c552!important}
+body.desk #dkWelcome.dk-compact .dk-src-meta>span{flex:0 0 auto;max-width:62%}
+body.desk #dkWelcome.dk-compact .dk-src-meta code{flex:0 1 auto;min-width:0}
