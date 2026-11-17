@@ -538,6 +538,7 @@ body.usp-direct #playerSheet{display:none!important}
       [["auto", "Auto"], ["browser", "Browser"], ["ultra", "Ultra"]].map(([k, l]) => `<button type="button" data-e="${k}" class="${mode === k ? "on" : ""}">${l}</button>`).join("") +
       `</div><button type="button" disabled><small>Now: ${esc(STEP_LABEL[step()] || "")}</small></button>`;
     if (!isEngine() && mode !== "browser") h += '<button type="button" data-x="ultra">Play this with Ultra engine</button>';
+    h += "<h4>Stream info</h4>" + streamInfo().map((l) => `<button type="button" disabled><small>${esc(l)}</small></button>`).join("");
     const href = vlcHref(current || {});
     h += `<hr><a href="${esc(href)}"${/^data:/.test(href) ? ' download="ultra-stalker.m3u"' : ""}>Open in VLC <small>▶</small></a><button type="button" data-x="copy">Copy stream link</button>`;
     menu.innerHTML = h;
@@ -564,6 +565,28 @@ body.usp-direct #playerSheet{display:none!important}
       setTimeout(openMenu, 60);
     };
     menu.classList.add("on");
+  }
+  /* What is playing and how well: picture size, codecs, decode speed, CPU threads. */
+  function streamInfo() {
+    const out = [];
+    try {
+      if (isEngine() && eng) {
+        const st = eng.getStats();
+        const vs = (eng.getStreams() || []).find((x) => /video/i.test(String(x.mediaType)));
+        const w = (st && st.width) || (vs && vs.codecparProxy && vs.codecparProxy.width) || 0;
+        const hgt = (st && st.height) || (vs && vs.codecparProxy && vs.codecparProxy.height) || 0;
+        if (w) out.push("Picture: " + w + "×" + hgt);
+        if (st) out.push("Decoding: " + Math.round(st.videoDecodeFramerate || 0) + " fps · shown " + Math.round(st.videoRenderFramerate || 0) + " fps");
+      } else if (video && video.videoWidth) {
+        out.push("Picture: " + video.videoWidth + "×" + video.videoHeight);
+        const q = video.getVideoPlaybackQuality && video.getVideoPlaybackQuality();
+        if (q) out.push("Frames: " + q.totalVideoFrames + " · dropped " + q.droppedVideoFrames);
+      }
+      if (info && (info.videoCodec || info.audioCodec)) out.push("Codecs: " + [info.videoCodec, info.audioCodec].filter(Boolean).map(codecName).join(" + "));
+    } catch (_) {}
+    out.push("Engine: " + STEP_LABEL[step()] + (isEngine() ? (self.crossOriginIsolated ? " · multi-core" : " · single-core") : ""));
+    out.push("CPU threads: " + (navigator.hardwareConcurrency || "?"));
+    return out;
   }
   function note(en, ar) {
     if (!box) return;

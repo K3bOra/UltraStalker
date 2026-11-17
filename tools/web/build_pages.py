@@ -24,7 +24,7 @@ from goldify import recolor_html  # noqa: E402  (black & gold theme)
 
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "web"
-WEB_VERSION = 17
+WEB_VERSION = 18
 PLUGIN_DIR = "usr/lib/enigma2/python/Plugins/Extensions/UltraStalker/"
 
 
@@ -123,7 +123,7 @@ def build_browse(src, release):
     h = sub(h, '<link rel="icon" type="image/png" href="/brand-logo.png">',
             '<link rel="icon" type="image/png" href="icons/gold-192.png">\n' + META)
     h = sub(h, "</head>", STYLES
-            + head_scripts(["i18n.js", "config.js", "hash.js", "engine.js", "player.js", "desktop.js"]) + "\n</head>")
+            + head_scripts(["coi.js", "i18n.js", "config.js", "hash.js", "engine.js", "player.js", "desktop.js"]) + "\n</head>")
     h = sub(h, "Palestinian identity • mobile browser", "Palestinian identity • from anywhere")
     h = sub(h, "Browse saved Portal, Xtream and M3U sources plus the receiver's Local library from your phone. "
                "Nothing here changes the channel or player on the receiver.",
@@ -192,7 +192,7 @@ def build_sources(src, release):
             '<link rel="icon" type="image/png" href="icons/gold-192.png">\n' + META)
     h = sub(h, "<title>Ultra Stalker • Playlist Cleaner</title>", "<title>Ultra Stalker • Sources &amp; Backup</title>")
     h = sub(h, "</head>", '<link rel="stylesheet" href="sources.css?v=%d">' % WEB_VERSION + STYLES
-            + head_scripts(["i18n.js", "config.js", "hash.js", "engine.js", "backup.js", "desktop.js"]) + "\n</head>")
+            + head_scripts(["coi.js", "i18n.js", "config.js", "hash.js", "engine.js", "backup.js", "desktop.js"]) + "\n</head>")
     h = sub(h, 'href="/" style="min-height:38px', 'href="index.html" style="min-height:38px')
     h = sub(h, "Local processing • private by design", "Saved in this browser • private")
     h = sub(h, "__US_WEB_RELEASE__", release)
