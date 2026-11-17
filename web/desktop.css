@@ -438,7 +438,7 @@ body.desk.dk-rails-on #browseCategories .dk-cat-tags i{height:18px;font-size:9px
 body.desk.dk-tv-mode #itemsStage{grid-template-columns:clamp(200px,13vw,250px) clamp(320px,22vw,400px) minmax(0,1fr)!important;grid-template-areas:"cats list tv"!important;gap:18px!important}
 html.lang-ar body.desk.dk-tv-mode #itemsStage{grid-template-areas:"tv list cats"!important;grid-template-columns:minmax(0,1fr) clamp(320px,22vw,400px) clamp(200px,13vw,250px)!important}
 body.desk.dk-tv-mode #itemsStage>.items-head,body.desk.dk-tv-mode .dk-feature{display:none!important}
-body.desk.dk-tv-mode .dk-tv-cats{display:flex;flex-direction:column;grid-area:cats;max-height:calc(100vh - 140px);min-height:0;padding:14px 10px;border-radius:22px;background:linear-gradient(180deg,#14110d,#0a0908) padding-box,linear-gradient(var(--us-edge),var(--us-edge)) border-box;border:1px solid transparent}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tv-cats{display:flex;flex-direction:column;grid-area:cats;max-height:calc(100vh - 140px);min-height:0;padding:14px 10px;border-radius:22px;background:linear-gradient(180deg,#14110d,#0a0908) padding-box,linear-gradient(var(--us-edge),var(--us-edge)) border-box;border:1px solid transparent}
 .dk-tvc-h{display:flex;align-items:center;justify-content:space-between;padding:2px 8px 12px;font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--gold-1);text-transform:uppercase}
 .dk-tvc-h i{font-style:normal;min-width:26px;height:22px;padding:0 7px;border-radius:999px;display:inline-grid;place-items:center;font-size:11px;background:rgba(212,175,55,.14);color:var(--gold-0);letter-spacing:0}
 .dk-tvc-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(212,175,55,.35) transparent}
@@ -574,12 +574,12 @@ body.desk .series-cinematic .dk-logo{max-height:150px!important}
 body.desk.dk-tv-mode main.shell{padding-top:0!important}
 body.desk.dk-tv-mode #itemsStage{box-sizing:border-box;height:100vh;padding:calc(var(--bar) + 18px) var(--pad) 22px!important;grid-template-columns:clamp(220px,14vw,270px) clamp(330px,22vw,410px) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;grid-template-areas:"cats list tv"!important;gap:20px!important;align-items:stretch!important}
 html.lang-ar body.desk.dk-tv-mode #itemsStage{grid-template-areas:"cats list tv"!important;grid-template-columns:clamp(220px,14vw,270px) clamp(330px,22vw,410px) minmax(0,1fr)!important}
-body.desk.dk-tv-mode .dk-tv-cats,body.desk.dk-tv-mode .dk-tv-list{max-height:none!important;height:100%;min-height:0}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tv-cats,body.desk.dk-tv-mode .dk-tv-list{max-height:none!important;height:100%;min-height:0}
 /* columns */
-body.desk.dk-tv-mode .dk-tv-cats{padding:16px 10px 10px!important;border-radius:22px!important;background:rgba(14,12,10,.72)!important;border:1px solid rgba(255,232,170,.08)!important}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tv-cats{padding:16px 10px 10px!important;border-radius:22px!important;background:rgba(14,12,10,.72)!important;border:1px solid rgba(255,232,170,.08)!important}
 body.desk.dk-tv-mode .dk-tv-list{display:flex!important;flex-direction:column;margin:0!important;padding:0!important;border-radius:22px;background:rgba(14,12,10,.72);border:1px solid rgba(255,232,170,.08);overflow:hidden!important}
 .dk-tvl-head{display:none}
-body.desk.dk-tv-mode .dk-tvl-head{display:flex;flex-direction:column;gap:12px;padding:16px 16px 12px;border-bottom:1px solid rgba(255,232,170,.07)}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvl-head{display:flex;flex-direction:column;gap:12px;padding:16px 16px 12px;border-bottom:1px solid rgba(255,232,170,.07)}
 .dk-tvl-head>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .dk-tvl-head b{font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dk-tvl-head small{font-size:11.5px;color:var(--dim);white-space:nowrap}
@@ -587,12 +587,12 @@ body.desk.dk-tv-mode .dk-tvl-head{display:flex;flex-direction:column;gap:12px;pa
 .dk-find:focus-within{border-color:rgba(212,175,55,.5)}
 .dk-find svg{flex:none;width:16px;height:16px;fill:none;stroke:var(--dim);stroke-width:2;stroke-linecap:round}
 .dk-find input{flex:1;min-width:0;height:100%;border:0;outline:none;background:none;color:var(--text);font:inherit;font-size:13.5px}
-body.desk.dk-tv-mode .dk-tv-cats .dk-find{margin:0 4px 10px}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tv-cats .dk-find{margin:0 4px 10px}
 body.desk.dk-tv-mode #browseItems{flex:1;min-height:0;overflow-y:auto;padding:8px!important;gap:2px!important;scrollbar-width:thin;scrollbar-color:rgba(212,175,55,.3) transparent}
 body.desk.dk-tv-mode #itemInfinite{padding:0 16px 10px!important;margin:0!important;font-size:12px}
-body.desk.dk-tv-mode .dk-tvc-h{padding:2px 10px 12px!important}
-body.desk.dk-tv-mode .dk-tvc-list button{padding:10px 12px!important;border-radius:12px!important;font-size:13.5px!important}
-body.desk.dk-tv-mode .dk-tvc-list button[hidden],body.desk.dk-tv-mode #browseItems .live-card[hidden]{display:none!important}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-h{padding:2px 10px 12px!important}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button{padding:10px 12px!important;border-radius:12px!important;font-size:13.5px!important}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button[hidden],body.desk.dk-tv-mode #browseItems .live-card[hidden]{display:none!important}
 /* channel rows: no boxes, a hairline, a gold marker when playing */
 html body.desk.dk-tv-mode #browseItems .live-card:not(#_){background:none!important;border:0!important;box-shadow:none!important;border-radius:14px!important;padding:9px 10px!important;min-height:0!important;grid-template-columns:50px minmax(0,1fr)!important;gap:12px!important;transform:none!important;filter:none!important;position:relative}
 html body.desk.dk-tv-mode #browseItems .live-card:not(#_)::before,html body.desk.dk-tv-mode #browseItems .live-card:not(#_)::after{display:none!important;content:none!important}
@@ -622,7 +622,7 @@ body.desk.dk-tv-mode .dk-epg-now{background:rgba(255,240,200,.035)!important;bor
 body.desk.dk-tv-mode .dk-epg-next>div{background:rgba(255,240,200,.025)!important;border-radius:12px!important}
 body.desk.dk-tv-mode .usp-msg.err{background:radial-gradient(70% 70% at 50% 40%,rgba(26,22,15,.94),rgba(5,5,5,.97))!important}
 html body.desk.dk-tv-mode #browseItems .live-card:not(#_){flex:none!important;height:auto!important}
-body.desk.dk-tv-mode .dk-tvc-list button{flex:none}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button{flex:none}
 /* no featured banner: rails start under the bar */
 body.desk.dk-rails-on .dk-rails{padding-top:6px}
 body.desk .dk-rails>.dk-rails-top{margin-top:0!important}
@@ -690,12 +690,12 @@ body.desk .dk-rail-h .dk-rail-all{order:2}
 body.desk .dk-rails-top .dk-cats-open{background:var(--glass)!important;border:1px solid transparent!important;box-shadow:var(--glass-shadow)!important}
 
 /* --- Live (computer): glass columns, warm rows, live equaliser on the playing channel --- */
-body.desk.dk-tv-mode .dk-tv-cats:not(#_),body.desk.dk-tv-mode .dk-tv-list:not(#_),body.desk.dk-tv-mode .dk-tv-info:not(#_){background:var(--glass)!important;border:1px solid transparent!important;box-shadow:var(--glass-shadow)!important;}
-body.desk.dk-tv-mode .dk-tvl-head{background:linear-gradient(180deg,rgba(240,222,180,.07),transparent);border-bottom:1px solid rgba(240,222,180,.10)!important}
-body.desk.dk-tv-mode .dk-tvl-head b{background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent!important;font-size:18px!important}
-body.desk.dk-tv-mode .dk-tvc-h{color:#f3d58a!important}
-body.desk.dk-tv-mode .dk-tvc-list button.on{background:linear-gradient(110deg,rgba(226,192,124,.30),rgba(226,192,124,.06) 70%)!important;color:#fff4d2!important;box-shadow:inset 3px 0 0 #e2c07c,0 8px 22px -14px rgba(226,192,124,.8)!important}
-body.desk.dk-tv-mode .dk-find{background:rgba(0,0,0,.25)!important;border-color:rgba(240,222,180,.14)!important}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tv-cats:not(#_),body.desk.dk-tv-mode .dk-tv-list:not(#_),body.desk.dk-tv-mode .dk-tv-info:not(#_){background:var(--glass)!important;border:1px solid transparent!important;box-shadow:var(--glass-shadow)!important;}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvl-head{background:linear-gradient(180deg,rgba(240,222,180,.07),transparent);border-bottom:1px solid rgba(240,222,180,.10)!important}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvl-head b{background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent!important;font-size:18px!important}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-h{color:#f3d58a!important}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button.on{background:linear-gradient(110deg,rgba(226,192,124,.30),rgba(226,192,124,.06) 70%)!important;color:#fff4d2!important;box-shadow:inset 3px 0 0 #e2c07c,0 8px 22px -14px rgba(226,192,124,.8)!important}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-find{background:rgba(0,0,0,.25)!important;border-color:rgba(240,222,180,.14)!important}
 html body.desk.dk-tv-mode #browseItems .live-card:not(#_):not(#__){border-radius:16px!important;transition:background .2s,transform .2s!important}
 html body.desk.dk-tv-mode #browseItems .live-card:not(#_):not(#__):hover{background:linear-gradient(90deg,rgba(240,222,180,.09),rgba(240,222,180,.02))!important;transform:translateX(3px)!important}
 html body.desk.dk-tv-mode #browseItems .live-card.dk-on:not(#_):not(#__){background:linear-gradient(90deg,rgba(226,192,124,.28),rgba(226,192,124,.05) 75%)!important;box-shadow:inset 3px 0 0 #e2c07c,0 10px 30px -18px rgba(226,192,124,.9)!important}
@@ -763,7 +763,7 @@ body.app .series-cinematic .series-overview:not(#_):not(#__){background:var(--gl
 #usAura{contain:strict;transform:translateZ(0)}
 #usAura .rays{width:130vmax;height:130vmax;margin-left:-65vmax}
 html body.app #dkBar.solid:not(#_){background:linear-gradient(180deg,rgba(28,20,10,.97),rgba(16,11,6,.95))!important}
-body.desk.dk-tv-mode .dk-tv-cats:not(#_),body.desk.dk-tv-mode .dk-tv-list:not(#_),body.desk.dk-tv-mode .dk-tv-info:not(#_){contain:layout paint}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tv-cats:not(#_),body.desk.dk-tv-mode .dk-tv-list:not(#_),body.desk.dk-tv-mode .dk-tv-info:not(#_){contain:layout paint}
 .dk-rail-retry{appearance:none;margin:30px 4px;padding:12px 18px;border-radius:14px;border:1px dashed rgba(240,222,180,.35);background:rgba(240,222,180,.06);color:#f0dcae;font:inherit;font-size:13.5px;cursor:pointer}
 .dk-rail-retry:hover{background:rgba(240,222,180,.14)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -806,7 +806,7 @@ html body.desk #dkWelcome.dk-compact .dk-src-go:not(#_){position:absolute!import
 html body.desk #dkWelcome.dk-compact .dk-sources[data-show="portal"] .dk-src[data-g="xtream"]:not(#_):not(#__),html body.desk #dkWelcome.dk-compact .dk-sources[data-show="xtream"] .dk-src[data-g="portal"]:not(#_):not(#__){display:none!important}
 /* Live: wider categories column so long names show in full */
 html body.desk.dk-tv-mode #itemsStage:not(#_){grid-template-columns:clamp(270px,17vw,340px) clamp(340px,22vw,420px) minmax(0,1fr)!important}
-body.desk.dk-tv-mode .dk-tvc-list button span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.35;overflow-wrap:anywhere}
+body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.35;overflow-wrap:anywhere}
 
 /* ===== v5 capsules: one premium family for kicker, chips, Favorite and empty states (phone + computer) ===== */
 html body.app .series-cinematic .series-kicker:not(#_):not(#__){height:30px!important;padding:0 14px 0 12px!important;gap:9px!important;border-radius:999px!important;border:1px solid transparent!important;background:linear-gradient(135deg,rgba(40,29,12,.82),rgba(14,10,6,.82)) padding-box,linear-gradient(var(--us-edge),var(--us-edge)) border-box!important;box-shadow:0 8px 22px -12px rgba(0,0,0,.9),inset 0 1px rgba(255,240,200,.12)!important;font-size:11px!important;font-weight:700!important;letter-spacing:.2em!important;color:#f6e3ad!important;text-shadow:none!important}
@@ -901,7 +901,7 @@ body.app:before{opacity:.18!important;filter:saturate(.6)}
 html body.app #dkBar.solid:not(#_){background:linear-gradient(180deg,rgba(18,17,15,.97),rgba(11,11,10,.95))!important}
 html body.app #dkBar:not(#_):after{background:linear-gradient(90deg,transparent,rgba(226,192,124,.45) 25%,rgba(249,236,208,.8) 50%,rgba(226,192,124,.45) 75%,transparent)!important;opacity:.6}
 /* gold text everywhere follows the foil */
-body.app .gold-text,body.desk.dk-tv-mode .dk-tvl-head b{background:var(--foil)!important;-webkit-background-clip:text!important;background-clip:text!important}
+body.app .gold-text,body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvl-head b{background:var(--foil)!important;-webkit-background-clip:text!important;background-clip:text!important}
 /* posters while loading: a still, finished-looking card (no shimmer) */
 html body.app .dk-rc.sk:not(#_),html body.app .dk-rc-art:not(#_){animation:none!important;background:radial-gradient(70% 45% at 50% 42%,rgba(226,192,124,.10),transparent 70%),url("ui/gold/emblem.png") center 44%/42% auto no-repeat,linear-gradient(160deg,#1c1a17,#0f0e0d 60%,#151310)!important;box-shadow:inset 0 0 0 1px rgba(240,222,180,.09),inset 0 1px rgba(255,246,225,.06)!important}
 html body.app .dk-rc.sk:not(#_){opacity:.9}
@@ -1025,14 +1025,14 @@ html body.app :is(.category,.live-card,.poster-card,.item-card,.series-season-bt
 /* list status: no "End of this category" line (the list simply ends) */
 html body.app #itemInfinite.done:not(#_),html body.app #localInfinite.done:not(#_){display:none!important}
 /* Live categories: a fine gold rule between rows */
-html body.desk.dk-tv-mode .dk-tvc-list:not(#_){gap:0!important}
-html body.desk.dk-tv-mode .dk-tvc-list button:not(#_){position:relative;border-radius:10px!important;margin:1px 0!important}
-html body.desk.dk-tv-mode .dk-tvc-list button:not(#_)+button:before{content:"";position:absolute;left:12px;right:12px;top:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(226,192,124,.32) 18%,rgba(226,192,124,.32) 82%,transparent);pointer-events:none}
-html body.desk.dk-tv-mode .dk-tvc-list button.on:not(#_):before,html body.desk.dk-tv-mode .dk-tvc-list button.on:not(#_)+button:before{opacity:0}
+html body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list:not(#_){gap:0!important}
+html body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button:not(#_){position:relative;border-radius:10px!important;margin:1px 0!important}
+html body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button:not(#_)+button:before{content:"";position:absolute;left:12px;right:12px;top:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(226,192,124,.32) 18%,rgba(226,192,124,.32) 82%,transparent);pointer-events:none}
+html body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button.on:not(#_):before,html body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button.on:not(#_)+button:before{opacity:0}
 /* selection marker: a straight gold bar with rounded ends, not a line bent around the corner */
-html body.desk.dk-tv-mode .dk-tvc-list button.on:not(#_):not(#__){box-shadow:none!important;background:linear-gradient(100deg,rgba(226,192,124,.22),rgba(226,192,124,.05) 75%)!important}
-html body.desk.dk-tv-mode .dk-tvc-list button.on:not(#_):not(#__):after{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--foil);box-shadow:0 0 10px rgba(226,192,124,.6)}
-html.lang-ar body.desk.dk-tv-mode .dk-tvc-list button.on:not(#_):not(#__):after{left:auto;right:0}
+html body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button.on:not(#_):not(#__){box-shadow:none!important;background:linear-gradient(100deg,rgba(226,192,124,.22),rgba(226,192,124,.05) 75%)!important}
+html body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button.on:not(#_):not(#__):after{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--foil);box-shadow:0 0 10px rgba(226,192,124,.6)}
+html.lang-ar body.desk:is(.dk-tv-mode,.dk-vg-mode) .dk-tvc-list button.on:not(#_):not(#__):after{left:auto;right:0}
 html body.desk.dk-tv-mode #browseItems .live-card.dk-on:not(#_):not(#__):not(#___){box-shadow:0 10px 30px -20px rgba(226,192,124,.8)!important;border-color:rgba(226,192,124,.35)!important}
 html body.desk.dk-tv-mode #browseItems .live-card.dk-on:not(#_):not(#__):not(#___)::before{content:""!important;display:block!important;position:absolute!important;left:0;top:14px;bottom:14px;width:3px;border-radius:3px;background:var(--foil)!important;box-shadow:0 0 10px rgba(226,192,124,.6)!important;opacity:1!important;inset:auto auto auto 0;height:auto}
 html body.desk.dk-tv-mode #browseItems .live-card.dk-on:not(#_):not(#__):not(#___)::before{top:14px!important;bottom:14px!important;left:0!important;width:3px!important}
@@ -1089,3 +1089,97 @@ html body.app .usp-menu:not(#_):not(#__){background:var(--sheen) padding-box,lin
 .dk-tv-facts em{font-style:normal;height:24px;padding:0 10px;display:inline-flex;align-items:center;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.04em;color:#efe3c6;background:linear-gradient(180deg,rgba(255,246,225,.08),rgba(255,246,225,.02));box-shadow:0 0 0 1px rgba(232,211,164,.24),inset 0 1px rgba(255,246,225,.08)}
 .dk-tv-facts em.q{color:#1a1306;font-weight:700;background:var(--foil);box-shadow:inset 0 1px rgba(255,255,255,.5)}
 .dk-tv-facts em.u{color:#e6cb8c;letter-spacing:.12em;font-size:10px}
+
+/* ======================================================================
+   Movies & Series (computer): a fixed category column and a poster wall.
+   The category column is the Live one; the page itself scrolls the wall.
+   ====================================================================== */
+/* the section opens on a category straight away: no chip grid in between */
+html body.desk:is([data-media="vod"],[data-media="series"]) #categoryStage:has(#browseCategories .category):not(#_){visibility:hidden}
+
+html body.desk.dk-vg-mode #itemsStage:not(#_):not(#__){display:grid!important;grid-template-columns:clamp(250px,16vw,300px) minmax(0,1fr)!important;grid-template-rows:auto!important;grid-template-areas:"cats list"!important;gap:0 34px!important;align-items:start!important;height:auto!important;padding:0 var(--pad) 70px!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important}
+html.lang-ar body.desk.dk-vg-mode #itemsStage:not(#_):not(#__){grid-template-areas:"cats list"!important}
+html body.desk.dk-vg-mode #itemsStage>.items-head:not(#_),html body.desk.dk-vg-mode .dk-tv:not(#_){display:none!important}
+
+/* the category column: sticky glass panel, its own scroll */
+html body.desk.dk-vg-mode .dk-tv-cats:not(#_):not(#__){display:flex!important;flex-direction:column;grid-area:cats;position:sticky!important;top:calc(var(--bar) + 22px);height:calc(100vh - var(--bar) - 44px)!important;max-height:none!important;min-height:0;padding:18px 10px 10px!important;border-radius:24px!important;background:var(--glass)!important;border:1px solid transparent!important;box-shadow:var(--glass-shadow)!important}
+html body.desk.dk-vg-mode .dk-tvc-h:not(#_){display:flex;align-items:center;justify-content:space-between;padding:0 10px 14px!important;font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+html body.desk.dk-vg-mode .dk-tvc-h i:not(#_){font-style:normal;min-width:30px;height:22px;padding:0 8px;display:inline-grid;place-items:center;border-radius:999px;background:var(--foil);color:#1a1306;font-size:11px;letter-spacing:0}
+html body.desk.dk-vg-mode .dk-tvc-list:not(#_){flex:1;min-height:0;overflow-y:auto;padding-right:2px}
+html body.desk.dk-vg-mode .dk-tvc-list button:not(#_):not(#__){padding:12px 14px!important;font-size:14px!important;font-weight:600!important;color:#e6dcc8;flex:none}
+html body.desk.dk-vg-mode .dk-tvc-list button.on:not(#_):not(#__){color:#fff4d2!important}
+html body.desk.dk-vg-mode .dk-tvc-list button[hidden]:not(#_){display:none!important}
+
+/* the wall */
+html body.desk.dk-vg-mode .dk-tv-list:not(#_):not(#__){display:block!important;grid-area:list;min-width:0;height:auto!important;max-height:none!important;overflow:visible!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important}
+html body.desk.dk-vg-mode .dk-tvl-head:not(#_):not(#__){display:flex!important;flex-direction:row!important;align-items:flex-end;justify-content:space-between;gap:24px;padding:6px 2px 22px!important;margin:0 0 30px;background:none!important;border:0!important;position:relative}
+html body.desk.dk-vg-mode .dk-tvl-head:not(#_):not(#__):after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,rgba(226,192,124,.55),rgba(226,192,124,.14) 45%,transparent)}
+html.lang-ar body.desk.dk-vg-mode .dk-tvl-head:not(#_):not(#__):after{background:linear-gradient(270deg,rgba(226,192,124,.55),rgba(226,192,124,.14) 45%,transparent)}
+html body.desk.dk-vg-mode .dk-tvl-head>div:not(#_){flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:6px;min-width:0}
+html.lang-ar body.desk.dk-vg-mode .dk-tvl-head>div:not(#_){align-items:flex-end}
+html body.desk.dk-vg-mode .dk-tvl-head b:not(#_):not(#__){font-size:clamp(26px,2vw,34px)!important;font-weight:700!important;letter-spacing:-.01em;line-height:1.15;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-bottom:2px}
+html body.desk.dk-vg-mode .dk-tvl-head small:not(#_){font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#cdb680}
+html body.desk.dk-vg-mode .dk-tvl-head .dk-find:not(#_):not(#__){flex:none;width:min(360px,34%);height:48px;padding:0 16px;border-radius:16px;background:var(--glass-soft)!important;border:1px solid transparent!important;box-shadow:inset 0 1px rgba(255,246,225,.06)}
+html body.desk.dk-vg-mode .dk-tvl-head .dk-find:focus-within:not(#_){box-shadow:0 0 0 1px rgba(226,192,124,.55),0 10px 30px -16px rgba(226,192,124,.6)}
+html body.desk.dk-vg-mode .dk-tvl-head .dk-find input:not(#_){font-size:14px}
+
+html body.desk.dk-vg-mode #browseItems:not(#_):not(#__){display:grid!important;grid-template-columns:repeat(auto-fill,minmax(clamp(178px,11.6vw,232px),1fr))!important;gap:38px 26px!important;padding:0!important;margin:0!important;overflow:visible!important;align-items:start!important}
+html body.desk.dk-vg-mode #browseItems .poster-card[hidden]:not(#_){display:none!important}
+
+/* a poster: the art carries the card; no box around it */
+html body.desk.dk-vg-mode #browseItems .poster-card:not(#_):not(#__):not(#___){display:flex!important;flex-direction:column!important;gap:0!important;padding:0!important;margin:0!important;min-height:0!important;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;transform:none!important;filter:none!important;cursor:pointer;outline:none}
+html body.desk.dk-vg-mode #browseItems .poster-card:not(#_):not(#__):not(#___)::before,html body.desk.dk-vg-mode #browseItems .poster-card:not(#_):not(#__):not(#___)::after,html body.desk.dk-vg-mode #browseItems .poster-card .poster-glow:not(#_){display:none!important;content:none!important}
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-frame:not(#_):not(#__){position:relative;width:100%;aspect-ratio:2/3;border-radius:18px!important;overflow:hidden;background:linear-gradient(160deg,#211d17,#0d0c0a)!important;border:0!important;box-shadow:0 22px 44px -22px rgba(0,0,0,.95),0 0 0 1px rgba(255,236,190,.09)!important;transition:transform .32s cubic-bezier(.2,.8,.2,1),box-shadow .32s ease!important;transform:translateZ(0)}
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-frame:not(#_):not(#__)::after{content:""!important;display:block!important;position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(180deg,rgba(255,246,225,.10),transparent 28%,transparent 62%,rgba(0,0,0,.55))!important;box-shadow:inset 0 1px rgba(255,246,225,.16)!important;opacity:.9;transition:opacity .3s}
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-frame:not(#_):not(#__)::before{content:""!important;display:block!important;position:absolute;z-index:2;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%231a1306' d='M9 6.6v10.8a1 1 0 0 0 1.53.85l8.4-5.4a1 1 0 0 0 0-1.7l-8.4-5.4A1 1 0 0 0 9 6.6z'/%3E%3C/svg%3E") center/26px no-repeat,var(--foil);box-shadow:0 12px 30px -8px rgba(0,0,0,.8),0 0 0 6px rgba(226,192,124,.18);opacity:0;transform:scale(.82);transition:opacity .25s ease,transform .3s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-image:not(#_):not(#__){width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.001);transition:transform .5s cubic-bezier(.2,.8,.2,1),filter .3s!important}
+html body.desk.dk-vg-mode #browseItems .poster-card:hover .poster-frame:not(#_):not(#__),html body.desk.dk-vg-mode #browseItems .poster-card:focus-visible .poster-frame:not(#_):not(#__){transform:translateY(-7px);box-shadow:0 34px 60px -26px rgba(0,0,0,.95),0 0 0 1.5px rgba(232,203,140,.85),0 18px 50px -22px rgba(226,192,124,.55)!important}
+html body.desk.dk-vg-mode #browseItems .poster-card:hover .poster-image:not(#_):not(#__){transform:scale(1.045);filter:brightness(.82)}
+html body.desk.dk-vg-mode #browseItems .poster-card:hover .poster-frame:not(#_):not(#__)::before{opacity:1;transform:scale(1)}
+
+/* favourite star: a small glass button, top corner, on hover (always when saved) */
+html body.desk.dk-vg-mode #browseItems .poster-card .item-actions:not(#_):not(#__){position:absolute!important;z-index:3;top:10px;right:10px;left:auto;margin:0!important;padding:0!important;display:block!important;width:auto!important;opacity:0;transition:opacity .2s}
+html.lang-ar body.desk.dk-vg-mode #browseItems .poster-card .item-actions:not(#_):not(#__){right:auto;left:10px}
+html body.desk.dk-vg-mode #browseItems .poster-card:hover .item-actions:not(#_):not(#__),html body.desk.dk-vg-mode #browseItems .poster-card .item-actions:has(.favorite-action.on,.favorite-action.active,[aria-pressed="true"]):not(#_):not(#__){opacity:1}
+html body.desk.dk-vg-mode #browseItems .poster-card .favorite-action:not(#_):not(#__):not(#___){width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;padding:0!important;border-radius:12px!important;display:grid!important;place-items:center;background:rgba(12,10,8,.62)!important;border:1px solid rgba(255,236,190,.22)!important;box-shadow:0 8px 20px -8px rgba(0,0,0,.8)!important;color:#f3dfae!important}
+html body.desk.dk-vg-mode #browseItems .poster-card .favorite-action>span:not(.favorite-star):not(#_){display:none!important}
+html body.desk.dk-vg-mode #browseItems .poster-card .favorite-action .favorite-star svg:not(#_){width:17px;height:17px}
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-chip:not(#_){display:none!important}
+
+/* title and facts under the art */
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-copy:not(#_):not(#__){display:flex!important;flex-direction:column;gap:7px;padding:15px 3px 0!important;margin:0!important;background:none!important;min-height:0!important}
+html body.desk.dk-vg-mode #browseItems .poster-card .item-title:not(#_):not(#__){font-size:15px!important;font-weight:600!important;line-height:1.36!important;min-height:0!important;color:#f4ecdb!important;letter-spacing:0;display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:normal!important;transition:color .2s}
+html body.desk.dk-vg-mode #browseItems .poster-card:hover .item-title:not(#_):not(#__){color:#f6dc9c!important}
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-facts:not(#_):not(#__){display:flex!important;align-items:center;flex-wrap:nowrap;gap:12px;margin:0!important;padding:0!important}
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-fact:not(#_):not(#__){display:inline-flex!important;align-items:center;gap:5px;height:auto!important;min-height:0!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;font-size:13px!important;font-weight:600!important;letter-spacing:.01em;color:#a99f8c!important;width:auto!important;flex:none!important}
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-fact.rating:not(#_):not(#__){color:#e8cf93!important}
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-fact.rating svg:not(#_){width:14px;height:14px;fill:#e2c07c;stroke:none;filter:drop-shadow(0 0 6px rgba(226,192,124,.45))}
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-fact:empty:not(#_){display:none!important}
+
+/* loading more: three soft gold dots under the wall */
+html body.desk.dk-vg-mode #itemInfinite:not(.done):not(#_):not(#__){display:flex!important;justify-content:center;padding:34px 0 10px!important;margin:0!important;color:#cdb680;font-size:12.5px;letter-spacing:.08em}
+/* the shell clips instead of hiding overflow, so the category column can stay put while the wall scrolls */
+html body.desk.dk-vg-mode main.shell:not(#_):not(#__){overflow:clip!important}
+html body.desk.dk-vg-mode:not(#_):not(#__){overflow-x:clip!important;overflow-y:visible!important}
+/* the column's row ends where the column ends at the bottom of the page: space under the wall lives inside it */
+html body.desk.dk-vg-mode #itemsStage:not(#_):not(#__){padding-bottom:22px!important}
+html body.desk.dk-vg-mode .dk-tv-list:not(#_):not(#__){padding-bottom:48px!important}
+html body.desk.dk-vg-mode main.shell:not(#_):not(#__){padding-bottom:0!important;margin-bottom:0!important}
+html body.desk.dk-vg-mode .wrap:not(#_):not(#__){padding-bottom:0!important}
+/* placeholders while a category loads, in the wall's own grid */
+.dk-vg-sk{display:none}
+html body.desk.dk-vg-mode .dk-tv-list:has(#browseItems:empty) .dk-vg-sk:not(#_){display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(178px,11.6vw,232px),1fr));gap:38px 26px}
+.dk-vg-sk i{display:flex;flex-direction:column;gap:10px;animation:dkVgPulse 1.6s ease-in-out infinite}
+.dk-vg-sk i:nth-child(3n+2){animation-delay:.2s}.dk-vg-sk i:nth-child(3n){animation-delay:.4s}
+.dk-vg-sk b{display:block;aspect-ratio:2/3;border-radius:18px;background:linear-gradient(160deg,rgba(255,240,210,.075),rgba(255,240,210,.02));box-shadow:0 0 0 1px rgba(255,236,190,.07)}
+.dk-vg-sk s{display:block;height:13px;width:78%;margin-top:6px;border-radius:7px;background:rgba(255,240,210,.07)}
+.dk-vg-sk u{display:block;height:10px;width:42%;border-radius:6px;background:rgba(226,192,124,.10)}
+@keyframes dkVgPulse{0%,100%{opacity:.55}50%{opacity:1}}
+/* the picture fades in when it has arrived */
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-image:not(#_):not(#__){opacity:0}
+html body.desk.dk-vg-mode #browseItems .poster-card .poster-image.dk-in:not(#_):not(#__){opacity:1;transition:opacity .4s ease,transform .5s cubic-bezier(.2,.8,.2,1),filter .3s!important}
+/* the category list fades out at its ends instead of being cut */
+html body.desk.dk-vg-mode .dk-tvc-list:not(#_):not(#__){-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 10px,#000 calc(100% - 34px),transparent);mask-image:linear-gradient(180deg,transparent 0,#000 10px,#000 calc(100% - 34px),transparent);padding-bottom:26px}
+/* thin gold scrollbars on the computer (Windows otherwise shows its grey bar) */
+html:has(body.desk){scrollbar-width:thin;scrollbar-color:rgba(226,192,124,.42) transparent}
+html body.desk *:not(#_){scrollbar-width:thin;scrollbar-color:rgba(226,192,124,.38) transparent}

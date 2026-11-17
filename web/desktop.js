@@ -543,7 +543,8 @@
   }
   function railsSync() {
     const media = (document.querySelector(".type.active") || {}).dataset?.media || "itv";
-    const on = DESK && !!$("browseAccount").value && (media === "vod" || media === "series") && visible("categoryStage");
+    // Movies / Series on the computer now open as a category column + poster wall (see liveSync).
+    const on = false && DESK && !!$("browseAccount").value && (media === "vod" || media === "series") && visible("categoryStage");
     document.body.classList.toggle("dk-rails-on", on);
     if (!on) return;
     const label = media === "vod" ? "Movies" : "Series";
@@ -645,13 +646,15 @@
 
   /* ------------------------------------------------ computer: Live opens straight into the TV screen */
   const live = { auto: "" };
+  const SECTION = { itv: "Live", vod: "Movies", series: "Series" };
+  const catKey = (media, account) => (media === "itv" ? "us-web-livecat:" : "us-web-cat:" + media + ":") + account;
   function liveSync() {
     if (!DESK) return;
     const media = (document.querySelector(".type.active") || {}).dataset?.media || "itv";
     const account = $("browseAccount").value;
-    if (!account || media !== "itv") return;
-    // Wait until the Live categories themselves are on screen (not the previous section's).
-    if (!/ categories • Live$/.test($("browseStatus").textContent || "")) return;
+    if (!account || !SECTION[media]) return;
+    // Wait until this section's categories themselves are on screen (not the previous section's).
+    if (!new RegExp(" categories • " + SECTION[media] + "$").test($("browseStatus").textContent || "")) return;
     const cats = [...document.querySelectorAll("#browseCategories .category")];
     // On the computer Live never shows the bare category grid: open a category straight away
     // (the remembered one). Debounced, and re-checked, because the page may reload its
@@ -660,27 +663,28 @@
       clearTimeout(live.autoT);
       live.autoT = setTimeout(() => {
         const media2 = (document.querySelector(".type.active") || {}).dataset?.media || "itv";
-        if (media2 !== "itv" || !visible("categoryStage") || $("browseAccount").value !== account) return;
+        if (media2 !== media || !visible("categoryStage") || $("browseAccount").value !== account) return;
         const now = [...document.querySelectorAll("#browseCategories .category")];
         if (!now.length) return;
         let want = "";
         try {
-          want = localStorage.getItem("us-web-livecat:" + account) || "";
+          want = localStorage.getItem(catKey(media, account)) || "";
         } catch (_) {}
         const el = now.find((c) => (c.dataset.categoryId || "*") === want) || now[0];
         // eslint-disable-next-line no-undef
         if (el && typeof openCategory === "function") openCategory(railRow(el), false);
       }, 180);
     }
-    tvCats(cats);
+    tvCats(cats, media);
   }
-  function tvCats(cats) {
+  function tvCats(cats, media) {
     const col = $("dkTvCats");
     if (!col) return;
+    media = media || "itv";
     const account = $("browseAccount").value;
     // eslint-disable-next-line no-undef
     const cur = typeof activeCategory !== "undefined" && activeCategory ? String(activeCategory.id) : "";
-    const sig = account + "|" + cats.map((c) => c.dataset.categoryId || "*").join(",");
+    const sig = media + "|" + account + "|" + cats.map((c) => c.dataset.categoryId || "*").join(",");
     if (col.dataset.sig !== sig) {
       col.dataset.sig = sig;
       col.innerHTML =
@@ -688,6 +692,8 @@
         cats
           .map((c) => {
             const r = railRow(c);
+            // Movies / Series: the category's whole name as the server has it ("4K Movies")
+            if (media !== "itv") return `<button type="button" data-cat="${esc(r.id)}"><span dir="auto">${esc(r.id === "*" && AR ? "الكل" : plain(r.title) || r.title)}</span></button>`;
             const n = splitName(r.title);
             return `<button type="button" data-cat="${esc(r.id)}"><span dir="auto">${esc(r.id === "*" && AR ? "الكل" : n.name)}</span>${n.tags.length ? `<i>${esc(n.tags.slice(0, 2).join(" · "))}</i>` : ""}</button>`;
           })
@@ -702,18 +708,31 @@
         if (!b) return;
         const el = cats.find((c) => (c.dataset.categoryId || "*") === b.dataset.cat);
         try {
-          localStorage.setItem("us-web-livecat:" + account, b.dataset.cat);
+          localStorage.setItem(catKey(media, account), b.dataset.cat);
         } catch (_) {}
         // eslint-disable-next-line no-undef
         if (el) openCategory(railRow(el), false);
-        tvCats(cats);
+        if (media !== "itv") window.scrollTo(0, 0);
+        const find = $("dkTvFind");
+        if (find && find.value) {
+          find.value = "";
+          find.dispatchEvent(new Event("input"));
+        }
+        tvCats(cats, media);
       };
     }
     col.querySelectorAll("button[data-cat]").forEach((b) => b.classList.toggle("on", b.dataset.cat === cur));
     // eslint-disable-next-line no-undef
     const curTitle = typeof activeCategory !== "undefined" && activeCategory ? activeCategory.title : "";
-    if ($("dkTvCat")) $("dkTvCat").textContent = cur === "*" ? T("All channels", "كل القنوات") : splitName(curTitle).name || "—";
-    if ($("dkTvCount")) $("dkTvCount").textContent = ($("itemsSummary") || {}).textContent || "";
+    const ALL = { itv: T("All channels", "كل القنوات"), vod: T("All movies", "كل الأفلام"), series: T("All series", "كل المسلسلات") };
+    if ($("dkTvCat")) $("dkTvCat").textContent = cur === "*" ? ALL[media] : (media === "itv" ? splitName(curTitle).name : plain(curTitle) || curTitle) || "—";
+    if ($("dkTvCount")) {
+      const raw = ($("itemsSummary") || {}).textContent || "";
+      const m = raw.match(/of\s+([\d,]+)/i);
+      const word = media === "itv" ? "" : media === "series" ? T("series", "مسلسل") : T("titles", "فيلم");
+      $("dkTvCount").textContent = media !== "itv" && m ? m[1] + " " + word : raw;
+    }
+    if ($("dkTvFind")) $("dkTvFind").placeholder = media === "itv" ? T("Find a channel", "دوّر على قناة") : T("Find in this category", "دوّر في القسم ده");
   }
 
   function langSwitch() {
@@ -1172,11 +1191,18 @@
     head.className = "dk-tvl-head";
     head.innerHTML = `<div><b id="dkTvCat">—</b><small id="dkTvCount"></small></div><label class="dk-find">${SVG.search}<input type="search" id="dkTvFind" placeholder="${T("Find a channel", "دوّر على قناة")}" autocomplete="off"></label>`;
     list.appendChild(head);
+    // Movies / Series: soft poster placeholders while a category loads
+    const sk = document.createElement("div");
+    sk.id = "dkVgSk";
+    sk.className = "dk-vg-sk";
+    sk.setAttribute("aria-hidden", "true");
+    sk.innerHTML = "<i><b></b><s></s><u></u></i>".repeat(12);
+    list.appendChild(sk);
     list.appendChild($("browseItems"));
     list.appendChild($("itemInfinite"));
     $("dkTvFind").addEventListener("input", (e) => {
       const q = plain(e.target.value).toLowerCase();
-      document.querySelectorAll("#browseItems .live-card").forEach((c) => (c.hidden = !!q && !plain(c.title || c.textContent).toLowerCase().includes(q)));
+      document.querySelectorAll("#browseItems .live-card, #browseItems .poster-card").forEach((c) => (c.hidden = !!q && !plain(c.dataset.t || c.title || c.textContent).toLowerCase().includes(q)));
     });
     $("dkTvFull").onclick = () => window.USPlayer.fullscreen();
     // The screen and the list fit the window: keep the page itself at the top.
@@ -1253,7 +1279,7 @@
     tv.id = id;
     document.querySelectorAll("#browseItems .live-card.dk-on").forEach((c) => c.classList.remove("dk-on"));
     card.classList.add("dk-on");
-    const name = card.title || (card.querySelector(".item-title") || {}).textContent || "Channel";
+    const name = card.dataset.t || card.title || (card.querySelector(".item-title") || {}).textContent || "Channel";
     $("dkTvName").textContent = name;
     if ($("dkTvFacts")) $("dkTvFacts").innerHTML = "";
     const pic = card.querySelector("img.live-picon");
@@ -1338,6 +1364,15 @@
     );
     featSync();
     tvMode(DESK && active && media === "itv" && visible("itemsStage") && !visible("favoritesStage") && !visible("searchStage"));
+    const vg = DESK && active && (media === "vod" || media === "series") && visible("itemsStage") && !visible("favoritesStage") && !visible("searchStage");
+    if (vg !== document.body.classList.contains("dk-vg-mode")) {
+      document.body.classList.toggle("dk-vg-mode", vg);
+      if (vg) wallReturn();
+    }
+    if (vg) {
+      const cats = [...document.querySelectorAll("#browseCategories .category")];
+      if (cats.length) tvCats(cats, media);
+    }
   }
 
   /* Stream facts from the player (quality, fps, codecs, engine) under the channel name. */
@@ -1349,7 +1384,48 @@
     box.innerHTML = chip(f.quality, "q") + chip(f.fps) + chip(f.video) + chip([f.audio, f.channels].filter(Boolean).join(" ")) + chip(f.engine === "Ultra engine" ? "ULTRA ENGINE" : "", "u");
   });
 
+  /* Movies / Series wall: the page scrolls to the first poster after a category loads
+     (right on a phone); on the computer the wall starts at the top under its header. */
+  const wall = { y: 0, key: "", until: 0 };
+  // eslint-disable-next-line no-undef
+  const wallKey = () => $("browseAccount").value + "|" + document.body.dataset.media + "|" + (typeof activeCategory !== "undefined" && activeCategory ? activeCategory.id : "");
+  /* Back from a movie or series: the wall comes back where it was. */
+  function wallReturn() {
+    if (!wall.y || wall.key !== wallKey()) return;
+    const y = wall.y;
+    wall.y = 0;
+    wall.until = Date.now() + 1500;
+    const go = () => window.scrollTo(0, y);
+    requestAnimationFrame(go);
+    setTimeout(go, 120);
+    setTimeout(go, 450);
+  }
+  function keepWallTop() {
+    document.addEventListener(
+      "click",
+      (e) => {
+        if (!document.body.classList.contains("dk-vg-mode") || !e.target.closest("#browseItems .poster-card")) return;
+        wall.y = window.scrollY;
+        wall.key = wallKey();
+      },
+      true
+    );
+    const orig = window.scrollElementToTop;
+    if (typeof orig !== "function" || orig._us) return;
+    const wrapped = function (el) {
+      const media = document.body.dataset.media;
+      if (DESK && (media === "vod" || media === "series") && el && $("itemsStage") && $("itemsStage").contains(el)) {
+        if (Date.now() > wall.until) window.scrollTo(0, 0);
+        return;
+      }
+      return orig.apply(this, arguments);
+    };
+    wrapped._us = true;
+    window.scrollElementToTop = wrapped;
+  }
+
   function start() {
+    keepWallTop();
     build();
     if (!BROWSE) return;
     if (DESK) tvBuild();
@@ -1366,6 +1442,27 @@
       cleanItemTitles();
       watchEpg();
       liveSync();
+      if (document.body.classList.contains("dk-vg-mode")) {
+        const cats = [...document.querySelectorAll("#browseCategories .category")];
+        if (cats.length) tvCats(cats, document.body.dataset.media);
+      }
+      // computer: no browser tooltip over cards (the name is already on the card)
+      if (DESK) {
+        document.querySelectorAll("#browseItems .item-card[title]").forEach((c) => {
+          c.dataset.t = c.title;
+          c.removeAttribute("title");
+        });
+      }
+      // posters fade in once their picture has arrived
+      document.querySelectorAll("#browseItems .poster-image:not([data-in])").forEach((img) => {
+        img.dataset.in = "1";
+        const done = () => img.classList.add("dk-in");
+        if (img.complete && img.naturalWidth) done();
+        else {
+          img.addEventListener("load", done, { once: true });
+          img.addEventListener("error", done, { once: true });
+        }
+      });
     }).observe($("browseItems"), { childList: true });
     drawWelcome();
     sync();
