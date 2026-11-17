@@ -811,7 +811,10 @@ body.usp-direct #playerSheet{display:none!important}
     stage.insertBefore(engBox, msg);
     video.style.visibility = "hidden";
     // Hardware first, software if that fails — like VLC's avcodec-hw then none.
-    eng = new AV({ container: engBox, wasmBaseUrl: ENGINE_WASM, isLive: !!ticket.live, enableHardware: !soft, enableWebCodecs: !soft, enableWorker: true, lowLatency: false, preLoadTime: ticket.live ? 1.5 : 4 });
+    // The engine decodes everything itself (WebCodecs hardware, else WebAssembly) and never
+    // hands the stream back to the browser's own player: that path is what already failed
+    // (e.g. 4K HEVC/HDR with MP2 sound -> "the element has no supported sources").
+    eng = new AV({ container: engBox, wasmBaseUrl: ENGINE_WASM, isLive: !!ticket.live, enableHardware: !soft, enableWebCodecs: !soft, enableWorker: true, lowLatency: false, preLoadTime: ticket.live ? 1.5 : 4, checkUseMSE: () => false });
     const me = eng;
     const onErr = (e) => {
       if (my !== alive || eng !== me) return;
