@@ -657,6 +657,7 @@ body.usp-direct #playerSheet{display:none!important}
       return i > 0 ? `<div><span>${esc(l.slice(0, i))}</span><b>${esc(l.slice(i + 2))}</b></div>` : `<div><b>${esc(l)}</b></div>`;
     }).join("") + "</div>";
     const href = vlcHref(current || {});
+    if (window.usNative && window.usNative.openLogs) h += '<button type="button" data-x="logs">Open program log</button>';
     h += `<hr><a href="${esc(href)}"${/^data:/.test(href) ? ' download="ultra-stalker.m3u"' : ""}>Open in VLC <small>▶</small></a><button type="button" data-x="copy">Copy stream link</button>`;
     menu.innerHTML = h;
     menu.onclick = (e) => {
@@ -675,6 +676,9 @@ body.usp-direct #playerSheet{display:none!important}
         store.set("us-player-engine", b.dataset.e);
         if (current) restart(Object.assign({}, current, { _plan: null, _step: 0 }));
         return menu.classList.remove("on");
+      } else if (b.dataset.x === "logs") {
+        window.usNative.openLogs();
+        return;
       } else if (b.dataset.x === "vlc") {
         restart(Object.assign({}, current, { _plan: ["vlc", "native", "engine", "soft"], _step: 0, _manual: true }));
         return menu.classList.remove("on");
@@ -800,6 +804,7 @@ body.usp-direct #playerSheet{display:none!important}
     } catch (_) {}
     out.push("Engine: " + STEP_LABEL[step()] + (isVlc() ? " · graphics card" : "") + (isEngine() ? (self.crossOriginIsolated ? " · multi-core" : " · single-core") : ""));
     out.push("CPU threads: " + (navigator.hardwareConcurrency || "?"));
+    for (const l of (current && current._log) || []) out.push("Tried: " + l);
     return out;
   }
   function note(en, ar) {
@@ -845,6 +850,8 @@ body.usp-direct #playerSheet{display:none!important}
     if (!isEngine() && video && video.muted && !A.muted() && !current._noAudio) unmuteBtn.classList.add("on");
     if (isEngine() && eng && eng.isSuspended && eng.isSuspended()) unmuteBtn.classList.add("on");
     if (isVlc()) vlcTracks();
+    const vlcWhy = (current._log || []).find((l) => /^VLC: /.test(l));
+    if (!isVlc() && hasVlc() && vlcWhy) note("VLC couldn't play this channel, so it plays here instead (" + vlcWhy.replace(/^VLC: /, "") + ").", "VLC مقدرش يشغّل القناة دي فاشتغلت هنا. السبب في الإعدادات ← Stream info");
   }
   /* Move on to the next way of playing this stream. */
   function escalate(why) {
@@ -1130,7 +1137,8 @@ body.usp-direct #playerSheet{display:none!important}
       subs: store.get("us-subs", "1") === "1",
     });
     if (my !== alive) return;
-    if (!r || !r.ok) throw new Error("VLC: " + ((r && r.error) || "couldn't start"));
+    if (!r || !r.ok) throw new Error((r && r.error) || "couldn't start");
+    ticket._vlcRetry = ticket._vlcRetry || 0;
     if (r.version) vs.version = r.version;
     const t0 = Date.now();
     clearInterval(vlcPoll);
@@ -1149,7 +1157,14 @@ body.usp-direct #playerSheet{display:none!important}
       if (over && started && ticket.live) return reconnect("ended");
       if (over && !started) {
         clearInterval(vlcPoll);
-        if (!escalate("VLC couldn't open this stream")) fail("VLC couldn't open this stream");
+        const why = s.error || "couldn't open this stream";
+        // One more try first: the line may still have been busy with the last channel.
+        if (!ticket._vlcRetry) {
+          show('<div class="usp-spin"></div><small>VLC · trying again</small>');
+          setTimeout(() => my === alive && restart(Object.assign({}, current, { _vlcRetry: 1, _vlcWhy: why })), 1500);
+          return;
+        }
+        if (!escalate(why)) fail(why);
       }
       if (over && started && !ticket.live) refresh();
     }, 600);
