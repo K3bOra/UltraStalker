@@ -894,6 +894,138 @@
     });
   }
 
+  /* ------------------------------------------------ computer: premium source picker
+     The page's own <select> stays the source of truth (hidden); this panel replaces
+     the operating system's plain drop-down list. */
+  function srcMeta(o) {
+    const k = String(o.dataset.kind || "portal");
+    let host = "", id = "";
+    try {
+      const p = window.USEngine.findProfile(o.value);
+      const kind = window.USEngine.profileKind(p);
+      const u = new URL(p.portal);
+      host = u.host;
+      id = kind === "portal" ? p.mac || "" : kind === "xtream" ? u.searchParams.get("username") || "" : "";
+    } catch (_) {}
+    let shown = String(o.textContent || "").trim();
+    if (host) shown = shown.replace(new RegExp("\\s*[·•\\-|]\\s*" + host.split(":")[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(:\\d+)?\\s*$"), "") || shown;
+    const words = plain(shown).replace(/[^\p{L}\p{N} ]/gu, " ").trim().split(/\s+/).filter(Boolean);
+    const mono = ((words[0] || "?")[0] + (words.length > 1 ? (/^\d+$/.test(words[1]) ? words[1].slice(0, 2) : words[1][0]) : (words[0] || "")[1] || "")).toUpperCase();
+    let hash = 0;
+    for (const ch of shown) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+    return { value: o.value, group: k === "portal" ? "portal" : "xtream", shown, mono, tint: hash % 6, host, id };
+  }
+  function srcPicker() {
+    const sel = $("browseAccount");
+    const holder = $("dkBarSrc");
+    if (!DESK || !sel || !holder || $("dkSrcBtn")) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.id = "dkSrcBtn";
+    btn.className = "dk-srcbtn";
+    btn.setAttribute("aria-haspopup", "listbox");
+    holder.appendChild(btn);
+    const panel = document.createElement("div");
+    panel.id = "dkSrcPanel";
+    panel.className = "dk-srcpanel";
+    panel.setAttribute("role", "listbox");
+    document.body.appendChild(panel);
+    let filter = "all";
+    const label = () => {
+      const o = sel.selectedOptions[0];
+      if (!o || !o.value) {
+        btn.innerHTML = `<span class="dk-src-av dk-sp-av empty">＋</span><span class="dk-sp-t"><b>Choose a source</b><small>${[...sel.options].filter((x) => x.value).length} saved</small></span><i>${SVG.chev || "⌄"}</i>`;
+        return;
+      }
+      const m = srcMeta(o);
+      btn.innerHTML = `<span class="dk-src-av dk-sp-av" data-t="${m.tint}">${esc(m.mono)}</span><span class="dk-sp-t"><b>${esc(m.shown)}</b><small>${esc(m.host)}</small></span><i>⌄</i>`;
+    };
+    const draw = () => {
+      const q = plain(panel.querySelector("input") ? panel.querySelector("input").value : "").toLowerCase();
+      const all = [...sel.options].filter((o) => o.value).map(srcMeta);
+      const count = { portal: all.filter((m) => m.group === "portal").length, xtream: all.filter((m) => m.group === "xtream").length };
+      const rows = all.filter((m) => (filter === "all" || m.group === filter) && (!q || (m.shown + " " + m.host + " " + m.id).toLowerCase().includes(q)));
+      const section = (g, title) => {
+        const list = rows.filter((m) => m.group === g);
+        if (!list.length) return "";
+        return `<div class="dk-sp-sec">${title}<i>${list.length}</i></div>` + list.map((m) => `<button type="button" role="option" class="dk-sp-row${m.value === sel.value ? " on" : ""}" data-v="${esc(m.value)}"><span class="dk-src-av dk-sp-av" data-t="${m.tint}">${esc(m.mono)}</span><span class="dk-sp-t"><b>${esc(m.shown)}</b><small>${esc(m.host)}${m.id ? ` · <code>${esc(m.id)}</code>` : ""}</small></span>${m.value === sel.value ? '<em>✓</em>' : ""}</button>`).join("");
+      };
+      const list = panel.querySelector(".dk-sp-list");
+      list.innerHTML = section("portal", "Stalker portals") + section("xtream", "Xtream / M3U") || '<div class="dk-sp-none">No source matches</div>';
+      panel.querySelectorAll(".dk-sp-tabs button").forEach((b) => {
+        b.classList.toggle("on", b.dataset.f === filter);
+        const n = b.querySelector("i");
+        if (n) n.textContent = b.dataset.f === "all" ? all.length : count[b.dataset.f];
+      });
+    };
+    const open = () => {
+      panel.innerHTML =
+        `<div class="dk-sp-head"><label class="dk-find">${SVG.search}<input type="search" placeholder="Find a source" autocomplete="off"></label>` +
+        '<div class="dk-sp-tabs"><button type="button" data-f="all">All <i></i></button><button type="button" data-f="portal">Stalker <i></i></button><button type="button" data-f="xtream">Xtream / M3U <i></i></button></div></div>' +
+        '<div class="dk-sp-list"></div>' +
+        '<a class="dk-sp-add" href="sources.html#connectionPanel">＋ Add connection</a>';
+      const r = btn.getBoundingClientRect();
+      panel.style.top = Math.round(r.bottom + 10) + "px";
+      panel.style.right = Math.round(innerWidth - r.right) + "px";
+      panel.classList.add("on");
+      btn.classList.add("on");
+      draw();
+      const input = panel.querySelector("input");
+      input.oninput = draw;
+      setTimeout(() => input.focus(), 30);
+      const cur = panel.querySelector(".dk-sp-row.on");
+      if (cur) cur.scrollIntoView({ block: "center" });
+    };
+    const close = () => {
+      panel.classList.remove("on");
+      btn.classList.remove("on");
+    };
+    const choose = (v) => {
+      close();
+      if (!v || v === sel.value) return;
+      try {
+        localStorage.setItem("us-web-last-src", v);
+      } catch (_) {}
+      sel.value = v;
+      sel.dispatchEvent(new Event("change"));
+    };
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      panel.classList.contains("on") ? close() : open();
+    };
+    panel.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const t = e.target.closest(".dk-sp-tabs button");
+      if (t) {
+        filter = t.dataset.f;
+        return draw();
+      }
+      const row = e.target.closest(".dk-sp-row");
+      if (row) choose(row.dataset.v);
+    });
+    panel.addEventListener("keydown", (e) => {
+      const rows = [...panel.querySelectorAll(".dk-sp-row")];
+      let i = rows.indexOf(document.activeElement);
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        i = e.key === "ArrowDown" ? Math.min(rows.length - 1, i + 1) : Math.max(0, i - 1);
+        if (rows[i]) rows[i].focus();
+      } else if (e.key === "Enter" && document.activeElement.tagName === "INPUT" && rows[0]) {
+        e.preventDefault();
+        choose(rows[0].dataset.v);
+      } else if (e.key === "Escape") {
+        close();
+        btn.focus();
+      }
+    });
+    document.addEventListener("click", (e) => panel.classList.contains("on") && !panel.contains(e.target) && close());
+    window.addEventListener("resize", close);
+    sel.addEventListener("change", label);
+    new MutationObserver(label).observe(sel, { childList: true });
+    holder.classList.add("dk-has-picker");
+    label();
+  }
+
   function flash() {
     const s = $("dkSource");
     s.classList.remove("flash");
@@ -1207,6 +1339,7 @@
     build();
     if (!BROWSE) return;
     if (DESK) tvBuild();
+    srcPicker();
     new MutationObserver(() => {
       decorateCategories();
       sync();
