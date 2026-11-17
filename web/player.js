@@ -35,6 +35,10 @@
 .usp-stage[data-fit=fill] video,.usp-stage[data-fit=fill] .usp-engine video{object-fit:cover!important}
 .usp-stage[data-fit=stretch] video{object-fit:fill!important}
 .usp-stage.idle{cursor:none}
+.usp-ic.stop svg{fill:currentColor;stroke:none;width:17px;height:17px}
+.usp-vlchole{position:absolute;inset:0;z-index:1;background:#000;display:none}
+.usp-stage.vlcmode .usp-vlchole{display:block}
+.usp-stage.vlcmode video{visibility:hidden}
 .usp-msg{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;color:#eadfc5;font-size:14px;line-height:1.7;pointer-events:none}
 .usp-msg.err{background:radial-gradient(70% 80% at 50% 40%,rgba(30,22,10,.92),rgba(4,3,2,.96));pointer-events:auto}
 .usp-msg b{font-size:18px;color:#fff6dc}
@@ -132,6 +136,7 @@ body.usp-direct #playerSheet{display:none!important}
     vol: '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
     mute: '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="m16 9.5 5 5m0-5-5 5"/></svg>',
     gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>',
+    stop: '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.2"/></svg>',
     pip: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11.5" width="7" height="5.5" rx="1"/></svg>',
     full: '<svg viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
   };
@@ -201,7 +206,11 @@ body.usp-direct #playerSheet{display:none!important}
 
   /* ------------------------------------------------------------------ plans
      A plan is the ordered list of ways to try one stream. */
-  const STEP_LABEL = { native: "Playing here", engine: "Ultra engine", soft: "Ultra engine · software", mute: "Picture only" };
+  const STEP_LABEL = { native: "Playing here", engine: "Ultra engine", soft: "Ultra engine · software", vlc: "VLC", mute: "Picture only" };
+  /* VLC inside the Windows program: the program runs VLC and lets it draw into a window
+     that sits exactly over the player (window.usNative comes from the program). */
+  const NV = (window.usNative && window.usNative.vlc) || null;
+  const hasVlc = () => !!(NV && NV.available);
   /* How many seconds to keep ahead before showing live video (like VLC's network
      caching). More = fewer stutters on shaky lines, a little later start. */
   const BUFFER = { fast: 1.2, normal: 3, smooth: 6 };
@@ -209,14 +218,20 @@ body.usp-direct #playerSheet{display:none!important}
     return BUFFER[store.get("us-buffer", "normal")] || 3;
   }
   function engineMode() {
-    return store.get("us-player-engine", "auto"); // auto | browser | ultra
+    const m = store.get("us-player-engine", "auto"); // auto | browser | vlc | ultra
+    return m === "vlc" && !hasVlc() ? "auto" : m;
   }
   function planFor(ticket, key) {
     const live = !!ticket.live;
     const mode = engineMode();
     let plan;
+    const mem = key ? store.get("us-eng:" + key, "") : "";
     if (mode === "browser") plan = ["native"];
-    else if (mode === "ultra" || (key && store.get("us-eng:" + key, "") === "1")) plan = ["engine", "soft", "native"];
+    else if (mode === "vlc") plan = ["vlc", "native", "engine", "soft"];
+    else if (mode === "ultra") plan = ["engine", "soft", "native"];
+    // The program: whatever the browser can't play smoothly goes to VLC.
+    else if (hasVlc()) plan = mem ? ["vlc", "native", "engine", "soft"] : ["native", "vlc", "engine", "soft"];
+    else if (mem === "1") plan = ["engine", "soft", "native"];
     else plan = ["native", "engine", "soft"];
     if (live) plan.push("mute");
     return plan;
@@ -225,6 +240,7 @@ body.usp-direct #playerSheet{display:none!important}
   /* ------------------------------------------------------------------ state */
   let box, stage, video, msg, title, sub, vlc, ui, bar, osd, menu, unmuteBtn;
   let hls = null, ts = null, eng = null, engBox = null;
+  let vs = null, vlcOn = false, vlcPoll = 0, vlcPlace = 0, vlcLast = "", pausedAt = 0;
   let alive = 0, info = null, started = false, current = null, opts = {};
   let lastT = 0, lastMove = 0, playingSince = 0, startTimer = 0, tick = 0, idleTimer = 0, gate = 0;
   function ahead() {
@@ -271,14 +287,29 @@ body.usp-direct #playerSheet{display:none!important}
 
   const step = () => (current && current._plan ? current._plan[current._step || 0] : "native");
   const isEngine = () => step() === "engine" || step() === "soft";
+  const isVlc = () => step() === "vlc";
 
   /* ------------------------------------------------------------------ one API over both engines */
   const A = {
     paused() {
+      if (current && current._halted) return true;
+      if (isVlc()) return !vs || !!vs.paused;
       if (isEngine()) return !eng || eng.getStatus() === 8;
       return !video || video.paused;
     },
     async toggle() {
+      if (current && current._halted) return resume();
+      const live = current && current.live;
+      // Live: pause holds the picture; play jumps back to what is on air now.
+      if (live && A.paused() && pausedAt && Date.now() - pausedAt > 1500) {
+        pausedAt = 0;
+        return restart(Object.assign({}, current, { _reconnects: 0 }));
+      }
+      pausedAt = A.paused() ? 0 : Date.now();
+      if (isVlc()) {
+        if (vs) vs.paused = !vs.paused;
+        return NV.cmd(vs && vs.paused ? "pause" : "play");
+      }
       if (isEngine()) {
         if (!eng) return;
         if (eng.getStatus() === 8) await eng.play().catch(() => {});
@@ -286,16 +317,22 @@ body.usp-direct #playerSheet{display:none!important}
       } else if (video) video.paused ? video.play().catch(() => {}) : video.pause();
     },
     time() {
+      if (isVlc()) return vs ? vs.time || 0 : 0;
       if (isEngine()) return eng ? Number(eng.currentTime || 0) / 1000 : 0;
       return video ? video.currentTime : 0;
     },
     duration() {
       if (current && current.live) return 0;
+      if (isVlc()) return vs ? vs.length || 0 : 0;
       if (isEngine()) return eng ? Number(eng.getDuration() || 0) / 1000 : 0;
       return video && isFinite(video.duration) ? video.duration : 0;
     },
     seek(sec) {
       if (current && current.live) return;
+      if (isVlc()) {
+        if (vs) vs.time = Math.max(0, sec);
+        return NV.cmd("seek", String(Math.max(0, Math.floor(sec))));
+      }
       if (isEngine()) eng && eng.seek(BigInt(Math.max(0, Math.floor(sec * 1000)))).catch(() => {});
       else if (video) video.currentTime = Math.max(0, sec);
     },
@@ -307,6 +344,7 @@ body.usp-direct #playerSheet{display:none!important}
     },
     applyVol() {
       const v = A.vol(), m = A.muted();
+      if (vlcOn) NV.cmd("volume", String(m ? 0 : Math.round(v * 256)));
       if (video) {
         video.volume = v;
         video.muted = m || !!(current && current._noAudio);
@@ -327,6 +365,7 @@ body.usp-direct #playerSheet{display:none!important}
       A.applyVol();
     },
     audioTracks() {
+      if (isVlc()) return vs && vs.atracks && vs.atracks.length > 1 ? vs.atracks : [];
       if (isEngine() && eng) {
         let cur = -1;
         try {
@@ -341,11 +380,13 @@ body.usp-direct #playerSheet{display:none!important}
       return [];
     },
     selectAudio(id) {
+      if (isVlc()) return NV.cmd("atrack", String(id)).then(vlcTracks);
       if (isEngine() && eng) eng.selectAudio(id).catch(() => {});
       else if (hls) hls.audioTrack = id;
       else if (video && video.audioTracks) [...video.audioTracks].forEach((t, i) => (t.enabled = i === id));
     },
     subTracks() {
+      if (isVlc()) return vs && vs.stracks ? vs.stracks : [];
       if (isEngine() && eng) {
         let cur = -1;
         try {
@@ -360,6 +401,10 @@ body.usp-direct #playerSheet{display:none!important}
       return [];
     },
     selectSub(id) {
+      if (isVlc()) {
+        store.set("us-subs", id < 0 ? "0" : "1");
+        return NV.cmd("strack", String(id)).then(vlcTracks);
+      }
       if (isEngine() && eng) {
         if (id < 0) {
           store.set("us-subs", "0");
@@ -375,6 +420,7 @@ body.usp-direct #playerSheet{display:none!important}
     setFit(fit) {
       store.set("us-fit", fit);
       if (stage) stage.dataset.fit = fit;
+      if (vlcOn) NV.fit(fit);
       if (eng) {
         try {
           eng.setRenderMode(fit === "fill" ? 1 : 0);
@@ -407,12 +453,13 @@ body.usp-direct #playerSheet{display:none!important}
     box.innerHTML =
       '<div class="usp-card" role="dialog" aria-modal="true"><div class="usp-head"><div class="usp-title"><strong></strong><small></small></div>' +
       '<div class="usp-btns"><a class="usp-btn vlc">▶ VLC</a><button type="button" class="usp-btn x" aria-label="Close">×</button></div></div>' +
-      '<div class="usp-stage"><video playsinline autoplay></video><div class="usp-msg"></div>' +
+      '<div class="usp-stage"><video playsinline autoplay></video><div class="usp-vlchole"></div><div class="usp-msg"></div>' +
       '<div class="usp-ui"><div class="usp-osd"><b></b><i></i><span class="usp-facts"></span></div>' +
       '<div class="usp-bar"><div class="usp-seek"><span class="c">0:00</span><input type="range" min="0" max="1000" value="0" aria-label="Seek"><span class="d">0:00</span></div>' +
       '<div class="usp-row">' +
       `<button type="button" class="usp-ic prev" aria-label="Previous channel" title="Previous channel (↑)">${I.prev}</button>` +
-      `<button type="button" class="usp-ic pp" aria-label="Play / pause">${I.pause}</button>` +
+      `<button type="button" class="usp-ic pp" aria-label="Play / pause" title="Pause (Space)">${I.pause}</button>` +
+      `<button type="button" class="usp-ic stop" aria-label="Stop" title="Stop">${I.stop}</button>` +
       `<button type="button" class="usp-ic next" aria-label="Next channel" title="Next channel (↓)">${I.next}</button>` +
       '<span class="usp-live">LIVE</span><span class="usp-time"></span>' +
       `<div class="usp-vol"><button type="button" class="usp-ic mute" aria-label="Sound (M)">${I.vol}</button><input type="range" min="0" max="100" aria-label="Volume"></div>` +
@@ -440,7 +487,8 @@ body.usp-direct #playerSheet{display:none!important}
     box.addEventListener("click", (e) => e.target === box && !box.classList.contains("docked") && close());
 
     const q = (s) => bar.querySelector(s);
-    q(".pp").onclick = () => A.toggle().then(refresh);
+    q(".pp").onclick = () => Promise.resolve(A.toggle()).then(refresh);
+    q(".stop").onclick = halt;
     q(".prev").onclick = () => opts.onPrev && opts.onPrev();
     q(".next").onclick = () => opts.onNext && opts.onNext();
     q(".mute").onclick = () => {
@@ -482,7 +530,7 @@ body.usp-direct #playerSheet{display:none!important}
     const wake = () => {
       stage.classList.remove("idle");
       clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => !menu.classList.contains("on") && !A.paused() && stage.classList.add("idle"), 3200);
+      idleTimer = setTimeout(() => !menu.classList.contains("on") && !A.paused() && !isVlc() && stage.classList.add("idle"), 3200);
     };
     stage.addEventListener("mousemove", wake);
     stage.addEventListener("touchstart", wake, { passive: true });
@@ -490,7 +538,7 @@ body.usp-direct #playerSheet{display:none!important}
       if (e.target.closest(".usp-bar,.usp-menu,.usp-msg.err,.usp-unmute,.usp-note")) return;
       if (menu.classList.contains("on")) return menu.classList.remove("on");
       if (matchMedia("(hover: none)").matches) return; // touch: a tap only wakes the controls
-      if (current && !current.live) A.toggle().then(refresh);
+      if (current && !current.live) Promise.resolve(A.toggle()).then(refresh);
     });
     stage.addEventListener("dblclick", (e) => !e.target.closest(".usp-bar,.usp-menu") && fullscreen());
 
@@ -504,7 +552,7 @@ body.usp-direct #playerSheet{display:none!important}
         if (menu.classList.contains("on")) menu.classList.remove("on");
         else if (!docked) close();
         else return;
-      } else if (k === " " || k === "k") A.toggle().then(refresh);
+      } else if (k === " " || k === "k") Promise.resolve(A.toggle()).then(refresh);
       else if (k === "m" || k === "M") A.toggleMute();
       else if (k === "f" || k === "F") fullscreen();
       else if (!live && (k === "ArrowRight" || k === "ArrowLeft")) A.seek(A.time() + (k === "ArrowRight" ? 10 : -10));
@@ -548,7 +596,8 @@ body.usp-direct #playerSheet{display:none!important}
     const live = !!(current && current.live);
     const paused = A.paused();
     q(".pp").innerHTML = paused ? I.play : I.pause;
-    q(".pp").hidden = live && !paused;
+    q(".pp").hidden = !current || (!current.stream && !current.url);
+    q(".stop").hidden = !current || (!current.stream && !current.url) || !!current._halted;
     q(".prev").hidden = q(".next").hidden = !(live && opts.onPrev);
     q(".usp-live").style.display = live ? "" : "none";
     const d = A.duration(), t = A.time();
@@ -568,16 +617,18 @@ body.usp-direct #playerSheet{display:none!important}
     const v = q(".usp-vol input");
     if (document.activeElement !== v) v.value = muted ? 0 : Math.round(A.vol() * 100);
     paint(v);
-    q(".usp-tag").hidden = !isEngine();
-    q(".pip").hidden = isEngine() || !document.pictureInPictureEnabled;
+    const tag = q(".usp-tag");
+    tag.hidden = !isEngine() && !isVlc();
+    tag.textContent = isVlc() ? "VLC" : "ULTRA";
+    q(".pip").hidden = isEngine() || isVlc() || !document.pictureInPictureEnabled;
     if (paused) stage.classList.remove("idle");
   }
   function osdShow() {
     if (!osd || !current) return;
     osd.querySelector("b").textContent = current.title || "Ultra Stalker";
     const i = osd.querySelector("i");
-    i.textContent = isEngine() ? "ULTRA ENGINE" : current._noAudio ? "PICTURE ONLY" : current.live ? "LIVE" : "HD";
-    i.className = isEngine() ? "" : "b";
+    i.textContent = isVlc() ? "VLC" : isEngine() ? "ULTRA ENGINE" : current._noAudio ? "PICTURE ONLY" : current.live ? "LIVE" : "HD";
+    i.className = isEngine() || isVlc() ? "" : "b";
     osd.classList.add("on");
     clearTimeout(osdShow.t);
     osdShow.t = setTimeout(() => osd.classList.remove("on"), 3500);
@@ -586,7 +637,7 @@ body.usp-direct #playerSheet{display:none!important}
     const at = A.audioTracks(), st = A.subTracks();
     const fit = store.get("us-fit", "fit");
     const mode = engineMode();
-    const fits = isEngine() ? [["fit", "Fit"], ["fill", "Fill"]] : [["fit", "Fit"], ["fill", "Fill"], ["stretch", "Stretch"]];
+    const fits = isEngine() || isVlc() ? [["fit", "Fit"], ["fill", "Fill"]] : [["fit", "Fit"], ["fill", "Fill"], ["stretch", "Stretch"]];
     let h = "";
     if (at.length > 1) h += "<h4>Audio</h4>" + at.map((t) => `<button type="button" data-a="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
     if (st.length) h += "<h4>Subtitles</h4>" + `<button type="button" data-s="-1" class="${st.some((t) => t.on) ? "" : "on"}">Off</button>` + st.map((t) => `<button type="button" data-s="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
@@ -597,9 +648,10 @@ body.usp-direct #playerSheet{display:none!important}
     }
     h +=
       '<h4>Player engine</h4><div class="usp-seg">' +
-      [["auto", "Auto"], ["browser", "Browser"], ["ultra", "Ultra"]].map(([k, l]) => `<button type="button" data-e="${k}" class="${mode === k ? "on" : ""}">${l}</button>`).join("") +
+      (hasVlc() ? [["auto", "Auto"], ["browser", "Browser"], ["vlc", "VLC"], ["ultra", "Ultra"]] : [["auto", "Auto"], ["browser", "Browser"], ["ultra", "Ultra"]]).map(([k, l]) => `<button type="button" data-e="${k}" class="${mode === k ? "on" : ""}">${l}</button>`).join("") +
       `</div><div class="usp-now">Now: <b>${esc(STEP_LABEL[step()] || "")}</b></div>`;
-    if (!isEngine() && mode !== "browser") h += '<button type="button" data-x="ultra">Play this with Ultra engine</button>';
+    if (hasVlc() && !isVlc()) h += '<button type="button" data-x="vlc">Play this with VLC</button>';
+    else if (!isEngine() && !isVlc() && mode !== "browser") h += '<button type="button" data-x="ultra">Play this with Ultra engine</button>';
     h += '<h4>Stream info</h4><div class="usp-info">' + streamInfo().map((l) => {
       const i = l.indexOf(": ");
       return i > 0 ? `<div><span>${esc(l.slice(0, i))}</span><b>${esc(l.slice(i + 2))}</b></div>` : `<div><b>${esc(l)}</b></div>`;
@@ -622,6 +674,9 @@ body.usp-direct #playerSheet{display:none!important}
       else if (b.dataset.e) {
         store.set("us-player-engine", b.dataset.e);
         if (current) restart(Object.assign({}, current, { _plan: null, _step: 0 }));
+        return menu.classList.remove("on");
+      } else if (b.dataset.x === "vlc") {
+        restart(Object.assign({}, current, { _plan: ["vlc", "native", "engine", "soft"], _step: 0, _manual: true }));
         return menu.classList.remove("on");
       } else if (b.dataset.x === "ultra") {
         const plan = ["engine", "soft", "native"].concat(current.live ? ["mute"] : []);
@@ -664,8 +719,17 @@ body.usp-direct #playerSheet{display:none!important}
     return !n ? "" : n === 1 ? "Mono" : n === 2 ? "Stereo" : n === 6 ? "5.1" : n === 8 ? "7.1" : n + " ch";
   }
   function facts() {
-    const f = { quality: "", fps: "", video: "", audio: "", channels: "", engine: isEngine() ? "Ultra engine" : current && current._noAudio ? "Picture only" : "Browser" };
+    const f = { quality: "", fps: "", video: "", audio: "", channels: "", engine: isVlc() ? "VLC" : isEngine() ? "Ultra engine" : current && current._noAudio ? "Picture only" : "Browser" };
     try {
+      if (isVlc()) {
+        const v = (vs && vs.info) || {};
+        f.quality = qualityOf(v.width, v.height);
+        f.fps = v.fps > 1 ? Math.round(v.fps) + " fps" : "";
+        f.video = prettyCodec(v.vcodec);
+        f.audio = prettyCodec(v.acodec);
+        f.channels = v.channels || "";
+        return f;
+      }
       if (isEngine() && eng) {
         const streams = eng.getStreams() || [];
         const vs = streams.find((x) => /video/i.test(String(x.mediaType)));
@@ -714,7 +778,13 @@ body.usp-direct #playerSheet{display:none!important}
   function streamInfo() {
     const out = [];
     try {
-      if (isEngine() && eng) {
+      if (isVlc()) {
+        const v = (vs && vs.info) || {};
+        if (v.width) out.push("Picture: " + v.width + "×" + v.height + (v.fps ? " · " + Math.round(v.fps) + " fps" : ""));
+        if (v.vcodec || v.acodec) out.push("Codecs: " + [prettyCodec(v.vcodec), [prettyCodec(v.acodec), v.channels].filter(Boolean).join(" ")].filter(Boolean).join(" + "));
+        if (vs && vs.stats && vs.stats.shown != null) out.push("Frames: " + vs.stats.shown + " shown · " + (vs.stats.lost || 0) + " lost");
+        if (vs && vs.version) out.push("VLC: " + vs.version);
+      } else if (isEngine() && eng) {
         const st = eng.getStats();
         const vs = (eng.getStreams() || []).find((x) => /video/i.test(String(x.mediaType)));
         const w = (st && st.width) || (vs && vs.codecparProxy && vs.codecparProxy.width) || 0;
@@ -728,7 +798,7 @@ body.usp-direct #playerSheet{display:none!important}
       }
       if (info && (info.videoCodec || info.audioCodec)) out.push("Codecs: " + [info.videoCodec, info.audioCodec].filter(Boolean).map(codecName).join(" + "));
     } catch (_) {}
-    out.push("Engine: " + STEP_LABEL[step()] + (isEngine() ? (self.crossOriginIsolated ? " · multi-core" : " · single-core") : ""));
+    out.push("Engine: " + STEP_LABEL[step()] + (isVlc() ? " · graphics card" : "") + (isEngine() ? (self.crossOriginIsolated ? " · multi-core" : " · single-core") : ""));
     out.push("CPU threads: " + (navigator.hardwareConcurrency || "?"));
     return out;
   }
@@ -768,11 +838,13 @@ body.usp-direct #playerSheet{display:none!important}
     const key = opts.key;
     if (key && !current._manual && engineMode() === "auto") {
       if (isEngine()) store.set("us-eng:" + key, "1");
+      else if (isVlc()) store.set("us-eng:" + key, "vlc");
       else if (step() === "native") store.set("us-eng:" + key, null);
     }
     // Autoplay with sound may be refused: play muted and offer one tap for sound.
     if (!isEngine() && video && video.muted && !A.muted() && !current._noAudio) unmuteBtn.classList.add("on");
     if (isEngine() && eng && eng.isSuspended && eng.isSuspended()) unmuteBtn.classList.add("on");
+    if (isVlc()) vlcTracks();
   }
   /* Move on to the next way of playing this stream. */
   function escalate(why) {
@@ -787,6 +859,9 @@ body.usp-direct #playerSheet{display:none!important}
   function note_step(why) {
     if (!current) return;
     current._log = (current._log || []).concat(STEP_LABEL[step()] + ": " + describe(why));
+    try {
+      console.info("[player] " + STEP_LABEL[step()] + " → next: " + describe(why));
+    } catch (_) {}
   }
   function describe(why) {
     const w = String(why || "").trim();
@@ -942,6 +1017,8 @@ body.usp-direct #playerSheet{display:none!important}
       }, 2500);
     }
     stopEngine();
+    stopVlc();
+    pausedAt = 0;
     info = null;
     const n = box && box.querySelector(".usp-note");
     if (n) n.style.display = "none";
@@ -1035,6 +1112,127 @@ body.usp-direct #playerSheet{display:none!important}
       } catch (_) {}
     }
     setTimeout(() => my === alive && eng === me && !started && eng.getStatus() >= 5 && onStarted(), 2500);
+  }
+
+  /* ------------------------------------------------------------------ VLC (program only) */
+  async function startVlc(ticket, src, my) {
+    if (!hasVlc()) throw new Error("VLC isn't available");
+    vlcOn = true;
+    vs = { paused: false, time: 0, length: 0 };
+    stage.classList.add("vlcmode");
+    const url = new URL(src, location.href).href;
+    const r = await NV.play({
+      url,
+      live: !!ticket.live,
+      caching: Math.round((ticket.live ? bufferSecs() : 3) * 1000),
+      volume: A.muted() ? 0 : Math.round(A.vol() * 256),
+      fit: store.get("us-fit", "fit"),
+      subs: store.get("us-subs", "1") === "1",
+    });
+    if (my !== alive) return;
+    if (!r || !r.ok) throw new Error("VLC: " + ((r && r.error) || "couldn't start"));
+    if (r.version) vs.version = r.version;
+    const t0 = Date.now();
+    clearInterval(vlcPoll);
+    vlcPoll = setInterval(async () => {
+      let s;
+      try {
+        s = await NV.status();
+      } catch (_) {
+        return;
+      }
+      if (my !== alive || !vlcOn || !s) return;
+      const keep = { atracks: vs.atracks, stracks: vs.stracks, version: vs.version };
+      vs = Object.assign(keep, s, { paused: s.state === "paused" });
+      if (!started && /playing|paused/.test(s.state) && (s.time > 0 || (s.info && s.info.width))) onStarted();
+      const over = /stopped|ended|error/.test(s.state) && Date.now() - t0 > 2500;
+      if (over && started && ticket.live) return reconnect("ended");
+      if (over && !started) {
+        clearInterval(vlcPoll);
+        if (!escalate("VLC couldn't open this stream")) fail("VLC couldn't open this stream");
+      }
+      if (over && started && !ticket.live) refresh();
+    }, 600);
+    placeVlc();
+  }
+  async function vlcTracks() {
+    if (!vlcOn) return;
+    const my = alive;
+    try {
+      const t = await NV.tracks();
+      if (my !== alive || !vs || !t) return;
+      vs.atracks = (t.audio || []).filter((x) => x.id >= 0).map((x, i) => ({ id: x.id, on: x.on, label: trackLabel({ title: x.name }, i) }));
+      vs.stracks = (t.subs || []).filter((x) => x.id >= 0).map((x, i) => ({ id: x.id, on: x.on, label: trackLabel({ title: x.name }, i) }));
+      if (menu && menu.classList.contains("on")) openMenu();
+    } catch (_) {}
+  }
+  /* Keep VLC's picture exactly over the free part of the player: above the control bar,
+     left of the settings panel, hidden while something else covers the player. */
+  function vlcRect() {
+    if (!box || box.classList.contains("hidden") || !started || document.hidden) return null;
+    if (msg && msg.style.display !== "none" && msg.classList.contains("err")) return null;
+    const r = stage.getBoundingClientRect();
+    if (r.width < 40 || r.height < 40) return null;
+    let right = r.right, bottom = r.bottom;
+    const b = bar.getBoundingClientRect();
+    if (b.height && b.top > r.top) bottom = Math.min(bottom, b.top - 2);
+    if (menu.classList.contains("on")) {
+      const m = menu.getBoundingClientRect();
+      if (m.width) right = Math.min(right, m.left - 6);
+    }
+    const x = Math.max(r.left, 0), y = Math.max(r.top, 0);
+    right = Math.min(right, innerWidth);
+    bottom = Math.min(bottom, innerHeight);
+    if (right - x < 40 || bottom - y < 40) return null;
+    // something else on top (a list, a dialog, the side menu)?
+    const pts = [[(x + right) / 2, (y + bottom) / 2], [x + 8, y + 8], [right - 8, y + 8], [x + 8, bottom - 8], [right - 8, bottom - 8]];
+    for (const [px, py] of pts) {
+      const el = document.elementFromPoint(px, py);
+      if (el && !stage.contains(el)) return null;
+      if (el && el.closest(".usp-menu,.usp-note,.usp-unmute")) return null;
+    }
+    return { x: Math.round(x), y: Math.round(y), w: Math.round(right - x), h: Math.round(bottom - y) };
+  }
+  function placeVlc() {
+    clearInterval(vlcPlace);
+    const go = () => {
+      if (!vlcOn) return;
+      const r = vlcRect();
+      const key = r ? r.x + "," + r.y + "," + r.w + "," + r.h : "";
+      if (key === vlcLast) return;
+      vlcLast = key;
+      NV.place(r);
+    };
+    vlcPlace = setInterval(go, 150);
+    go();
+  }
+  function stopVlc() {
+    clearInterval(vlcPoll);
+    clearInterval(vlcPlace);
+    if (stage) stage.classList.remove("vlcmode");
+    if (!vlcOn) return;
+    vlcOn = false;
+    vlcLast = "";
+    vs = null;
+    NV.place(null);
+    NV.stop();
+  }
+  /* Stop: end the stream but stay on the page (the line is freed). */
+  function halt() {
+    if (!current || current._halted) return;
+    const t = Object.assign({}, current);
+    if (!box.classList.contains("docked")) return close();
+    stop();
+    current = Object.assign({}, t, { _halted: true });
+    show(`<button type="button" class="usp-ic pp" style="pointer-events:auto;width:64px;height:64px" aria-label="Play">${I.play}</button><small>Stopped · متوقف</small>`);
+    const b = msg.querySelector(".pp");
+    if (b) b.onclick = (e) => (e.stopPropagation(), resume());
+    refresh();
+  }
+  function resume() {
+    if (!current) return;
+    const t = Object.assign({}, current, { _halted: false, _reconnects: 0 });
+    restart(t);
   }
 
   async function startNative(ticket, src, my) {
@@ -1165,14 +1363,14 @@ body.usp-direct #playerSheet{display:none!important}
     else vlc.removeAttribute("download");
     box.classList.remove("hidden");
     if (!host) document.documentElement.style.overflow = "hidden";
-    if (!ticket._reconnects || !msg.innerHTML) show('<div class="usp-spin"></div>' + (how === "engine" || how === "soft" ? "<small>Ultra engine</small>" : ""));
+    if (!ticket._reconnects || !msg.innerHTML) show('<div class="usp-spin"></div>' + (how === "engine" || how === "soft" ? "<small>Ultra engine</small>" : how === "vlc" ? "<small>VLC</small>" : ""));
     stage.classList.remove("idle");
     refresh();
     if (!tick) tick = setInterval(watchdog, 1000);
     // A stream that never shows a picture: try the next way, then explain.
     startTimer = setTimeout(() => {
       if (my !== alive || started) return;
-      if (how !== "engine" && how !== "soft" && video.readyState >= 2 && video.paused) return askTap(() => video.play());
+      if (how === "native" && video.readyState >= 2 && video.paused) return askTap(() => video.play());
       escalate("timeout") || fail("timeout");
     }, how === "native" ? START_TIMEOUT : START_TIMEOUT + 8000);
     let src = (/^https:/i.test(url) && !Object.keys(headers).length) || ticket.ticket ? url : viaRelay(url, headers);
@@ -1183,7 +1381,8 @@ body.usp-direct #playerSheet{display:none!important}
     if (my !== alive) return;
     ticket._src = src;
     try {
-      if (how === "engine" || how === "soft") await startEngine(ticket, src, my, how === "soft");
+      if (how === "vlc") await startVlc(ticket, src, my);
+      else if (how === "engine" || how === "soft") await startEngine(ticket, src, my, how === "soft");
       else await startNative(ticket, src, my);
     } catch (e) {
       if (my !== alive) return;
