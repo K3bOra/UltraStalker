@@ -51,6 +51,8 @@
 .usp-ui{position:absolute;inset:0;z-index:4;pointer-events:none}
 .usp-osd{position:absolute;left:18px;top:16px;display:flex;align-items:center;gap:10px;max-width:70%;padding:8px 14px 8px 10px;border-radius:14px;background:rgba(12,9,5,.72);border:1px solid rgba(240,222,180,.22);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:0;transform:translateY(-8px);transition:opacity .3s,transform .3s}
 .usp-osd.on{opacity:1;transform:none}
+.usp-facts{display:flex;gap:5px;flex-wrap:wrap}
+.usp-facts em{font-style:normal;padding:2px 7px;border-radius:7px;font-size:10px;font-weight:600;letter-spacing:.04em;color:#f1e6cc;background:rgba(255,246,225,.08);border:1px solid rgba(232,211,164,.2)}
 .usp-osd b{font-size:14px;color:#fff6dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .usp-osd i,.usp-tag{font-style:normal;flex:none;padding:3px 8px;border-radius:999px;font-size:9.5px;font-weight:800;letter-spacing:.1em;color:#1a1306;background:var(--foil)}
 .usp-osd i.b{color:#f3e2b4;background:rgba(240,222,180,.14)}
@@ -200,6 +202,12 @@ body.usp-direct #playerSheet{display:none!important}
   /* ------------------------------------------------------------------ plans
      A plan is the ordered list of ways to try one stream. */
   const STEP_LABEL = { native: "Playing here", engine: "Ultra engine", soft: "Ultra engine · software", mute: "Picture only" };
+  /* How many seconds to keep ahead before showing live video (like VLC's network
+     caching). More = fewer stutters on shaky lines, a little later start. */
+  const BUFFER = { fast: 1.2, normal: 3, smooth: 6 };
+  function bufferSecs() {
+    return BUFFER[store.get("us-buffer", "normal")] || 3;
+  }
   function engineMode() {
     return store.get("us-player-engine", "auto"); // auto | browser | ultra
   }
@@ -218,7 +226,48 @@ body.usp-direct #playerSheet{display:none!important}
   let box, stage, video, msg, title, sub, vlc, ui, bar, osd, menu, unmuteBtn;
   let hls = null, ts = null, eng = null, engBox = null;
   let alive = 0, info = null, started = false, current = null, opts = {};
-  let lastT = 0, lastMove = 0, playingSince = 0, startTimer = 0, tick = 0, idleTimer = 0;
+  let lastT = 0, lastMove = 0, playingSince = 0, startTimer = 0, tick = 0, idleTimer = 0, gate = 0;
+  function ahead() {
+    try {
+      const b = video.buffered;
+      for (let i = b.length - 1; i >= 0; i--) if (b.start(i) <= video.currentTime + 0.3) return b.end(i) - video.currentTime;
+      return b.length ? b.end(b.length - 1) - video.currentTime : 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+  /* Live: hold the picture until enough is buffered, then play smoothly. Used at the
+     start and whenever the buffer runs dry (instead of stuttering every second). */
+  function holdForBuffer(my, again) {
+    if (!current || !current.live || isEngine() || !video) return false;
+    const need = again ? Math.max(1.5, bufferSecs()) : bufferSecs();
+    if (ahead() >= need) return false;
+    clearInterval(gate);
+    if (!video.paused) video.pause();
+    current._holding = true;
+    const t0 = Date.now();
+    let best = ahead(), grewAt = Date.now();
+    gate = setInterval(() => {
+      if (my !== alive || !current) return clearInterval(gate);
+      const a = ahead();
+      if (a > best + 0.05) {
+        best = a;
+        grewAt = Date.now();
+      } else if (Date.now() - grewAt > 8000) {
+        // nothing new is arriving: the line dropped, open it again
+        clearInterval(gate);
+        current._holding = false;
+        return reconnect("stall");
+      }
+      if (started) show('<div class="usp-spin"></div><small>Buffering ' + Math.min(100, Math.round((a / need) * 100)) + "%</small>");
+      if (a >= need || Date.now() - t0 > 15000) {
+        clearInterval(gate);
+        current._holding = false;
+        video.play().catch(() => {});
+      }
+    }, 200);
+    return true;
+  }
 
   const step = () => (current && current._plan ? current._plan[current._step || 0] : "native");
   const isEngine = () => step() === "engine" || step() === "soft";
@@ -359,7 +408,7 @@ body.usp-direct #playerSheet{display:none!important}
       '<div class="usp-card" role="dialog" aria-modal="true"><div class="usp-head"><div class="usp-title"><strong></strong><small></small></div>' +
       '<div class="usp-btns"><a class="usp-btn vlc">▶ VLC</a><button type="button" class="usp-btn x" aria-label="Close">×</button></div></div>' +
       '<div class="usp-stage"><video playsinline autoplay></video><div class="usp-msg"></div>' +
-      '<div class="usp-ui"><div class="usp-osd"><b></b><i></i></div>' +
+      '<div class="usp-ui"><div class="usp-osd"><b></b><i></i><span class="usp-facts"></span></div>' +
       '<div class="usp-bar"><div class="usp-seek"><span class="c">0:00</span><input type="range" min="0" max="1000" value="0" aria-label="Seek"><span class="d">0:00</span></div>' +
       '<div class="usp-row">' +
       `<button type="button" class="usp-ic prev" aria-label="Previous channel" title="Previous channel (↑)">${I.prev}</button>` +
@@ -473,7 +522,10 @@ body.usp-direct #playerSheet{display:none!important}
       onStarted();
       if (current && current._noAudio) note("Playing without sound — this channel's audio doesn't decode here. Use VLC for sound.", "القناة شغالة من غير صوت لأن صيغة الصوت مش بتشتغل هنا. للصوت شغّلها بـ VLC.");
     });
-    video.addEventListener("waiting", () => started && !isEngine() && show('<div class="usp-spin"></div>'));
+    video.addEventListener("waiting", () => {
+      if (!started || isEngine()) return;
+      if (!holdForBuffer(alive, true)) show('<div class="usp-spin"></div>');
+    });
     video.addEventListener("timeupdate", () => {
       if (isEngine()) return;
       if (msg.classList.contains("err") && video.currentTime > lastT + 1 && !video.paused) show("");
@@ -539,6 +591,10 @@ body.usp-direct #playerSheet{display:none!important}
     if (at.length > 1) h += "<h4>Audio</h4>" + at.map((t) => `<button type="button" data-a="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
     if (st.length) h += "<h4>Subtitles</h4>" + `<button type="button" data-s="-1" class="${st.some((t) => t.on) ? "" : "on"}">Off</button>` + st.map((t) => `<button type="button" data-s="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
     h += '<h4>Picture</h4><div class="usp-seg">' + fits.map(([k, l]) => `<button type="button" data-f="${k}" class="${fit === k ? "on" : ""}">${l}</button>`).join("") + "</div>";
+    if (current && current.live) {
+      const bf = store.get("us-buffer", "normal");
+      h += '<h4>Buffer</h4><div class="usp-seg">' + [["fast", "Fast"], ["normal", "Normal"], ["smooth", "Smooth"]].map(([k, l]) => `<button type="button" data-b="${k}" class="${bf === k ? "on" : ""}">${l}</button>`).join("") + "</div>";
+    }
     h +=
       '<h4>Player engine</h4><div class="usp-seg">' +
       [["auto", "Auto"], ["browser", "Browser"], ["ultra", "Ultra"]].map(([k, l]) => `<button type="button" data-e="${k}" class="${mode === k ? "on" : ""}">${l}</button>`).join("") +
@@ -558,6 +614,11 @@ body.usp-direct #playerSheet{display:none!important}
       if (b.dataset.a !== undefined) A.selectAudio(+b.dataset.a);
       else if (b.dataset.s !== undefined) A.selectSub(+b.dataset.s);
       else if (b.dataset.f) A.setFit(b.dataset.f);
+      else if (b.dataset.b) {
+        store.set("us-buffer", b.dataset.b);
+        if (current) restart(Object.assign({}, current, { _reconnects: 0 }));
+        return menu.classList.remove("on");
+      }
       else if (b.dataset.e) {
         store.set("us-player-engine", b.dataset.e);
         if (current) restart(Object.assign({}, current, { _plan: null, _step: 0 }));
@@ -575,6 +636,80 @@ body.usp-direct #playerSheet{display:none!important}
     };
     menu.classList.add("on");
   }
+  /* Stream facts for badges: quality, frame rate, video / audio codec, channels. */
+  const VCODEC = { 27: "H.264", 173: "HEVC", 2: "MPEG-2", 1: "MPEG-1", 225: "AV1", 167: "VP9", 12: "MPEG-4" };
+  const ACODEC = { 86018: "AAC", 86019: "AC-3", 86056: "E-AC-3", 86017: "MPEG audio", 86016: "MPEG audio", 86076: "Opus", 86020: "DTS", 86028: "Vorbis", 86065: "AAC" };
+  function prettyCodec(c) {
+    const s = String(c || "").toLowerCase();
+    if (/^avc|h264/.test(s)) return "H.264";
+    if (/^(hvc|hev)|hevc|h265/.test(s)) return "HEVC";
+    if (/^mp4a\.40/.test(s) || s === "aac") return "AAC";
+    if (/^ec-?3/.test(s)) return "E-AC-3";
+    if (/^ac-?3/.test(s)) return "AC-3";
+    if (/mp3|mp4a\.6b|mpeg audio/.test(s)) return "MPEG audio";
+    if (/opus/.test(s)) return "Opus";
+    if (/mpeg2|mp2v|m2v/.test(s)) return "MPEG-2";
+    return c ? String(c).split(".")[0].toUpperCase() : "";
+  }
+  function qualityOf(w, h) {
+    const v = Math.max(h || 0, Math.round(((w || 0) * 9) / 16));
+    if (!v) return "";
+    if (v >= 2000) return "4K UHD";
+    if (v >= 1400) return "QHD 1440p";
+    if (v >= 1000) return "FHD 1080p";
+    if (v >= 700) return "HD 720p";
+    return "SD " + (h || v) + "p";
+  }
+  function channelsOf(n) {
+    return !n ? "" : n === 1 ? "Mono" : n === 2 ? "Stereo" : n === 6 ? "5.1" : n === 8 ? "7.1" : n + " ch";
+  }
+  function facts() {
+    const f = { quality: "", fps: "", video: "", audio: "", channels: "", engine: isEngine() ? "Ultra engine" : current && current._noAudio ? "Picture only" : "Browser" };
+    try {
+      if (isEngine() && eng) {
+        const streams = eng.getStreams() || [];
+        const vs = streams.find((x) => /video/i.test(String(x.mediaType)));
+        const as = streams.find((x) => x.id === eng.getSelectedAudioStreamId()) || streams.find((x) => /audio/i.test(String(x.mediaType)));
+        const st = eng.getStats();
+        if (vs) {
+          const cp = vs.codecparProxy || {};
+          f.quality = qualityOf(cp.width || (st && st.width), cp.height || (st && st.height));
+          f.video = VCODEC[cp.codecId] || "";
+          const fr = cp.framerate || vs.avgFramerate || vs.rFrameRate;
+          const fps = fr && fr.den ? fr.num / fr.den : 0;
+          if (fps > 1) f.fps = Math.round(fps) + " fps";
+        }
+        if (as) {
+          const cp = as.codecparProxy || {};
+          f.audio = ACODEC[cp.codecId] || codecOf(as) || "";
+          f.channels = channelsOf((cp.chLayout && cp.chLayout.nbChannels) || cp.channels);
+        }
+      } else {
+        if (video && video.videoWidth) f.quality = qualityOf(video.videoWidth, video.videoHeight);
+        else if (info && info.height) f.quality = qualityOf(info.width, info.height);
+        if (info) {
+          f.video = prettyCodec(info.videoCodec);
+          f.audio = current && current._noAudio ? "" : prettyCodec(info.audioCodec);
+          if (info.fps) f.fps = Math.round(info.fps) + " fps";
+          f.channels = current && current._noAudio ? "" : channelsOf(info.channels);
+        }
+      }
+    } catch (_) {}
+    return f;
+  }
+  let lastFacts = "";
+  function announceFacts() {
+    if (!current || !started) return;
+    const f = facts();
+    const key = JSON.stringify(f);
+    if (key === lastFacts) return;
+    lastFacts = key;
+    window.dispatchEvent(new CustomEvent("usp:facts", { detail: f }));
+    const chips = [f.quality, f.fps, f.video, [f.audio, f.channels].filter(Boolean).join(" ")].filter(Boolean);
+    const box = osd && osd.querySelector(".usp-facts");
+    if (box) box.innerHTML = chips.map((c) => `<em>${esc(c)}</em>`).join("");
+  }
+
   /* What is playing and how well: picture size, codecs, decode speed, CPU threads. */
   function streamInfo() {
     const out = [];
@@ -627,6 +762,8 @@ body.usp-direct #playerSheet{display:none!important}
     A.applyVol();
     osdShow();
     refresh();
+    lastFacts = "";
+    setTimeout(announceFacts, 600);
     // Remember which way this channel plays, so next time it opens on the first try.
     const key = opts.key;
     if (key && !current._manual && engineMode() === "auto") {
@@ -709,12 +846,15 @@ body.usp-direct #playerSheet{display:none!important}
   function watchdog() {
     if (!current || !box || box.classList.contains("hidden")) return;
     refresh();
+    announceFacts();
     if (!started) return;
     const t = A.time();
     if (Math.abs(t - lastT) > 0.05) {
       lastT = t;
       lastMove = Date.now();
       if (current._reconnects && Date.now() - playingSince > 60000) current._reconnects = 0;
+    } else if (current._holding) {
+      lastMove = Date.now();
     } else if (current.live && !A.paused() && Date.now() - lastMove > STALL_LIMIT && navigator.onLine !== false) {
       reconnect("stall");
     }
@@ -782,6 +922,7 @@ body.usp-direct #playerSheet{display:none!important}
   function stop() {
     alive++;
     clearTimeout(startTimer);
+    clearInterval(gate);
     const h = hls, t = ts;
     hls = ts = null;
     try {
@@ -862,7 +1003,7 @@ body.usp-direct #playerSheet{display:none!important}
     // The engine decodes everything itself (WebCodecs hardware, else WebAssembly) and never
     // hands the stream back to the browser's own player: that path is what already failed
     // (e.g. 4K HEVC/HDR with MP2 sound -> "the element has no supported sources").
-    eng = new AV({ container: engBox, wasmBaseUrl: ENGINE_WASM, isLive: !!ticket.live, enableHardware: !soft, enableWebCodecs: !soft, enableWorker: true, lowLatency: false, preLoadTime: ticket.live ? 1.5 : 4, checkUseMSE: () => false });
+    eng = new AV({ container: engBox, wasmBaseUrl: ENGINE_WASM, isLive: !!ticket.live, enableHardware: !soft, enableWebCodecs: !soft, enableWorker: true, lowLatency: false, preLoadTime: ticket.live ? bufferSecs() : 4, enableJitterBuffer: !!ticket.live, jitterBufferMin: ticket.live ? Math.max(1, bufferSecs() - 1) : undefined, jitterBufferMax: ticket.live ? bufferSecs() * 2 + 2 : undefined, checkUseMSE: () => false });
     const me = eng;
     const onErr = (e) => {
       if (my !== alive || eng !== me) return;
@@ -913,7 +1054,7 @@ body.usp-direct #playerSheet{display:none!important}
         hls = new window.Hls({ lowLatencyMode: false, maxBufferLength: 30, manifestLoadingMaxRetry: 3, levelLoadingMaxRetry: 4, fragLoadingMaxRetry: 6 });
         hls.on(window.Hls.Events.MANIFEST_PARSED, (_, d) => {
           const l = d && d.levels && d.levels[0];
-          if (l) info = { videoCodec: l.videoCodec, audioCodec: l.audioCodec };
+          if (l) info = { videoCodec: l.videoCodec, audioCodec: l.audioCodec, width: l.width, height: l.height, fps: l.frameRate };
           if (unsupported() && my === alive) escalate("codec");
         });
         hls.on(window.Hls.Events.ERROR, (_, d) => {
@@ -933,10 +1074,10 @@ body.usp-direct #playerSheet{display:none!important}
       else {
         const ds = { type: "mpegts", isLive: !!ticket.live, url: src };
         if (ticket._noAudio) ds.hasAudio = false;
-        ts = M.createPlayer(ds, { enableStashBuffer: true, stashInitialSize: 384 * 1024, liveBufferLatencyChasing: false, lazyLoad: !ticket.live });
+        ts = M.createPlayer(ds, { enableStashBuffer: true, stashInitialSize: 512 * 1024, liveBufferLatencyChasing: false, liveSync: false, lazyLoad: !ticket.live, autoCleanupSourceBuffer: true, autoCleanupMaxBackwardDuration: 60, autoCleanupMinBackwardDuration: 30 });
         ts.on(M.Events.MEDIA_INFO, (mi) => {
           if (my !== alive) return;
-          info = { videoCodec: mi && mi.videoCodec, audioCodec: ticket._noAudio ? "" : mi && mi.audioCodec, hasVideo: mi && mi.hasVideo };
+          info = { videoCodec: mi && mi.videoCodec, audioCodec: ticket._noAudio ? "" : mi && mi.audioCodec, hasVideo: mi && mi.hasVideo, fps: mi && mi.fps, width: mi && mi.width, height: mi && mi.height, channels: mi && mi.audioChannelCount };
           if (unsupported()) escalate("codec") || fail();
         });
         ts.on(M.Events.ERROR, (type, detail) => {
@@ -949,6 +1090,21 @@ body.usp-direct #playerSheet{display:none!important}
         ts.load();
       }
     } else video.src = src;
+    if (ticket.live && ts) {
+      // let a few seconds build up before the first frame
+      await new Promise((r) => setTimeout(r, 120));
+      if (my !== alive) return;
+      const t0 = Date.now();
+      await new Promise((r) => {
+        const iv = setInterval(() => {
+          if (my !== alive || ahead() >= bufferSecs() || Date.now() - t0 > 9000) {
+            clearInterval(iv);
+            r();
+          }
+        }, 150);
+      });
+      if (my !== alive) return;
+    }
     const p = video.play();
     if (p && p.catch)
       p.catch((e) => {
@@ -1129,5 +1285,5 @@ body.usp-direct #playerSheet{display:none!important}
     else if (stage.webkitRequestFullscreen) stage.webkitRequestFullscreen();
     else if (video && video.webkitEnterFullscreen && !isEngine()) video.webkitEnterFullscreen();
   }
-  window.USPlayer = { play, offer, pending, close, vlcHref, fullscreen, video: () => video, engine: () => step() };
+  window.USPlayer = { play, offer, pending, close, vlcHref, fullscreen, video: () => video, engine: () => step(), facts };
 })();

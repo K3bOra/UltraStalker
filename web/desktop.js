@@ -1156,7 +1156,7 @@
     panel.innerHTML =
       '<div class="dk-tv-screen" id="dkTvScreen"><div class="dk-tv-idle"><img src="brand-logo-gold.webp" alt=""><b>' + T("Choose a channel", "اختار قناة") + "</b><span>" + T("Pick one from the list", "من القايمة اللي جنبك") + '</span></div></div>' +
       '<div class="dk-tv-info" id="dkTvInfo">' +
-      '<div class="dk-tv-ch"><span class="dk-tv-logo" id="dkTvLogo"></span><div class="dk-tv-name"><small>' + T("LIVE", "مباشر") + '</small><b id="dkTvName">—</b></div>' +
+      '<div class="dk-tv-ch"><span class="dk-tv-logo" id="dkTvLogo"></span><div class="dk-tv-name"><small>' + T("LIVE", "مباشر") + '</small><b id="dkTvName">—</b><span class="dk-tv-facts" id="dkTvFacts"></span></div>' +
       '<div class="dk-tv-acts"><a class="dk-tv-btn" id="dkTvVlc">▶ VLC</a><button type="button" class="dk-tv-btn" id="dkTvFull" title="Full screen">⛶</button></div></div>' +
       '<div class="dk-tv-epg" id="dkTvEpg"></div></div>';
     const list = document.createElement("div");
@@ -1255,6 +1255,7 @@
     card.classList.add("dk-on");
     const name = card.title || (card.querySelector(".item-title") || {}).textContent || "Channel";
     $("dkTvName").textContent = name;
+    if ($("dkTvFacts")) $("dkTvFacts").innerHTML = "";
     const pic = card.querySelector("img.live-picon");
     $("dkTvLogo").innerHTML = pic && pic.complete && pic.naturalWidth ? `<img src="${pic.src}" alt="">` : `<i>${(name.trim()[0] || "TV").toUpperCase()}</i>`;
     $("dkTv").classList.add("playing");
@@ -1338,6 +1339,15 @@
     featSync();
     tvMode(DESK && active && media === "itv" && visible("itemsStage") && !visible("favoritesStage") && !visible("searchStage"));
   }
+
+  /* Stream facts from the player (quality, fps, codecs, engine) under the channel name. */
+  window.addEventListener("usp:facts", (e) => {
+    const box = $("dkTvFacts");
+    const f = e.detail || {};
+    if (!box) return;
+    const chip = (t, cls) => (t ? `<em class="${cls || ""}">${esc(t)}</em>` : "");
+    box.innerHTML = chip(f.quality, "q") + chip(f.fps) + chip(f.video) + chip([f.audio, f.channels].filter(Boolean).join(" ")) + chip(f.engine === "Ultra engine" ? "ULTRA ENGINE" : "", "u");
+  });
 
   function start() {
     build();
