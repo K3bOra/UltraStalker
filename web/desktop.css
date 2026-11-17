@@ -1082,3 +1082,4 @@ html body.ph .dk-ptabs .dk-src-find:not(#_){grid-column:1/-1;width:auto!importan
 html body.ph .dk-src[hidden]:not(#_):not(#__){display:none!important}
 html body.ph .dk-src>b:not(#_){display:none!important}
 html body.ph .dk-src-name:not(#_){display:block;grid-area:name;align-self:end;min-width:0;font-family:var(--display);font-size:17px;font-weight:700;color:#fff6e3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body.app .usp-menu:not(#_):not(#__){background:var(--sheen) padding-box,linear-gradient(170deg,rgba(34,30,25,.96),rgba(14,13,11,.97)) padding-box,linear-gradient(var(--us-edge),var(--us-edge)) border-box!important}

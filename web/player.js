@@ -89,10 +89,16 @@
 .usp-menu button.on{color:#fff6dc;background:rgba(226,192,124,.16)}
 .usp-menu button.on:after{content:"";width:8px;height:8px;border-radius:50%;background:#e2c07c;box-shadow:0 0 10px #e2c07c}
 .usp-menu small{color:#a99c80;font-size:11px}
-.usp-menu .row{display:flex;gap:6px;padding:2px 4px 6px}
-.usp-menu .row button{justify-content:center;padding:8px 6px;border:1px solid rgba(240,222,180,.14)}
-.usp-menu .row button.on{border-color:rgba(226,192,124,.6)}
-.usp-menu .row button.on:after{display:none}
+.usp-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;margin:2px 4px 8px;padding:3px;border-radius:999px;background:rgba(8,7,6,.5);box-shadow:inset 0 1px 3px rgba(0,0,0,.55),0 0 0 1px rgba(232,211,164,.22)}
+.usp-menu .usp-seg button{justify-content:center;height:32px;padding:0 8px;border:0;border-radius:999px;background:none;color:#cfc3a8;font-size:12.5px;font-weight:500}
+.usp-menu .usp-seg button:hover{background:rgba(255,246,225,.06);color:#fff6e3}
+.usp-menu .usp-seg button.on{color:#1a1306;font-weight:600;background:var(--foil);box-shadow:0 6px 16px -8px rgba(226,192,124,.8),inset 0 1px rgba(255,255,255,.5)}
+.usp-menu .usp-seg button.on:after{display:none}
+.usp-now{margin:0 10px 4px;font-size:11.5px;color:#a99f8a}.usp-now b{color:#e6cb8c;font-weight:600}
+.usp-info{margin:2px 4px 6px;padding:4px 12px;border-radius:14px;background:rgba(8,7,6,.42);box-shadow:inset 0 1px 3px rgba(0,0,0,.5),0 0 0 1px rgba(232,211,164,.16)}
+.usp-info div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:12px;border-top:1px solid rgba(232,211,164,.08)}
+.usp-info div:first-child{border-top:0}
+.usp-info span{color:#a99f8a}.usp-info b{color:#f1e6cc;font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
 .usp-menu hr{border:0;border-top:1px solid rgba(240,222,180,.12);margin:6px 4px}
 .usp-note{position:absolute;left:14px;right:14px;bottom:86px;z-index:6;display:none;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-radius:14px;background:rgba(14,10,6,.9);border:1px solid rgba(226,192,124,.4);color:#eadfc8;font-size:12.5px;line-height:1.5;pointer-events:auto}
 .usp-note .ar{direction:rtl;flex:1 1 100%;color:#d6c7a6}
@@ -532,13 +538,16 @@ body.usp-direct #playerSheet{display:none!important}
     let h = "";
     if (at.length > 1) h += "<h4>Audio</h4>" + at.map((t) => `<button type="button" data-a="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
     if (st.length) h += "<h4>Subtitles</h4>" + `<button type="button" data-s="-1" class="${st.some((t) => t.on) ? "" : "on"}">Off</button>` + st.map((t) => `<button type="button" data-s="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
-    h += '<h4>Picture</h4><div class="row">' + fits.map(([k, l]) => `<button type="button" data-f="${k}" class="${fit === k ? "on" : ""}">${l}</button>`).join("") + "</div>";
+    h += '<h4>Picture</h4><div class="usp-seg">' + fits.map(([k, l]) => `<button type="button" data-f="${k}" class="${fit === k ? "on" : ""}">${l}</button>`).join("") + "</div>";
     h +=
-      '<h4>Player engine</h4><div class="row">' +
+      '<h4>Player engine</h4><div class="usp-seg">' +
       [["auto", "Auto"], ["browser", "Browser"], ["ultra", "Ultra"]].map(([k, l]) => `<button type="button" data-e="${k}" class="${mode === k ? "on" : ""}">${l}</button>`).join("") +
-      `</div><button type="button" disabled><small>Now: ${esc(STEP_LABEL[step()] || "")}</small></button>`;
+      `</div><div class="usp-now">Now: <b>${esc(STEP_LABEL[step()] || "")}</b></div>`;
     if (!isEngine() && mode !== "browser") h += '<button type="button" data-x="ultra">Play this with Ultra engine</button>';
-    h += "<h4>Stream info</h4>" + streamInfo().map((l) => `<button type="button" disabled><small>${esc(l)}</small></button>`).join("");
+    h += '<h4>Stream info</h4><div class="usp-info">' + streamInfo().map((l) => {
+      const i = l.indexOf(": ");
+      return i > 0 ? `<div><span>${esc(l.slice(0, i))}</span><b>${esc(l.slice(i + 2))}</b></div>` : `<div><b>${esc(l)}</b></div>`;
+    }).join("") + "</div>";
     const href = vlcHref(current || {});
     h += `<hr><a href="${esc(href)}"${/^data:/.test(href) ? ' download="ultra-stalker.m3u"' : ""}>Open in VLC <small>▶</small></a><button type="button" data-x="copy">Copy stream link</button>`;
     menu.innerHTML = h;
