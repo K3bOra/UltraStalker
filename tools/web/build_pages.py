@@ -24,7 +24,7 @@ from goldify import recolor_html  # noqa: E402  (black & gold theme)
 
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "web"
-WEB_VERSION = 23
+WEB_VERSION = 24
 PLUGIN_DIR = "usr/lib/enigma2/python/Plugins/Extensions/UltraStalker/"
 
 
@@ -125,6 +125,9 @@ def build_browse(src, release):
     h = sub(h, "</head>", STYLES
             + head_scripts(["coi.js", "i18n.js", "config.js", "hash.js", "engine.js", "player.js", "desktop.js"]) + "\n</head>")
     h = sub(h, "Palestinian identity • mobile browser", "Palestinian identity • from anywhere")
+    # Say what the provider answered instead of a generic line (e.g. "the server refused this login").
+    h = sub(h, ":'Provider categories are unavailable right now.')",
+            ":'Provider categories are unavailable right now'+(msg?' · '+msg:'.'))")
     h = sub(h, "Browse saved Portal, Xtream and M3U sources plus the receiver's Local library from your phone. "
                "Nothing here changes the channel or player on the receiver.",
             "Your Portal, Xtream and M3U sources from anywhere, on your phone or computer. "

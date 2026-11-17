@@ -934,7 +934,7 @@
     const label = () => {
       const o = sel.selectedOptions[0];
       if (!o || !o.value) {
-        btn.innerHTML = `<span class="dk-src-av dk-sp-av empty">＋</span><span class="dk-sp-t"><b>Choose a source</b><small>${[...sel.options].filter((x) => x.value).length} saved</small></span><i>${SVG.chev || "⌄"}</i>`;
+        btn.innerHTML = `<span class="dk-src-av dk-sp-av is-empty">＋</span><span class="dk-sp-t"><b>Choose a source</b><small>${[...sel.options].filter((x) => x.value).length} saved</small></span><i>${SVG.chev || "⌄"}</i>`;
         return;
       }
       const m = srcMeta(o);
@@ -1327,6 +1327,10 @@
     $("dkSub").textContent = sub;
     railsSync();
     liveSync();
+    // An empty category list: show the provider's own reason under it.
+    const empty = document.querySelector("#browseCategories>.empty");
+    const why = ($("browseStatus").textContent || "").split(" · ").slice(1).join(" · ");
+    if (empty && why && !empty.querySelector("small")) empty.insertAdjacentHTML("beforeend", `<small>${esc(why)}</small>`);
     document.body.classList.toggle(
       "dk-hero-top",
       DESK && (visible("seasonsStage") || visible("movieStage"))

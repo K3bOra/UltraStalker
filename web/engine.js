@@ -906,11 +906,11 @@
       this.cache = new Map();
       this.groups = {};
     }
-    async api(action, extra = {}, key) {
+    async api(action, extra = {}, key, ua) {
       const k = key || action + JSON.stringify(extra);
       if (this.cache.has(k)) return this.cache.get(k);
       const q = new URLSearchParams(Object.assign({ username: this.c.user, password: this.c.pass }, action ? { action } : {}, extra));
-      const res = await relayFetch(this.c.base + "/player_api.php?" + q.toString(), { "User-Agent": "VLC/3.0.20 LibVLC/3.0.20" }, { timeout: 45000 });
+      const res = await relayFetch(this.c.base + "/player_api.php?" + q.toString(), { "User-Agent": ua || this.ua || "VLC/3.0.20 LibVLC/3.0.20" }, { timeout: 45000 });
       const text = await res.text();
       const js = parseJsonText(text);
       if (js === undefined) throw new WebError(res.ok ? "Server sent an unreadable answer" : "Server answered " + res.status, 502);
@@ -923,16 +923,61 @@
       if (kind === "vod") return `${this.c.base}/movie/${u}/${p}/${sid}.${ext || "mp4"}`;
       return `${this.c.base}/series/${u}/${p}/${sid}.${ext || "mp4"}`;
     }
+    /* Some panels answer with an object keyed by id instead of a list. */
+    static asRows(js) {
+      if (Array.isArray(js)) return js.filter((r) => r && typeof r === "object");
+      if (js && typeof js === "object" && !js.user_info) {
+        const vals = Object.values(js).filter((r) => r && typeof r === "object" && !Array.isArray(r));
+        if (vals.length && vals.every((r) => "category_id" in r || "stream_id" in r || "series_id" in r)) return vals;
+      }
+      return [];
+    }
     async categories(media) {
       const action = { itv: "get_live_categories", vod: "get_vod_categories", series: "get_series_categories" }[media];
-      const rows = await this.api(action);
-      const out = (Array.isArray(rows) ? rows : []).map((r) => ({ id: str(r.category_id), title: str(r.category_name) || "Other" }));
+      let out = [], lastErr = null;
+      // Many panels only answer known player apps: try a few identities before giving up.
+      for (const ua of [this.ua || "VLC/3.0.20 LibVLC/3.0.20", "IPTVSmartersPlayer", "okhttp/4.9.3", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"]) {
+        try {
+          const js = await this.api(action, {}, action + "|" + ua, ua);
+          out = Xtream.asRows(js).map((r) => ({ id: str(r.category_id), title: str(r.category_name) || "Other" }));
+          if (out.length) {
+            this.ua = ua;
+            break;
+          }
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      if (!out.length) {
+        // Why is it empty? Ask for the account itself.
+        let info = null;
+        try {
+          info = await this.api("", {}, "account|" + (this.ua || ""));
+        } catch (e) {
+          lastErr = lastErr || e;
+        }
+        const ui = info && info.user_info;
+        if (ui && (String(ui.auth) === "0" || ui.auth === false)) throw new WebError("The server refused this login (wrong details, an expired line, or it does not accept web connections)", 401);
+        if (ui && ui.status && !/^active$/i.test(String(ui.status))) throw new WebError("This line is " + String(ui.status).toLowerCase() + (ui.exp_date ? " (ended " + new Date(Number(ui.exp_date) * 1000).toLocaleDateString() + ")" : ""), 403);
+        // Last way in: the same line's M3U playlist.
+        try {
+          const m = new M3U(Object.assign({}, this.p, { portal: xtreamPlaylist(this.c.base, this.c.user, this.c.pass), playlist_mode: "m3u" }));
+          const cats = await m.categories(media);
+          if (cats.length) {
+            CLIENTS.set(accountId(this.p), m);
+            return cats;
+          }
+        } catch (e) {
+          lastErr = lastErr || e;
+        }
+        if (!ui && lastErr) throw lastErr;
+      }
       this.groups[media] = new Map(out.map((r) => [r.id, r.title]));
       return out;
     }
     normalise(media, rows, cid) {
       const groups = this.groups[media] || new Map();
-      return (Array.isArray(rows) ? rows : []).filter((r) => r && typeof r === "object").map((row, pos) => {
+      return Xtream.asRows(rows).map((row, pos) => {
         const c = str(row.category_id || cid);
         const group = groups.get(c) || str(row.category_name) || "Other";
         if (media === "itv") {
