@@ -941,7 +941,9 @@
       (opts.length
         ? '<div class="dk-row-h"><h3>' + T("Portals <span>البورتالات</span>", "البورتالات <span>Portals</span>") + "</h3><span>" + opts.length + T(" saved · ", " محفوظة · ") + '<a href="sources.html#connectionPanel">＋ ' + T("Add", "إضافة") + "</a></span></div>" +
           `<div class="dk-ptabs" role="tablist"><button type="button" data-g="portal" class="${group === "portal" ? "on" : ""}"><img src="ui/gold/live.png" alt=""><b>${T("Stalker Portal", "بورتال ستالكر")}</b><i>${counts.portal}</i></button>` +
-          `<button type="button" data-g="xtream" class="${group === "xtream" ? "on" : ""}"><img src="ui/gold/movies.png" alt=""><b>${T("Xtream / M3U", "Xtream / M3U")}</b><i>${counts.xtream}</i></button></div>` +
+          `<button type="button" data-g="xtream" class="${group === "xtream" ? "on" : ""}"><img src="ui/gold/movies.png" alt=""><b>${T("Xtream / M3U", "Xtream / M3U")}</b><i>${counts.xtream}</i></button>` +
+          (opts.length > 6 ? `<label class="dk-find dk-src-find">${SVG.search}<input type="search" placeholder="${T("Find a portal", "دوّر على بورتال")}" autocomplete="off"></label>` : "") +
+          "</div>" +
           `<div class="dk-sources" data-show="${group}">` +
           opts
             .map((o) => {
@@ -952,7 +954,7 @@
                 <span class="dk-src-art"><img src="${icons[k] || icons.portal}" alt=""></span>
                 <span class="dk-src-k">${kindsAr[k] || kinds[k] || "Portal"}</span>
                 <b>${safe(o.textContent)}</b>
-                <span class="dk-src-host" dir="ltr">${safe(h.host)}</span>
+                <span class="dk-src-host" dir="ltr" data-id="${safe(h.mac)}">${safe(h.host)}</span>
                 ${h.mac ? `<span class="dk-src-id" dir="ltr">${safe(h.mac)}</span>` : ""}
                 <span class="dk-src-go">${T("Open portal <i>›</i>", "افتح البورتال <i>‹</i>")}</span><span class="dk-src-chev">${AR ? "‹" : "›"}</span></button>`;
             })
@@ -963,6 +965,13 @@
           '<div><a class="dk-btn" href="sources.html#connectionPanel">＋ ' + T("Add Connection", "إضافة مصدر") + '</a><a class="dk-btn ghost" href="sources.html#backupPanel">⇩ ' + T("Load receiver backup", "ارفع باك اب الرسيفر") + "</a></div></div>");
     const hero = box.querySelector(".dk-hero");
     if (hero) hero.appendChild(langSwitch());
+    box.classList.toggle("dk-compact", opts.length > 0);
+    const find = box.querySelector(".dk-src-find input");
+    if (find)
+      find.oninput = () => {
+        const q = plain(find.value).toLowerCase();
+        box.querySelectorAll(".dk-src").forEach((c) => (c.hidden = !!q && !c.textContent.toLowerCase().includes(q)));
+      };
     box.onclick = (e) => {
       const tab = e.target.closest(".dk-ptabs button[data-g]");
       if (tab) {

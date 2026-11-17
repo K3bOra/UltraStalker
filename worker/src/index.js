@@ -392,7 +392,8 @@ async function play(request, ticket, env) {
   const cache = d.mode === "stalker" ? linkCache(ticket, d) : null;
   let res, final, target, problem = "";
   for (let round = 0; round < 2; round++) {
-    const reused = cache && round === 0 ? cache.get() : "";
+    // ?fresh=… : the player is retrying after a failed attempt; never hand it the used link.
+    const reused = cache && round === 0 && !new URL(request.url).searchParams.has("fresh") ? cache.get() : "";
     try {
       target = d.mode === "stalker" ? reused || (await stalkerLink(d, env)) : d.u;
     } catch (e) {

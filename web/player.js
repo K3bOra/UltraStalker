@@ -40,6 +40,7 @@
 .usp-msg b{font-size:18px;color:#fff6dc}
 .usp-msg .ar{direction:rtl;font-size:15px;color:#e5cfa4}
 .usp-msg small{color:#cdb98a;font-size:12px;max-width:640px}
+.usp-diag{max-width:640px;padding:10px 14px;border-radius:12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,226,150,.14);font-size:11.5px;line-height:1.6;color:#bfb08e;text-align:left;font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr}
 .usp-acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .usp-msg .loader{margin-right:8px}
 .usp-spin{width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,226,150,.15);border-top-color:#f0c45a;animation:uspSpin .9s linear infinite;filter:drop-shadow(0 0 10px rgba(240,196,90,.6))}
@@ -98,6 +99,7 @@
 .usp-note .usp-btn{height:32px;margin-inline-start:auto}
 @media(max-width:760px){.usp{padding:0}.usp-card{border-radius:0;border-left:0;border-right:0}.usp-stage{max-height:none}.usp-head .usp-btn.vlc{display:none}.usp-vol input{display:none}.usp-ic{width:38px;height:38px}.usp-bar{padding:36px 8px 8px}.usp-ic.pip{display:none}}
 .player-option.web{border-color:rgba(201,155,48,.5)!important}
+body.usp-direct #playerSheet{display:none!important}
 .usp.docked{position:absolute;inset:0;z-index:2;padding:0;background:#000;backdrop-filter:none;border-radius:inherit;overflow:hidden}
 .usp.docked .usp-card{width:100%;height:100%;border:0;border-radius:inherit;background:#000;box-shadow:none;display:flex;flex-direction:column}
 .usp.docked .usp-head{display:none}
@@ -608,9 +610,58 @@
     if (!current || !current._plan) return false;
     const n = (current._step || 0) + 1;
     if (n >= current._plan.length) return false;
+    note_step(why);
     if (current._plan[n] === "mute" && info && badPart("video")) return false;
     restart(Object.assign({}, current, { _step: n, _why: why || "" }));
     return true;
+  }
+  function note_step(why) {
+    if (!current) return;
+    current._log = (current._log || []).concat(STEP_LABEL[step()] + ": " + describe(why));
+  }
+  function describe(why) {
+    const w = String(why || "").trim();
+    const codecs = info ? [info.videoCodec, info.audioCodec].filter(Boolean).map(codecName).join(" + ") : "";
+    if (w === "codec") return "can't decode " + (unsupported() || codecs || "this format");
+    if (w === "timeout") return "no picture after " + Math.round(START_TIMEOUT / 1000) + "s" + (codecs ? " (" + codecs + ")" : "");
+    if (w === "format") return "unsupported format" + (codecs ? " (" + codecs + ")" : "");
+    if (w === "media") return "decoder error" + (codecs ? " (" + codecs + ")" : "");
+    return w.replace(/\[[^\]]*\]\s*/g, "").replace(/,\s*$/, "").slice(0, 90) || "failed";
+  }
+  /* What did the stream server actually send? (status, type, first bytes) */
+  async function probe(url) {
+    try {
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 8000);
+      const r = await fetch(url, { headers: { Range: "bytes=0-2047" }, cache: "no-store", signal: ctl.signal });
+      const type = (r.headers.get("content-type") || "").split(";")[0];
+      let kind = "";
+      if (r.ok && r.body) {
+        const rd = r.body.getReader();
+        let got = new Uint8Array(0);
+        while (got.length < 400) {
+          const { value, done } = await rd.read();
+          if (done || !value) break;
+          const m = new Uint8Array(got.length + value.length);
+          m.set(got);
+          m.set(value, got.length);
+          got = m;
+        }
+        ctl.abort();
+        const txt = new TextDecoder().decode(got.slice(0, 60)).trim();
+        if (!got.length) kind = "empty reply";
+        else if (got[0] === 0x47 && (got.length < 189 || got[188] === 0x47)) kind = "MPEG-TS data";
+        else if (/^#EXTM3U/.test(txt)) kind = "HLS playlist";
+        else if (/ftyp/.test(new TextDecoder().decode(got.slice(4, 8)))) kind = "MP4 data";
+        else if (/^</.test(txt)) kind = "a web page, not video";
+        else if (got[0] === 0x1a && got[1] === 0x45) kind = "MKV data";
+        else kind = "unknown data (" + [...got.slice(0, 4)].map((b) => b.toString(16).padStart(2, "0")).join(" ") + ")";
+      } else if (!r.ok) kind = ((await r.text().catch(() => "")) || "").slice(0, 120);
+      clearTimeout(t);
+      return "Server: HTTP " + r.status + (type ? " · " + type : "") + (kind ? " · " + kind : "");
+    } catch (e) {
+      return "Server: no answer (" + String((e && e.name) || e).slice(0, 40) + ")";
+    }
   }
   /* The stream dropped: open it again the same way (like VLC's http-reconnect). */
   function reconnect(why) {
@@ -655,7 +706,7 @@
     if (started && !isEngine() && video && video.readyState >= 2 && !video.paused && !video.error) return;
     clearTimeout(startTimer);
     const url = String(current.stream || current.url || "");
-    let en = "This stream could not play inside the browser.", ar = "الستريم ده مش راضي يشتغل جوه المتصفح.", extra = "";
+    let en = "This stream could not play inside the browser.", ar = "الستريم ده مش راضي يشتغل جوه المتصفح.";
     const bad = unsupported();
     if (detail === "timeout") {
       en = "The stream timed out or is not supported.";
@@ -666,24 +717,26 @@
     } else if (bad && engineMode() === "browser") {
       en = "This stream uses " + bad + ". Switch the player engine to Auto or Ultra to play it here.";
       ar = "الستريم ده بصيغة " + bad + ". خلّي محرّك التشغيل Auto أو Ultra من الإعدادات وهيشتغل هنا.";
-    } else if (/\/play\//.test(url)) {
-      try {
-        const r = await fetch(url, { headers: { Range: "bytes=0-0" }, cache: "no-store" });
-        if (my !== alive) return;
-        if (!r.ok) extra = (await r.text()).slice(0, 180) || "Server answered " + r.status;
-      } catch (_) {}
-    } else if (detail && detail !== "format") extra = String(detail).slice(0, 160);
+    }
+    const log = (current._log || []).concat(STEP_LABEL[step()] + ": " + describe(detail));
+    show('<div class="usp-spin"></div><small>Checking the stream…</small>');
+    const server = /^https?:/i.test(url) ? await probe(/\/play\/[^?]+$/.test(url) ? url + "?fresh=probe" + Date.now().toString(36) : url) : "";
     if (my !== alive) return;
+    if (/web page|empty reply|HTTP 4\d\d|HTTP 5\d\d|no answer/.test(server)) {
+      en = "The stream server didn't send video to the website (it may only allow its own apps or one connection at a time).";
+      ar = "سيرفر القناة مبعتش فيديو للموقع. ممكن يكون مش بيسمح غير لأجهزته أو لاتصال واحد في نفس الوقت.";
+    }
     const href = vlcHref(current);
     show(
-      `<b>Can't play here</b><div class="ar">${esc(ar)}</div><small>${esc(en)}${extra ? "<br>" + esc(extra) : ""}</small>` +
+      `<b>Can't play here</b><div class="ar">${esc(ar)}</div><small>${esc(en)}</small>` +
+        `<div class="usp-diag">${log.map((l) => "<div>" + esc(l) + "</div>").join("")}${server ? "<div>" + esc(server) + "</div>" : ""}</div>` +
         `<div class="usp-acts"><button type="button" class="usp-btn" data-retry>↻ Try again · جرّب تاني</button><a class="usp-btn" href="${esc(href)}"${/^data:/.test(href) ? ' download="ultra-stalker.m3u"' : ""}>▶ VLC</a><button type="button" class="usp-btn" data-copy>Copy link · انسخ الرابط</button></div>`,
       true,
     );
     const copy = msg.querySelector("[data-copy]");
     if (copy) copy.onclick = () => navigator.clipboard && navigator.clipboard.writeText(url).then(() => (copy.textContent = "Copied · اتنسخ"));
     const again = msg.querySelector("[data-retry]");
-    if (again) again.onclick = () => restart(Object.assign({}, current, { _plan: null, _step: 0, _reconnects: 0 }));
+    if (again) again.onclick = () => restart(Object.assign({}, current, { _plan: null, _step: 0, _reconnects: 0, _log: [] }));
   }
   function stopEngine() {
     const e = eng;
@@ -732,6 +785,15 @@
   function close() {
     stop();
     current = null;
+    if (directWatch) directWatch.disconnect();
+    if (document.body.classList.contains("usp-direct")) {
+      document.body.classList.remove("usp-direct");
+      const sheet = document.getElementById("playerSheet");
+      if (sheet) {
+        sheet.classList.add("hidden");
+        sheet.setAttribute("aria-hidden", "true");
+      }
+    }
     clearInterval(tick);
     tick = 0;
     if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
@@ -765,7 +827,13 @@
     if (my !== alive) return;
     A.setFit(store.get("us-fit", "fit") === "fill" ? "fill" : "fit");
     A.applyVol();
-    await eng.play();
+    try {
+      await eng.play();
+    } catch (e) {
+      if (my !== alive) return;
+      if (e && e.name === "NotAllowedError") return askTap(() => eng && eng.play().then(() => eng.resume && eng.resume()));
+      throw e;
+    }
     if (my !== alive) return;
     if (store.get("us-subs", "1") === "0") {
       try {
@@ -830,16 +898,27 @@
     } else video.src = src;
     const p = video.play();
     if (p && p.catch)
-      p.catch(() => {
-        if (my !== alive || started) return;
+      p.catch((e) => {
+        if (my !== alive || started || !e || e.name !== "NotAllowedError") return;
         // Autoplay with sound refused: start muted, one tap brings the sound back.
         video.muted = true;
-        video.play().catch(() => my === alive && !started && show('<button type="button" class="usp-ic pp" style="pointer-events:auto;width:64px;height:64px">' + I.play + "</button>"));
-        const b = msg.querySelector(".pp");
-        if (b) b.onclick = () => video.play();
+        video.play().catch(() => my === alive && !started && askTap(() => video.play()));
       });
   }
 
+  /* The browser refused to start playback by itself (autoplay blocked): that is not a
+     broken stream, so stop the clock and ask for one tap. */
+  function askTap(go) {
+    clearTimeout(startTimer);
+    show('<button type="button" class="usp-ic pp" style="pointer-events:auto;width:72px;height:72px" aria-label="Play">' + I.play + '</button><small>Tap to play · دوس للتشغيل</small>');
+    const b = msg.querySelector(".pp");
+    if (b)
+      b.onclick = (e) => {
+        e.stopPropagation();
+        show('<div class="usp-spin"></div>');
+        Promise.resolve(go()).catch(() => {});
+      };
+  }
   /* opts.host: play inside that element (the Live TV screen) instead of the pop-up.
      opts.key: a stable id for remembering how this stream plays.
      opts.onPrev / opts.onNext: channel zapping for live. */
@@ -862,6 +941,7 @@
     if (!ticket._plan) {
       ticket._plan = planFor(ticket, opts.key);
       ticket._step = 0;
+      ticket._log = [];
     }
     current = ticket;
     const how = step();
@@ -881,8 +961,17 @@
     refresh();
     if (!tick) tick = setInterval(watchdog, 1000);
     // A stream that never shows a picture: try the next way, then explain.
-    startTimer = setTimeout(() => my === alive && !started && (escalate("timeout") || fail("timeout")), how === "native" ? START_TIMEOUT : START_TIMEOUT + 8000);
-    const src = (/^https:/i.test(url) && !Object.keys(headers).length) || ticket.ticket ? url : viaRelay(url, headers);
+    startTimer = setTimeout(() => {
+      if (my !== alive || started) return;
+      if (how !== "engine" && how !== "soft" && video.readyState >= 2 && video.paused) return askTap(() => video.play());
+      escalate("timeout") || fail("timeout");
+    }, how === "native" ? START_TIMEOUT : START_TIMEOUT + 8000);
+    let src = (/^https:/i.test(url) && !Object.keys(headers).length) || ticket.ticket ? url : viaRelay(url, headers);
+    // Retries ask the relay for a fresh portal link (live links usually work once).
+    if ((ticket._step || ticket._reconnects) && /\/play\/[^?]+$/.test(src)) src += "?fresh=" + Date.now().toString(36);
+    // Give the previous connection a moment to close: many lines allow one stream at a time.
+    if (o._again && ticket.live) await new Promise((r) => setTimeout(r, 700));
+    if (my !== alive) return;
     try {
       if (how === "engine" || how === "soft") await startEngine(ticket, src, my, how === "soft");
       else await startNative(ticket, src, my);
@@ -909,13 +998,75 @@
       play(ticket);
     };
   }
+  /* Computer: Play starts the stream in the page straight away (no chooser sheet).
+     pending() runs when the page starts preparing a stream, offer() when it is ready. */
+  const direct = () => document.body.classList.contains("desk");
+  let directWatch = null;
   function pending() {
     const a = document.getElementById("playerWeb");
+    if (a) {
+      a.classList.add("unavailable");
+      a.setAttribute("aria-disabled", "true");
+      a.removeAttribute("href");
+      a.onclick = null;
+    }
+    if (!direct()) return;
+    document.body.classList.add("usp-direct");
+    build();
+    stop();
+    current = { title: "Preparing stream…", _plan: ["native"], _step: 0 };
+    opts = {};
+    if (box.classList.contains("docked") || box.parentNode !== document.body) {
+      box.classList.remove("docked");
+      document.body.appendChild(box);
+    }
+    title.textContent = "Preparing stream…";
+    sub.textContent = "";
+    box.classList.remove("hidden");
+    document.documentElement.style.overflow = "hidden";
+    show('<div class="usp-spin"></div>');
+    const subEl = document.getElementById("playerSheetSub");
+    if (directWatch) directWatch.disconnect();
+    if (subEl) {
+      const check = () => {
+        const t = subEl.textContent || "";
+        if (/preparing stream|choose a player/i.test(t)) {
+          const name = t.split(" • ")[0];
+          if (name && current && !current.stream) title.textContent = name;
+          return;
+        }
+        // The page could not prepare the stream: say why in the player.
+        directWatch.disconnect();
+        if (current && !current.stream) show(`<b>Can't open this</b><small>${esc(t)}</small>`, true);
+      };
+      directWatch = new MutationObserver(check);
+      directWatch.observe(subEl, { childList: true, characterData: true, subtree: true });
+    }
+  }
+  function offer(ticket) {
+    const a = document.getElementById("playerWeb");
+    if (direct()) {
+      if (directWatch) directWatch.disconnect();
+      const sheet = document.getElementById("playerSheet");
+      if (sheet) {
+        sheet.classList.add("hidden");
+        sheet.setAttribute("aria-hidden", "true");
+      }
+      if (box && !box.classList.contains("hidden") && current && !current.stream) play(ticket);
+    }
     if (!a) return;
-    a.classList.add("unavailable");
-    a.setAttribute("aria-disabled", "true");
-    a.removeAttribute("href");
-    a.onclick = null;
+    a.classList.remove("unavailable");
+    a.removeAttribute("aria-disabled");
+    a.href = "#play";
+    a.onclick = (e) => {
+      e.preventDefault();
+      const sheet = document.getElementById("playerSheet");
+      if (sheet) {
+        sheet.classList.add("hidden");
+        sheet.setAttribute("aria-hidden", "true");
+      }
+      play(ticket);
+    };
   }
   function fullscreen() {
     if (!box) return;
