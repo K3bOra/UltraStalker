@@ -1387,7 +1387,7 @@ body.usp-direct #playerSheet{display:none!important}
       if (my !== alive || started) return;
       if (how === "native" && video.readyState >= 2 && video.paused) return askTap(() => video.play());
       escalate("timeout") || fail("timeout");
-    }, how === "native" ? START_TIMEOUT : START_TIMEOUT + 8000);
+    }, how === "native" ? START_TIMEOUT : how === "vlc" ? START_TIMEOUT + 35000 : START_TIMEOUT + 8000);
     let src = (/^https:/i.test(url) && !Object.keys(headers).length) || ticket.ticket ? url : viaRelay(url, headers);
     // Retries ask the relay for a fresh portal link (live links usually work once).
     if ((ticket._step || ticket._reconnects) && /\/play\/[^?]+$/.test(src)) src += "?fresh=" + Date.now().toString(36);
