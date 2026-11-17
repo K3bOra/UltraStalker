@@ -31,6 +31,16 @@
 .usp-msg .loader{margin-right:8px}
 @media(max-width:760px){.usp{padding:0}.usp-card{border-radius:0;border-left:0;border-right:0}.usp-stage{max-height:none}.usp-head .usp-btn.vlc{display:none}}
 .player-option.web{border-color:rgba(201,155,48,.5)!important}
+.usp-engine{position:absolute;inset:0;z-index:1;background:#000}
+.usp-engine canvas,.usp-engine video{width:100%!important;height:100%!important;object-fit:contain}
+.usp-ebar{position:absolute;left:0;right:0;bottom:0;z-index:4;display:none;align-items:center;gap:12px;padding:30px 16px 12px;background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,0));color:#f2e9d6;font-size:12.5px;opacity:0;transition:opacity .25s}
+.usp-stage:hover .usp-ebar,.usp-ebar:focus-within{opacity:1}
+.usp-ebar.on{display:flex}
+.usp-ebar button{appearance:none;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,232,170,.25);background:rgba(20,18,14,.7);color:#f6e7b8;cursor:pointer;font-size:14px;display:grid;place-items:center}
+.usp-ebar input[type=range]{accent-color:#d4af37}
+.usp-ebar .seek{flex:1}
+.usp-ebar .vol{width:90px}
+.usp-ebar .tag{padding:3px 9px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.08em;color:#1a1306;background:linear-gradient(135deg,#fbeeb5,#d9b44a 45%,#a87b22)}
 .usp-note{position:absolute;left:14px;right:14px;bottom:62px;z-index:3;display:none;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-radius:14px;background:rgba(10,9,7,.88);border:1px solid rgba(212,175,55,.35);color:#eadfc8;font-size:12.5px;line-height:1.5}
 .usp-note .ar{direction:rtl;flex:1 1 100%;color:#c9bfa9}
 .usp-note .usp-btn{height:32px;margin-inline-start:auto}
@@ -128,7 +138,12 @@
       if (video.currentTime < lastT) lastT = video.currentTime;
       if (!msg.classList.contains("err")) lastT = video.currentTime;
     });
-    video.addEventListener("error", () => fail(video.error && video.error.code === 4 ? "format" : ""));
+    video.addEventListener("error", () => {
+      if (current && current._engine) return;
+      const fmt = video.error && (video.error.code === 4 || video.error.code === 3);
+      if (fmt && escalate()) return;
+      fail(fmt ? "format" : "");
+    });
   }
   function note(en, ar) {
     if (!box) return;
@@ -148,6 +163,102 @@
     msg.classList.toggle("err", !!err);
     msg.style.display = html ? "flex" : "none";
   }
+  /* "Ultra engine": a full software player (FFmpeg decoders in WebAssembly, like VLC)
+     for streams the browser can't play itself — AC-3/E-AC-3/MP2 sound, HEVC, MPEG-2,
+     MKV. It loads only when needed. */
+  const ENGINE_WASM = "https://cdn.jsdelivr.net/gh/zhaohappy/libmedia@1.3.1/dist";
+  let eng = null, engBox = null, ebar = null, ebarTimer = 0;
+  function hostOpts() {
+    return box && box.classList.contains("docked") ? { host: box.parentNode } : undefined;
+  }
+  function escalate() {
+    if (!current) return false;
+    if (!current._engineTried) {
+      play(Object.assign({}, current, { _engine: true, _engineTried: true }), hostOpts());
+      return true;
+    }
+    if (current.live && !current._noAudio && !(info && badPart("video"))) {
+      play(Object.assign({}, current, { _engine: false, _noAudio: true }), hostOpts());
+      return true;
+    }
+    return false;
+  }
+  function fmtClock(ms) {
+    const t = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
+    return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(sec).padStart(2, "0");
+  }
+  function engineBar(live) {
+    if (!ebar) {
+      ebar = document.createElement("div");
+      ebar.className = "usp-ebar";
+      ebar.innerHTML = '<button type="button" class="pp" aria-label="Play / pause">❚❚</button><span class="t"></span><input class="seek" type="range" min="0" max="1000" value="0"><button type="button" class="mute" aria-label="Sound">🔊</button><input class="vol" type="range" min="0" max="100" value="100"><span class="tag">ULTRA ENGINE</span>';
+      box.querySelector(".usp-stage").appendChild(ebar);
+      ebar.querySelector(".pp").onclick = async () => {
+        if (!eng) return;
+        const st = eng.getStatus();
+        if (st === 8) {
+          await eng.play().catch(() => {});
+          ebar.querySelector(".pp").textContent = "❚❚";
+        } else {
+          await eng.pause().catch(() => {});
+          ebar.querySelector(".pp").textContent = "▶";
+        }
+      };
+      ebar.querySelector(".mute").onclick = () => {
+        if (!eng) return;
+        const v = eng.getVolume() > 0 ? 0 : (+ebar.querySelector(".vol").value || 100) / 100;
+        eng.setVolume(v);
+        ebar.querySelector(".mute").textContent = v ? "🔊" : "🔇";
+      };
+      ebar.querySelector(".vol").oninput = (e) => eng && eng.setVolume(+e.target.value / 100);
+      ebar.querySelector(".seek").onchange = (e) => {
+        if (!eng) return;
+        const d = Number(eng.getDuration() || 0);
+        if (d > 0) eng.seek(BigInt(Math.floor((+e.target.value / 1000) * d))).catch(() => {});
+      };
+    }
+    ebar.querySelector(".seek").style.display = live ? "none" : "";
+    ebar.querySelector(".pp").style.display = live ? "none" : "";
+    ebar.classList.add("on");
+    clearInterval(ebarTimer);
+    ebarTimer = setInterval(() => {
+      if (!eng || live) return;
+      const d = Number(eng.getDuration() || 0), c = Number(eng.currentTime || 0);
+      ebar.querySelector(".t").textContent = fmtClock(c) + (d ? " / " + fmtClock(d) : "");
+      if (d && document.activeElement !== ebar.querySelector(".seek")) ebar.querySelector(".seek").value = Math.round((c / d) * 1000);
+    }, 500);
+  }
+  async function startEngine(ticket, src, my) {
+    await lib(HERE + "vendor/libmedia/avplayer.js");
+    if (my !== alive) return;
+    const AV = window.AVPlayer && (window.AVPlayer.default || window.AVPlayer);
+    if (!AV) throw new Error("engine unavailable");
+    engBox = document.createElement("div");
+    engBox.className = "usp-engine";
+    box.querySelector(".usp-stage").insertBefore(engBox, msg);
+    video.style.visibility = "hidden";
+    eng = new AV({ container: engBox, wasmBaseUrl: ENGINE_WASM, isLive: !!ticket.live, enableHardware: true, enableWebCodecs: true, enableWorker: true, lowLatency: !!ticket.live });
+    eng.on("error", (e) => my === alive && !escalate() && fail(String((e && e.message) || e)));
+    await eng.load(src, { isLive: !!ticket.live });
+    if (my !== alive) return;
+    await eng.play();
+    if (my !== alive) return;
+    started = true;
+    show("");
+    engineBar(!!ticket.live);
+  }
+  function stopEngine() {
+    clearInterval(ebarTimer);
+    if (ebar) ebar.classList.remove("on");
+    const e = eng;
+    eng = null;
+    if (e) e.destroy().catch(() => {});
+    if (engBox) engBox.remove();
+    engBox = null;
+    if (video) video.style.visibility = "";
+  }
+
   function badPart(kind) {
     if (!info || !window.MediaSource || !MediaSource.isTypeSupported) return false;
     const c = kind === "audio" ? info.audioCodec : info.videoCodec;
@@ -222,6 +333,7 @@
       }
     } catch (_) {}
     hls = ts = null;
+    stopEngine();
     info = null;
     const n = box && box.querySelector(".usp-note");
     if (n) n.style.display = "none";
@@ -271,6 +383,15 @@
     const isHls = /\.m3u8$/.test(path) || /[?&](extension|type|output)=(m3u8|hls)/i.test(url);
     const isTs = !isHls && (/\.ts$/.test(path) || /[?&](extension|output)=ts/i.test(url) || (ticket.live && !/\.(mp4|mkv|m4v|mov|webm|avi)$/.test(path)));
     const src = (/^https:/i.test(url) && !Object.keys(headers).length) || ticket.ticket ? url : viaRelay(url, headers);
+    if (ticket._engine) {
+      show('<span class="loader"></span>Opening with Ultra engine…');
+      try {
+        await startEngine(ticket, src, my);
+      } catch (e) {
+        if (my === alive && !escalate()) fail(String((e && e.message) || e));
+      }
+      return;
+    }
     try {
       if (isHls) {
         if (video.canPlayType("application/vnd.apple.mpegurl") && !window.MediaSource) video.src = src;
@@ -282,7 +403,11 @@
             const l = d && d.levels && d.levels[0];
             if (l) info = { videoCodec: l.videoCodec, audioCodec: l.audioCodec };
           });
-          hls.on(window.Hls.Events.ERROR, (_, d) => d && d.fatal && fail(d.details));
+          hls.on(window.Hls.Events.ERROR, (_, d) => {
+            if (!d || !d.fatal || my !== alive) return;
+            if (d.type === "mediaError" && escalate()) return;
+            fail(d.details);
+          });
           hls.loadSource(src);
           hls.attachMedia(video);
         }
@@ -297,18 +422,18 @@
           ts = M.createPlayer(ds, { enableStashBuffer: true, stashInitialSize: 384 * 1024, liveBufferLatencyChasing: false, lazyLoad: !ticket.live });
           ts.on(M.Events.MEDIA_INFO, (mi) => {
             info = { videoCodec: mi && mi.videoCodec, audioCodec: ticket._noAudio ? "" : mi && mi.audioCodec, hasVideo: mi && mi.hasVideo };
-            if (badPart("audio") && retryWithoutSound()) return;
+            if (unsupported() && escalate()) return;
             if (unsupported()) fail();
           });
           ts.on(M.Events.ERROR, (type, detail) => {
             if (my !== alive) return;
-            if (/MSE|Media/i.test(String(detail || type)) && retryWithoutSound()) return;
+            if (/MSE|Media/i.test(String(detail || type)) && escalate()) return;
             fail(String(detail || type));
           });
           ts.attachMediaElement(video);
           ts.load();
           // Data arrives but nothing can be decoded (MPEG-2 video has no browser decoder): say so.
-          setTimeout(() => my === alive && !started && video.readyState < 2 && fail(info ? "format" : ""), 20000);
+          setTimeout(() => my === alive && !started && video.readyState < 2 && !escalate() && fail(info ? "format" : ""), 20000);
         }
       } else video.src = src;
       const p = video.play();

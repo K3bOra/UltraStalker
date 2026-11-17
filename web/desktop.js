@@ -526,9 +526,18 @@
     const on = DESK && !!$("browseAccount").value && (media === "vod" || media === "series") && visible("categoryStage");
     document.body.classList.toggle("dk-rails-on", on);
     if (!on) return;
+    const label = media === "vod" ? "Movies" : "Series";
+    const ready = / categories • (Movies|Series)$/.test($("browseStatus").textContent || "");
+    const box0 = $("dkRails");
+    if (!ready || !$("browseStatus").textContent.endsWith("• " + label)) {
+      // The other section's categories are still on screen: hide the old rails until ours arrive.
+      if (box0 && rails.media !== media) box0.classList.add("dk-rails-wait");
+      return;
+    }
     const cats = [...document.querySelectorAll("#browseCategories .category")];
     if (!cats.length) return;
-    const key = $("browseAccount").value + "|" + media + "|" + cats.length + "|" + (cats[0].dataset.categoryId || "");
+    const key = $("browseAccount").value + "|" + media + "|" + cats.map((c) => c.dataset.categoryId || "*").join(",");
+    if (box0) box0.classList.remove("dk-rails-wait");
     let box = $("dkRails");
     if (key === rails.key && box) return;
     rails.key = key;
@@ -621,16 +630,27 @@
     const media = (document.querySelector(".type.active") || {}).dataset?.media || "itv";
     const account = $("browseAccount").value;
     if (!account || media !== "itv") return;
+    // Wait until the Live categories themselves are on screen (not the previous section's).
+    if (!/ categories • Live$/.test($("browseStatus").textContent || "")) return;
     const cats = [...document.querySelectorAll("#browseCategories .category")];
-    if (visible("categoryStage") && cats.length && live.auto !== account + "|" + cats.length) {
-      live.auto = account + "|" + cats.length;
-      let want = "";
-      try {
-        want = localStorage.getItem("us-web-livecat:" + account) || "";
-      } catch (_) {}
-      const el = cats.find((c) => (c.dataset.categoryId || "*") === want) || cats[0];
-      // eslint-disable-next-line no-undef
-      if (el && typeof openCategory === "function") openCategory(railRow(el), false);
+    // On the computer Live never shows the bare category grid: open a category straight away
+    // (the remembered one). Debounced, and re-checked, because the page may reload its
+    // categories right after (history restore) which would cancel an earlier open.
+    if (visible("categoryStage") && cats.length) {
+      clearTimeout(live.autoT);
+      live.autoT = setTimeout(() => {
+        const media2 = (document.querySelector(".type.active") || {}).dataset?.media || "itv";
+        if (media2 !== "itv" || !visible("categoryStage") || $("browseAccount").value !== account) return;
+        const now = [...document.querySelectorAll("#browseCategories .category")];
+        if (!now.length) return;
+        let want = "";
+        try {
+          want = localStorage.getItem("us-web-livecat:" + account) || "";
+        } catch (_) {}
+        const el = now.find((c) => (c.dataset.categoryId || "*") === want) || now[0];
+        // eslint-disable-next-line no-undef
+        if (el && typeof openCategory === "function") openCategory(railRow(el), false);
+      }, 180);
     }
     tvCats(cats);
   }
@@ -640,7 +660,7 @@
     const account = $("browseAccount").value;
     // eslint-disable-next-line no-undef
     const cur = typeof activeCategory !== "undefined" && activeCategory ? String(activeCategory.id) : "";
-    const sig = account + "|" + cats.length;
+    const sig = account + "|" + cats.map((c) => c.dataset.categoryId || "*").join(",");
     if (col.dataset.sig !== sig) {
       col.dataset.sig = sig;
       col.innerHTML =
@@ -745,6 +765,13 @@
   function build() {
     BROWSE = !!document.getElementById("browseAccount");
     document.body.classList.add("app", DESK ? "desk" : "ph", BROWSE ? "desk-browse" : "desk-sources");
+    if (!document.getElementById("usAura")) {
+      const aura = document.createElement("div");
+      aura.id = "usAura";
+      aura.setAttribute("aria-hidden", "true");
+      aura.innerHTML = '<i class="a1"></i><i class="a2"></i><i class="a3"></i><i class="a4"></i><b class="rays"></b><span class="dust d1"></span><span class="dust d2"></span>';
+      document.body.prepend(aura);
+    }
     const side = document.createElement("aside");
     side.className = "dk-side";
     side.innerHTML =
@@ -1156,6 +1183,7 @@
       sync();
     }).observe($("browseAccount"), { childList: true });
     $("browseAccount").addEventListener("change", sync);
+    $("browseStatus") && new MutationObserver(sync).observe($("browseStatus"), { childList: true, characterData: true, subtree: true });
     $("itemsTitle") && new MutationObserver(sync).observe($("itemsTitle"), { childList: true, characterData: true, subtree: true });
     ["seasonsStage", "movieStage"].forEach((id) => {
       const el = $(id);
