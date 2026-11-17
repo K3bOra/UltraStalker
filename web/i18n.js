@@ -1,4 +1,4 @@
-/* Ultra Stalker Web — Arabic / English.
+/* Ultra Stalker Web — language.
 
    The page is built in English. In Arabic (the default) every text the page
    shows is translated as it appears: fixed labels by exact match, counters and
@@ -6,9 +6,11 @@
 (function () {
   "use strict";
   const KEY = "us-web-lang";
-  let lang = "ar";
+  // The site is in English (Arabic text still shows in Cairo). The Arabic
+  // translation below is kept for later but is switched off.
+  const lang = "en";
   try {
-    lang = localStorage.getItem(KEY) === "en" ? "en" : "ar";
+    localStorage.removeItem(KEY);
   } catch (_) {}
   const AR = lang === "ar";
   document.documentElement.lang = lang;

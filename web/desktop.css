@@ -362,3 +362,100 @@ body.app #seriesSeasonStack .series-season-btn.dk-season.season-selected .dk-sea
 body.app #seriesSeasonStack .series-season-btn.dk-season.season-selected .dk-season-year{color:#f4e7ca}
 body.app #seriesSeasonStack .series-season-btn.dk-season{height:auto!important;max-height:none!important;aspect-ratio:auto!important}
 body.app #seriesSeasonStack{flex-direction:row!important;align-items:flex-start!important}
+
+/* ======================================================================
+   Computer, v2: a desktop app, not a phone page.
+   Full-height menu on the edge (right in Arabic, left in English), a sticky
+   top bar, content without boxes, poster rails, a 3-column Live TV.
+   ====================================================================== */
+body.desk{--side:272px;--pad:40px}
+body.desk .wrap{margin:0 var(--side) 0 0!important;padding:0 var(--pad) 60px!important}
+html.lang-en body.desk .wrap{margin:0 0 0 var(--side)!important}
+body.desk .dk-side{top:0!important;bottom:0!important;right:0!important;left:auto!important;width:var(--side)!important;border-radius:0!important;border:0!important;border-left:1px solid rgba(255,232,170,.12)!important;padding:26px 18px 18px!important;background:linear-gradient(180deg,#100e0b,#080706 60%,#0b0908)!important;box-shadow:-30px 0 60px -30px rgba(0,0,0,.9)!important}
+html.lang-en body.desk .dk-side{right:auto!important;left:0!important;border-left:0!important;border-right:1px solid rgba(255,232,170,.12)!important;box-shadow:30px 0 60px -30px rgba(0,0,0,.9)!important}
+body.desk .dk-side:before{content:"";position:absolute;inset:0 0 auto 0;height:220px;background:radial-gradient(240px 160px at 50% 0%,rgba(212,175,55,.14),transparent 70%);pointer-events:none}
+body.desk .dk-brand img{max-width:200px!important}
+body.desk .dk-nav>button,body.desk .dk-nav>a{min-height:52px!important;border-radius:14px!important}
+html.lang-ar body.desk .dk-nav>button,html.lang-ar body.desk .dk-nav>a{direction:rtl;text-align:right}
+html.lang-ar body.desk .dk-tx small{text-align:right!important}
+html.lang-ar body.desk .dk-label{direction:rtl}
+
+/* top bar: sticky, quiet */
+body.desk .dk-top{position:sticky;top:0;z-index:40;align-items:center!important;margin:0 calc(-1 * var(--pad)) 22px!important;padding:20px var(--pad) 18px!important;background:linear-gradient(180deg,rgba(7,6,5,.97) 0%,rgba(7,6,5,.88) 65%,rgba(7,6,5,0))!important}
+body.desk .dk-where h1{font-size:30px!important;margin:2px 0 0!important}
+body.desk .dk-where span{display:none}
+body.desk .dk-search{flex:0 1 420px!important}
+body.desk .dk-search .search-input{min-height:46px!important;height:46px!important;border-radius:14px!important;background:rgba(255,240,200,.05)!important;border:1px solid var(--line-2)!important}
+body.desk .dk-search .utility-btn{height:46px!important;min-height:46px!important;border-radius:14px!important;background:var(--gold-grad)!important;color:#1a1306!important;border:0!important}
+html.lang-ar body.desk .dk-top{flex-direction:row-reverse}
+html.lang-ar body.desk .dk-where{text-align:right}
+html.lang-ar body.desk .dk-top .dk-lang{margin-left:0;margin-right:auto}
+
+/* no boxes around the content */
+body.desk main.shell{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important}
+body.desk main.shell:before,body.desk main.shell:after{display:none!important}
+body.desk main.shell>.inner{padding:0!important}
+body.desk #categoryStage .statusbar{display:none!important}
+body.desk .items-stage>.items-head{padding:0 0 14px!important;border:0!important}
+
+/* ---------------------------------------------------------------- poster rails */
+.dk-rails{display:none}
+body.desk.dk-rails-on .dk-rails{display:flex;flex-direction:column;gap:34px;margin:0 0 30px}
+body.desk .dk-rails .dk-feature{margin:0 0 4px;min-height:clamp(380px,56vh,620px)}
+.dk-rail-h{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 4px 12px}
+.dk-rail-h h3{margin:0;font-size:22px;font-weight:700;color:var(--text);font-family:var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dk-rail-all{appearance:none;flex:none;border:1px solid var(--line-2);background:rgba(255,240,200,.04);color:var(--gold-1);font:inherit;font-size:13px;font-weight:700;height:34px;padding:0 14px;border-radius:999px;cursor:pointer;transition:background .2s}
+.dk-rail-all:hover{background:rgba(212,175,55,.16)}
+.dk-rail-all i{font-style:normal;margin-inline-start:4px}
+.dk-rail-wrap{position:relative}
+.dk-rail-track{display:grid;grid-auto-flow:column;grid-auto-columns:clamp(150px,10.4vw,205px);gap:18px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:8px 4px 16px;scrollbar-width:none}
+.dk-rail-track::-webkit-scrollbar{display:none}
+html.lang-ar .dk-rail-track{direction:rtl}
+.dk-rc{scroll-snap-align:start;appearance:none;border:0;background:none;padding:0;color:var(--text);cursor:pointer;display:flex;flex-direction:column;gap:8px;text-align:start;min-width:0;font:inherit}
+.dk-rc-art{display:block;aspect-ratio:2/3;border-radius:16px;overflow:hidden;background:#141210;border:1px solid var(--line);box-shadow:0 14px 30px -16px rgba(0,0,0,.9);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+.dk-rc-art img{width:100%;height:100%;object-fit:cover;display:block}
+.dk-rc:hover .dk-rc-art,.dk-rc:focus-visible .dk-rc-art{transform:translateY(-6px) scale(1.03);border-color:rgba(232,199,102,.75);box-shadow:0 28px 50px -18px rgba(0,0,0,.95),0 0 34px -8px rgba(212,175,55,.55)}
+.dk-rc-t{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px}
+.dk-rc-m{font-size:12px;color:var(--gold-1);font-weight:600;padding:0 2px}
+.dk-rc.sk{aspect-ratio:2/3;border-radius:16px;background:linear-gradient(100deg,#13110e 30%,#201b14 50%,#13110e 70%);background-size:300% 100%;animation:dkSk 1.3s linear infinite}
+@keyframes dkSk{from{background-position:100% 0}to{background-position:-200% 0}}
+.dk-rail.empty{display:none}
+.dk-rail-nav{position:absolute;top:8px;bottom:58px;width:58px;z-index:2;border:0;cursor:pointer;color:#fff;font-size:40px;line-height:1;opacity:0;transition:opacity .2s;font-family:var(--body)}
+.dk-rail-nav.prev{left:0;background:linear-gradient(90deg,rgba(7,6,5,.95),rgba(7,6,5,0));border-radius:16px 0 0 16px}
+.dk-rail-nav.next{right:0;background:linear-gradient(270deg,rgba(7,6,5,.95),rgba(7,6,5,0));border-radius:0 16px 16px 0}
+.dk-rail-wrap:hover .dk-rail-nav{opacity:1}
+.dk-allcats-h{margin-top:6px}
+/* all categories as compact chips under the rails */
+body.desk.dk-rails-on #browseCategories{display:flex!important;flex-wrap:wrap!important;gap:10px!important}
+body.desk.dk-rails-on #browseCategories .category{min-height:0!important;padding:10px 18px!important;border-radius:999px!important;flex-direction:row!important;align-items:center!important;gap:10px!important}
+body.desk.dk-rails-on #browseCategories .category:after,body.desk.dk-rails-on #browseCategories .category-title:before,body.desk.dk-rails-on #browseCategories .dk-cat-mono,body.desk.dk-rails-on #browseCategories .dk-cat-chev{display:none!important}
+body.desk.dk-rails-on #browseCategories .category-copy{flex-direction:row!important;align-items:center!important;gap:8px!important}
+body.desk.dk-rails-on #browseCategories .category-title{font-size:14px!important;-webkit-line-clamp:1!important}
+body.desk.dk-rails-on #browseCategories .dk-cat-tags i{height:18px;font-size:9px}
+
+/* ---------------------------------------------------------------- Live TV: categories | channels | screen */
+.dk-tv-cats{display:none}
+body.desk.dk-tv-mode #itemsStage{grid-template-columns:clamp(200px,13vw,250px) clamp(320px,22vw,400px) minmax(0,1fr)!important;grid-template-areas:"cats list tv"!important;gap:18px!important}
+html.lang-ar body.desk.dk-tv-mode #itemsStage{grid-template-areas:"tv list cats"!important;grid-template-columns:minmax(0,1fr) clamp(320px,22vw,400px) clamp(200px,13vw,250px)!important}
+body.desk.dk-tv-mode #itemsStage>.items-head,body.desk.dk-tv-mode .dk-feature{display:none!important}
+body.desk.dk-tv-mode .dk-tv-cats{display:flex;flex-direction:column;grid-area:cats;max-height:calc(100vh - 140px);min-height:0;padding:14px 10px;border-radius:22px;background:linear-gradient(180deg,#14110d,#0a0908) padding-box,linear-gradient(180deg,rgba(255,236,190,.2),rgba(212,175,55,.25),rgba(255,236,190,.06)) border-box;border:1px solid transparent}
+.dk-tvc-h{display:flex;align-items:center;justify-content:space-between;padding:2px 8px 12px;font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--gold-1);text-transform:uppercase}
+.dk-tvc-h i{font-style:normal;min-width:26px;height:22px;padding:0 7px;border-radius:999px;display:inline-grid;place-items:center;font-size:11px;background:rgba(212,175,55,.14);color:var(--gold-0);letter-spacing:0}
+.dk-tvc-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(212,175,55,.35) transparent}
+.dk-tvc-list button{appearance:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;padding:9px 12px;border:0;border-radius:12px;background:none;color:#d9d0be;font:inherit;font-size:13.5px;font-weight:600;text-align:start;cursor:pointer;transition:background .15s}
+.dk-tvc-list button span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dk-tvc-list button i{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--dim)}
+.dk-tvc-list button:hover{background:rgba(255,240,200,.05)}
+.dk-tvc-list button.on{background:linear-gradient(120deg,rgba(212,175,55,.22),rgba(212,175,55,.05));color:var(--gold-0);box-shadow:inset 3px 0 0 var(--gold)}
+html.lang-ar .dk-tvc-list button{align-items:flex-end;text-align:right}
+html.lang-ar .dk-tvc-list button.on{box-shadow:inset -3px 0 0 var(--gold)}
+body.desk.dk-tv-mode .dk-tv-list{max-height:calc(100vh - 140px)!important}
+body.desk.dk-tv-mode .dk-tv{top:110px!important}
+/* channel rows: name, then what's on now under it */
+body.desk.dk-tv-mode #browseItems .live-card .live-copy{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:"title fav" "epg fav"!important;flex-direction:initial!important;row-gap:4px!important}
+body.desk.dk-tv-mode #browseItems .live-card:not(.has-epg) .live-copy{grid-template-areas:"title fav"!important}
+body.desk.dk-tv-mode #browseItems .live-card .live-copy .item-title{font-size:14px!important}
+body.desk.dk-tv-mode #browseItems .live-card .favorite-action.live-favorite{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}
+/* the receiver page styles .shell with very specific selectors: out-rank them */
+html body.desk main.shell:not(#_):not(#__){background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important}
+html body.desk main.shell:not(#_):not(#__)::before,html body.desk main.shell:not(#_):not(#__)::after{display:none!important;content:none!important}

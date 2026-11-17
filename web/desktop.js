@@ -253,7 +253,7 @@
     const ex = seriesExtra;
     if (!ex || !ex.tmdb || !window.USEngine.tmdbGet) return;
     const key = ex.tmdb + ":" + season;
-    if (!SEASONS.has(key)) SEASONS.set(key, window.USEngine.tmdbGet("tv/" + ex.tmdb + "/season/" + season, { language: "ar" }));
+    if (!SEASONS.has(key)) SEASONS.set(key, window.USEngine.tmdbGet("tv/" + ex.tmdb + "/season/" + season, { language: AR ? "ar" : "en-US" }));
     const data = await SEASONS.get(key);
     if (!data || !Array.isArray(data.episodes) || seriesExtra !== ex) return;
     const byNum = new Map(data.episodes.map((e) => [e.episode_number, e]));
@@ -340,10 +340,12 @@
       '<div class="dk-f-dots"></div>';
     const head = $("itemsStage").querySelector(".items-head");
     head.after(el);
+    feat.home = head;
     el.addEventListener("mouseenter", () => (feat.hold = true));
     el.addEventListener("mouseleave", () => (feat.hold = false));
     el.querySelector(".dk-f-go").onclick = () => {
-      const card = document.querySelector(`#browseItems .poster-card[data-item="${CSS.escape(feat.ids[feat.i] || "")}"]`);
+      const sel = CSS.escape(feat.ids[feat.i] || "");
+      const card = document.querySelector(`#dkRails .dk-rc[data-item="${sel}"]`) || document.querySelector(`#browseItems .poster-card[data-item="${sel}"]`);
       if (card) (card.querySelector(".item-title") || card).click();
     };
     el.querySelector(".dk-f-dots").onclick = (e) => {
@@ -386,7 +388,7 @@
     copy.classList.add("in");
     const logo = el.querySelector(".dk-f-logo");
     const title = el.querySelector(".dk-f-title");
-    title.textContent = (d && d.title) || (document.querySelector(`#browseItems [data-item="${CSS.escape(id)}"] .item-title`) || {}).textContent || "";
+    title.textContent = (d && d.title) || (document.querySelector(`#browseItems [data-item="${CSS.escape(id)}"] .item-title, #dkRails .dk-rc[data-item="${CSS.escape(id)}"] .dk-rc-t`) || {}).textContent || "";
     logo.classList.remove("on");
     if (ex.logo) {
       logo.onload = () => logo.classList.add("on");
@@ -408,8 +410,16 @@
   }
   function featSync() {
     const media = document.body.dataset.media;
-    const on = !!$("browseAccount").value && (media === "vod" || media === "series") && visible("itemsStage");
-    const cards = on ? [...document.querySelectorAll("#browseItems .poster-card[data-item]")] : [];
+    const active = !!$("browseAccount").value && (media === "vod" || media === "series");
+    let cards = [];
+    let where = null;
+    if (active && visible("itemsStage")) {
+      cards = [...document.querySelectorAll("#browseItems .poster-card[data-item]")];
+      where = "items";
+    } else if (active && DESK && visible("categoryStage") && $("dkRails")) {
+      cards = [...document.querySelectorAll("#dkRails .dk-rail:not(.empty) .dk-rc[data-item]")];
+      where = "rails";
+    }
     const el = $("dkFeature");
     if (!cards.length) {
       if (el) el.classList.add("hidden");
@@ -418,19 +428,183 @@
       return;
     }
     const ids = cards.slice(0, 5).map((c) => c.dataset.item);
-    const key = media + "|" + ids.join(",");
+    const key = where + "|" + media + "|" + ids.join(",");
     if (key === feat.key) return;
     feat.key = key;
     feat.ids = ids;
-    featBuild().classList.remove("hidden");
+    const box = featBuild();
+    if (where === "rails") $("dkRails").prepend(box);
+    else if (feat.home && box.previousElementSibling !== feat.home) feat.home.after(box);
+    box.classList.remove("hidden");
     featShow(0);
     clearInterval(feat.timer);
     feat.timer = setInterval(() => {
-      if (!feat.hold && !document.hidden && feat.ids.length > 1 && visible("itemsStage")) featShow(feat.i + 1);
+      if (!feat.hold && !document.hidden && feat.ids.length > 1 && (visible("itemsStage") || visible("categoryStage"))) featShow(feat.i + 1);
     }, 9000);
   }
 
+  /* ------------------------------------------------ computer: poster rails for Movies / Series */
+  const rails = { key: "", io: null };
+  function railRow(el) {
+    return { id: el.dataset.categoryId || "*", title: el.title || (el.querySelector(".category-title") || {}).textContent || "" };
+  }
+  function openRow(row, media) {
+    // Make "back" return to this page, then open the details like the page does.
+    try {
+      if (!(history.state && history.state.usBrowse)) {
+        // eslint-disable-next-line no-undef
+        history.replaceState(Object.assign({ usBrowse: 1, view: "categories", depth: 0, scrollY: window.scrollY }, typeof baseHistory === "function" ? baseHistory() : {}), document.title);
+      }
+      // eslint-disable-next-line no-undef
+      if (media === "series") openSeries(row, "items", true);
+      // eslint-disable-next-line no-undef
+      else openMovie(row, "items", true);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  async function fillRail(rail) {
+    if (rail.dataset.state) return;
+    rail.dataset.state = "loading";
+    const media = rails.media;
+    const account = $("browseAccount").value;
+    const track = rail.querySelector(".dk-rail-track");
+    try {
+      const url = "api/browse/items?account=" + encodeURIComponent(account) + "&type=" + encodeURIComponent(media) + "&category=" + encodeURIComponent(rail.dataset.cat) + "&title=" + encodeURIComponent(rail.dataset.title) + "&page=1";
+      const j = await (await fetch(url, { cache: "no-store" })).json();
+      const items = ((j && j.items) || []).slice(0, 24);
+      if (!items.length) {
+        rail.classList.add("empty");
+        return;
+      }
+      const fb = media === "series" ? "poster-series.png" : "poster-movie.png";
+      track.innerHTML = items
+        .map((row, i) => {
+          const art = window.USEngine.art(row.id, media) || fb;
+          const facts = [row.year, row.rating ? "★ " + Number(row.rating).toFixed(1) : ""].filter(Boolean).join(" · ");
+          return `<button type="button" class="dk-rc" data-item="${esc(row.id)}" data-i="${i}"><span class="dk-rc-art"><img loading="lazy" decoding="async" src="${esc(art)}" alt="" onerror="this.onerror=null;this.src='${fb}'"></span><span class="dk-rc-t" dir="auto">${esc(plain(row.title || ""))}</span>${facts ? `<span class="dk-rc-m">${esc(facts)}</span>` : ""}</button>`;
+        })
+        .join("");
+      track.onclick = (e) => {
+        const b = e.target.closest(".dk-rc");
+        if (b) openRow(items[+b.dataset.i], media);
+      };
+      rail.dataset.state = "done";
+      featSync();
+    } catch (_) {
+      rail.dataset.state = "";
+      rail.classList.add("empty");
+    }
+  }
+  function railsSync() {
+    const media = (document.querySelector(".type.active") || {}).dataset?.media || "itv";
+    const on = DESK && !!$("browseAccount").value && (media === "vod" || media === "series") && visible("categoryStage");
+    document.body.classList.toggle("dk-rails-on", on);
+    if (!on) return;
+    const cats = [...document.querySelectorAll("#browseCategories .category")];
+    if (!cats.length) return;
+    const key = $("browseAccount").value + "|" + media + "|" + cats.length + "|" + (cats[0].dataset.categoryId || "");
+    let box = $("dkRails");
+    if (key === rails.key && box) return;
+    rails.key = key;
+    rails.media = media;
+    if (!box) {
+      box = document.createElement("section");
+      box.id = "dkRails";
+      box.className = "dk-rails";
+      $("categoryStage").prepend(box);
+    }
+    if (rails.io) rails.io.disconnect();
+    let pick = cats.map(railRow);
+    if (pick.length > 3) pick = pick.filter((r) => r.id !== "*");
+    pick = pick.slice(0, 10);
+    const feature = $("dkFeature");
+    box.innerHTML = pick
+      .map(
+        (r) =>
+          `<div class="dk-rail" data-cat="${esc(r.id)}" data-title="${esc(r.title)}"><div class="dk-rail-h"><h3 dir="auto">${esc(splitName(r.title).name)}</h3><button type="button" class="dk-rail-all">${T("See all", "عرض الكل")} <i>${AR ? "‹" : "›"}</i></button></div>` +
+          `<div class="dk-rail-wrap"><button type="button" class="dk-rail-nav prev" aria-label="Previous">‹</button><div class="dk-rail-track">${'<span class="dk-rc sk"></span>'.repeat(8)}</div><button type="button" class="dk-rail-nav next" aria-label="Next">›</button></div></div>`
+      )
+      .join("") +
+      `<div class="dk-rail-h dk-allcats-h"><h3>${T("All categories", "كل الأقسام")}</h3></div>`;
+    if (feature && feature.parentNode === box) box.prepend(feature);
+    box.onclick = (e) => {
+      const all = e.target.closest(".dk-rail-all");
+      if (all) {
+        const rail = all.closest(".dk-rail");
+        const el = cats.find((c) => (c.dataset.categoryId || "*") === rail.dataset.cat);
+        if (el) el.click();
+        return;
+      }
+      const nav = e.target.closest(".dk-rail-nav");
+      if (nav) {
+        const track = nav.parentNode.querySelector(".dk-rail-track");
+        const dir = nav.classList.contains("next") ? 1 : -1;
+        track.scrollBy({ left: dir * track.clientWidth * 0.85 * (getComputedStyle(track).direction === "rtl" ? -1 : 1), behavior: "smooth" });
+      }
+    };
+    rails.io = new IntersectionObserver((list) => list.forEach((en) => en.isIntersecting && fillRail(en.target)), { rootMargin: "400px 0px" });
+    box.querySelectorAll(".dk-rail").forEach((r) => rails.io.observe(r));
+  }
+
+  /* ------------------------------------------------ computer: Live opens straight into the TV screen */
+  const live = { auto: "" };
+  function liveSync() {
+    if (!DESK) return;
+    const media = (document.querySelector(".type.active") || {}).dataset?.media || "itv";
+    const account = $("browseAccount").value;
+    if (!account || media !== "itv") return;
+    const cats = [...document.querySelectorAll("#browseCategories .category")];
+    if (visible("categoryStage") && cats.length && live.auto !== account + "|" + cats.length) {
+      live.auto = account + "|" + cats.length;
+      let want = "";
+      try {
+        want = localStorage.getItem("us-web-livecat:" + account) || "";
+      } catch (_) {}
+      const el = cats.find((c) => (c.dataset.categoryId || "*") === want) || cats[0];
+      // eslint-disable-next-line no-undef
+      if (el && typeof openCategory === "function") openCategory(railRow(el), false);
+    }
+    tvCats(cats);
+  }
+  function tvCats(cats) {
+    const col = $("dkTvCats");
+    if (!col) return;
+    const account = $("browseAccount").value;
+    // eslint-disable-next-line no-undef
+    const cur = typeof activeCategory !== "undefined" && activeCategory ? String(activeCategory.id) : "";
+    const sig = account + "|" + cats.length;
+    if (col.dataset.sig !== sig) {
+      col.dataset.sig = sig;
+      col.innerHTML =
+        `<div class="dk-tvc-h">${T("Categories", "الأقسام")} <i>${cats.length}</i></div><div class="dk-tvc-list">` +
+        cats
+          .map((c) => {
+            const r = railRow(c);
+            const n = splitName(r.title);
+            return `<button type="button" data-cat="${esc(r.id)}"><span dir="auto">${esc(r.id === "*" && AR ? "الكل" : n.name)}</span>${n.tags.length ? `<i>${esc(n.tags.slice(0, 2).join(" · "))}</i>` : ""}</button>`;
+          })
+          .join("") +
+        "</div>";
+      col.onclick = (e) => {
+        const b = e.target.closest("button[data-cat]");
+        if (!b) return;
+        const el = cats.find((c) => (c.dataset.categoryId || "*") === b.dataset.cat);
+        try {
+          localStorage.setItem("us-web-livecat:" + account, b.dataset.cat);
+        } catch (_) {}
+        // eslint-disable-next-line no-undef
+        if (el) openCategory(railRow(el), false);
+        tvCats(cats);
+      };
+    }
+    col.querySelectorAll("button[data-cat]").forEach((b) => b.classList.toggle("on", b.dataset.cat === cur));
+  }
+
   function langSwitch() {
+    // English only for now: no switch on the page.
+    return document.createComment("lang");
+    // eslint-disable-next-line no-unreachable
     const el = document.createElement("div");
     el.className = "dk-lang";
     el.setAttribute("data-no-tr", "");
@@ -653,7 +827,11 @@
     const list = document.createElement("div");
     list.id = "dkTvList";
     list.className = "dk-tv-list";
-    stage.querySelector(".items-head").after(panel);
+    const cats = document.createElement("nav");
+    cats.id = "dkTvCats";
+    cats.className = "dk-tv-cats";
+    stage.querySelector(".items-head").after(cats);
+    cats.after(panel);
     panel.after(list);
     list.appendChild($("browseItems"));
     list.appendChild($("itemInfinite"));
@@ -796,11 +974,16 @@
     let title = active ? T(ar[go], names[go]) : T("Welcome", "أهلاً بيك");
     let sub = active ? T(names[go], ar[go]) : T("أهلاً بيك", "Welcome");
     if (active && visible("itemsStage")) {
-      title = $("itemsTitle").textContent || title;
+      // eslint-disable-next-line no-undef
+      const cat = typeof activeCategory !== "undefined" && activeCategory ? activeCategory.title : "";
+      const shown = $("itemsTitle").textContent;
+      title = splitName(cat || (shown && shown !== "Items" ? shown : "")).name || title;
       sub = T(ar[go] + " · " + names[go], names[go] + " · " + ar[go]);
     }
     $("dkTitle").textContent = title;
     $("dkSub").textContent = sub;
+    railsSync();
+    liveSync();
     featSync();
     tvMode(DESK && active && media === "itv" && visible("itemsStage") && !visible("favoritesStage") && !visible("searchStage"));
   }
@@ -809,7 +992,10 @@
     build();
     if (!BROWSE) return;
     if (DESK) tvBuild();
-    new MutationObserver(decorateCategories).observe($("browseCategories"), { childList: true });
+    new MutationObserver(() => {
+      decorateCategories();
+      sync();
+    }).observe($("browseCategories"), { childList: true });
     decorateCategories();
     let ft = 0;
     new MutationObserver(() => {

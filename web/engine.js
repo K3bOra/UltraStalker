@@ -1359,15 +1359,17 @@
       .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x660))
       .replace(/[^\p{L}\p{N}]+/gu, " ").trim();
   }
+  const TMDB_STOP = new Set("the a an of and in on at to for la le el al de der die das il the ال و في من".split(" "));
   function tmdbSimilar(a, b) {
-    const A = new Set(tmdbNorm(a).split(" ").filter(Boolean)), B = new Set(tmdbNorm(b).split(" ").filter(Boolean));
+    const words = (v) => tmdbNorm(v).split(" ").filter((w) => w && !TMDB_STOP.has(w));
+    const A = new Set(words(a)), B = new Set(words(b));
     if (!A.size || !B.size) return 0;
     if (tmdbNorm(a) === tmdbNorm(b)) return 1;
     let hit = 0;
     A.forEach((w) => B.has(w) && hit++);
     return hit / Math.max(A.size, B.size);
   }
-  const TMDB_CACHE_KEY = "us-tmdb-v3";
+  const TMDB_CACHE_KEY = "us-tmdb-v5";
   let tmdbMem = null;
   function tmdbCache() {
     if (!tmdbMem) {
@@ -1406,9 +1408,13 @@
     }
   }
   const TMDB_PENDING = new Map();
+  function tmdbLang() {
+    return window.USLang && !window.USLang.ar ? "en-US" : "ar";
+  }
   function tmdbLookup(title, year, media) {
     const type = media === "series" ? "tv" : "movie";
-    const key = type + "|" + tmdbNorm(title) + "|" + (year || "");
+    const LANG = tmdbLang();
+    const key = type + "|" + LANG + "|" + tmdbNorm(title) + "|" + (year || "");
     const hit = tmdbCache()[key];
     if (hit && Date.now() - hit.t < 14 * 864e5) return Promise.resolve(hit.v);
     if (TMDB_PENDING.has(key)) return TMDB_PENDING.get(key);
@@ -1418,7 +1424,8 @@
       const base = queries.base || title;
       for (const query of queries) {
         for (const withYear of year ? [true, false] : [false]) {
-          const params = { query, language: "ar", include_adult: "false" };
+          // Search in the query's own script so titles compare like with like.
+          const params = { query, language: /[\u0600-\u06ff]/.test(query) ? "ar" : LANG, include_adult: "false" };
           if (withYear) params[type === "tv" ? "first_air_date_year" : "year"] = year;
           const r = await tmdbGet("search/" + type, params);
           const rows = (r && r.results) || [];
@@ -1427,8 +1434,12 @@
             const name = row.title || row.name || "";
             const orig = row.original_title || row.original_name || "";
             const ry = yearOf(row.release_date || row.first_air_date);
-            let score = Math.max(tmdbSimilar(base, name), tmdbSimilar(base, orig), broad ? 0 : Math.max(tmdbSimilar(query, name), tmdbSimilar(query, orig)));
-            if (year && ry) score += ry === String(year) ? 0.35 : Math.abs(+ry - +year) <= 1 ? 0.15 : -0.25;
+            const sim = Math.max(tmdbSimilar(base, name), tmdbSimilar(base, orig), broad ? 0 : Math.max(tmdbSimilar(query, name), tmdbSimilar(query, orig)));
+            const sameYear = !!(year && ry && ry === String(year));
+            // The title has to match on its own; the year only breaks ties.
+            if (sim < 0.6 && !(sim >= 0.5 && sameYear)) return;
+            let score = sim;
+            if (year && ry) score += sameYear ? 0.35 : Math.abs(+ry - +year) <= 1 ? 0.15 : -0.25;
             score += Math.min(0.1, (row.popularity || 0) / 1000) - (broad ? 0 : i * 0.02);
             if (!best || score > best.score) best = { score, row };
           });
@@ -1438,15 +1449,16 @@
       }
       let out = null;
       if (best && best.score >= 0.45) {
-        const d = await tmdbGet(type + "/" + best.row.id, { language: "ar", append_to_response: "credits,images,translations", include_image_language: "ar,en,null" });
+        const d = await tmdbGet(type + "/" + best.row.id, { language: LANG, append_to_response: "credits,images,translations", include_image_language: "ar,en,null" });
         if (d) {
           const img = d.images || {};
           const clean = (img.backdrops || []).filter((b) => !b.iso_639_1).sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))[0];
           const logos = img.logos || [];
           // Phones show a tall picture: the poster without its title text when TMDB has one.
           const tall = (img.posters || []).filter((p) => !p.iso_639_1).sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))[0];
-          const logo = logos.find((l) => l.iso_639_1 === "ar") || logos.find((l) => l.iso_639_1 === "en") || logos[0];
-          const tr = ((d.translations || {}).translations || []).find((t) => t.iso_639_1 === "en");
+          const first = LANG === "ar" ? "ar" : "en";
+          const logo = logos.find((l) => l.iso_639_1 === first) || logos.find((l) => l.iso_639_1 === (first === "ar" ? "en" : "ar")) || logos[0];
+          const tr = ((d.translations || {}).translations || []).find((t) => t.iso_639_1 === (first === "ar" ? "en" : "ar"));
           const enOverview = tr && tr.data && tr.data.overview;
           out = {
             id: d.id,

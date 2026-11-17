@@ -452,3 +452,6 @@ body.app .dk-cat-tags i{white-space:nowrap}
 /* one Latin family everywhere */
 body.app .dk-src b,body.app .dk-where h1,body.app .dk-hero h2,body.app .dk-row-h h3,body.app .series-info h3,body.app .dk-f-title,body.app .dk-tv-name b,body.app .dk-credit b{font-weight:700!important;letter-spacing:-.01em!important}
 body.ph #browseCategories .dk-cat-tags{flex-wrap:wrap!important;overflow:visible!important}
+body.ph .dk-hero{padding-top:24px!important}
+html.lang-en body.ph .dk-hero h2,html.lang-en body.ph .dk-hero-copy p{text-align:center!important}
+html.lang-en body.ph .dk-hero-copy{align-items:center!important;text-align:center!important}

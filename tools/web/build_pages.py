@@ -24,7 +24,7 @@ from goldify import recolor_html  # noqa: E402  (black & gold theme)
 
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "web"
-WEB_VERSION = 11  # bump with any change to web/*.js or the pages (cache busting)
+WEB_VERSION = 12  # bump with any change to web/*.js or the pages (cache busting)
 PLUGIN_DIR = "usr/lib/enigma2/python/Plugins/Extensions/UltraStalker/"
 
 
@@ -80,8 +80,8 @@ def head_scripts(names):
 
 META = (
     '<meta name="description" content="Ultra Stalker on the web: your Portal, Xtream and M3U sources from anywhere, '
-    'with receiver backup and restore.">\n<link rel="manifest" href="manifest.webmanifest">\n'
-    '<link rel="apple-touch-icon" href="icons/icon-192.png">\n'
+    'with receiver backup and restore.">\n<link rel="manifest" href="manifest.webmanifest?v=gold1">\n'
+    '<link rel="apple-touch-icon" href="icons/gold-192.png">\n'
 )
 
 
@@ -121,7 +121,7 @@ def arabic_labels(h):
 def build_browse(src, release):
     h = src
     h = sub(h, '<link rel="icon" type="image/png" href="/brand-logo.png">',
-            '<link rel="icon" type="image/png" href="icons/icon-192.png">\n' + META)
+            '<link rel="icon" type="image/png" href="icons/gold-192.png">\n' + META)
     h = sub(h, "</head>", STYLES
             + head_scripts(["i18n.js", "config.js", "hash.js", "engine.js", "player.js", "desktop.js"]) + "\n</head>")
     h = sub(h, "Palestinian identity • mobile browser", "Palestinian identity • from anywhere")
@@ -189,7 +189,7 @@ def build_browse(src, release):
 def build_sources(src, release):
     h = src
     h = sub(h, '<link rel="icon" type="image/png" href="/brand-logo.png">',
-            '<link rel="icon" type="image/png" href="icons/icon-192.png">\n' + META)
+            '<link rel="icon" type="image/png" href="icons/gold-192.png">\n' + META)
     h = sub(h, "<title>Ultra Stalker • Playlist Cleaner</title>", "<title>Ultra Stalker • Sources &amp; Backup</title>")
     h = sub(h, "</head>", '<link rel="stylesheet" href="sources.css?v=%d">' % WEB_VERSION + STYLES
             + head_scripts(["i18n.js", "config.js", "hash.js", "engine.js", "backup.js", "desktop.js"]) + "\n</head>")
