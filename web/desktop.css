@@ -928,3 +928,28 @@ body.desk .dk-rail-h h3:before{margin:0 12px 2px 0!important;margin-inline:0 12p
 #usAura:before{background:linear-gradient(rgba(6,6,7,.22),rgba(6,6,7,.22)),radial-gradient(140% 100% at 50% 45%,transparent 60%,rgba(0,0,0,.35) 100%)!important}
 body.app .dk-rc-t,body.app .dk-rc-m,body.app .dk-rail-h h3,body.app .dk-row-h,body.app .dk-hero-sum,body.app #favoritesStage .items-head{text-shadow:0 1px 10px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.6)}
 html body.desk #dkWelcome.dk-compact .dk-src-find:not(#_){background:rgba(10,9,8,.72)!important}
+
+/* ===== v9 bars: top bar, phone header and tab bar in obsidian glass with a champagne rule ===== */
+html{scrollbar-color:rgba(207,169,95,.6) #0b0a09}
+html::-webkit-scrollbar{width:11px;height:11px;background:#0b0a09}
+html::-webkit-scrollbar-thumb{border-radius:10px;border:3px solid #0b0a09;background:linear-gradient(180deg,#e4c486,#a8813f)}
+body.app *{scrollbar-color:rgba(207,169,95,.45) transparent}
+html body.app #dkBar.solid:not(#_):not(#__){background:radial-gradient(700px 90px at 50% -30%,rgba(226,192,124,.16),transparent 70%),linear-gradient(180deg,rgba(24,21,17,.995),rgba(11,10,9,.99))!important;box-shadow:0 18px 40px -22px rgba(0,0,0,.95),inset 0 -1px rgba(240,222,180,.06)!important}
+html body.app #dkBar:not(#_):not(#__):after{opacity:.85!important}
+/* phone header */
+html body.ph .dk-top:not(#_):not(#__){background:radial-gradient(400px 80px at 50% -30%,rgba(226,192,124,.16),transparent 70%),linear-gradient(180deg,rgba(24,21,17,.995),rgba(11,10,9,.99))!important;border-bottom:0!important;box-shadow:0 14px 30px -18px rgba(0,0,0,.95)!important}
+html body.ph .dk-top:not(#_):not(#__):after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(226,192,124,.45) 25%,rgba(249,236,208,.8) 50%,rgba(226,192,124,.45) 75%,transparent);opacity:.8;pointer-events:none}
+/* phone tab bar */
+html body.ph .dk-side:not(#_):not(#__){background:radial-gradient(260px 70px at 50% 0%,rgba(226,192,124,.14),transparent 70%),linear-gradient(180deg,rgba(26,23,19,.96),rgba(10,9,8,.97)) padding-box,linear-gradient(120deg,rgba(249,236,208,.55),rgba(207,169,95,.18) 35%,rgba(207,169,95,.08) 65%,rgba(240,222,180,.45)) border-box!important;border:1px solid transparent!important;box-shadow:0 20px 40px -14px rgba(0,0,0,.95),inset 0 1px rgba(255,246,225,.07)!important}
+
+/* ===== Back on movie / series details follows you down the page ===== */
+html body.desk .series-cinematic .detail-back:not(#_):not(#__){position:fixed!important;top:calc(var(--bar) + 14px)!important;left:var(--pad)!important;z-index:60!important;box-shadow:0 12px 28px -10px rgba(0,0,0,.95)!important}
+html body.ph .series-cinematic .detail-back:not(#_):not(#__){position:fixed!important;top:calc(env(safe-area-inset-top) + var(--ph-top, 84px))!important;left:14px!important;z-index:60!important;box-shadow:0 12px 28px -10px rgba(0,0,0,.95)!important}
+/* the bar always stays above page content (details pages included) */
+html body.desk #dkBar:not(#_):not(#__){z-index:120!important}
+html body.desk .series-cinematic .detail-back:not(#_):not(#__){z-index:110!important}
+/* phone: the header stays on screen while scrolling (it used to scroll away with its short container) */
+html body.ph .dk-top:not(#_):not(#__){position:fixed!important;top:0!important;left:0!important;right:0!important;margin:0!important;z-index:120!important}
+html body.ph .dk-top:not(#_):not(#__)~*:first-of-type{margin-top:0}
+html body.ph .series-cinematic .detail-back:not(#_):not(#__){z-index:110!important;background:linear-gradient(160deg,rgba(40,34,25,.96),rgba(14,12,10,.96)) padding-box,linear-gradient(130deg,rgba(249,236,208,.7),rgba(207,169,95,.25) 50%,rgba(240,222,180,.5)) border-box!important}
+html body.ph .wrap:has(> .dk-top):not(#_){padding-top:calc(78px + env(safe-area-inset-top))!important}
