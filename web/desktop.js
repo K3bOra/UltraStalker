@@ -327,6 +327,7 @@
   });
 
   /* ------------------------------------------------ featured banner over poster walls */
+  const FEATURE_OFF = true;
   const feat = { key: "", ids: [], i: 0, timer: 0, data: new Map(), hold: false };
   function featBuild() {
     if ($("dkFeature")) return $("dkFeature");
@@ -409,6 +410,11 @@
     if (feat.ids.length > 1) featData(feat.ids[(feat.i + 1) % feat.ids.length]);
   }
   function featSync() {
+    // The featured banner is switched off: the poster walls start right away.
+    const off = $("dkFeature");
+    if (off) off.classList.add("hidden");
+    clearInterval(feat.timer);
+    if (FEATURE_OFF) return;
     const media = document.body.dataset.media;
     const active = !!$("browseAccount").value && (media === "vod" || media === "series");
     let cards = [];
@@ -463,8 +469,27 @@
       console.error(e);
     }
   }
-  async function fillRail(rail) {
+  const railQ = [];
+  let railBusy = 0;
+  function queueRail(rail) {
     if (rail.dataset.state) return;
+    rail.dataset.state = "queued";
+    railQ.push(rail);
+    pumpRails();
+  }
+  function pumpRails() {
+    while (railBusy < 3 && railQ.length) {
+      const r = railQ.shift();
+      if (!r.isConnected) continue;
+      railBusy++;
+      fillRail(r).finally(() => {
+        railBusy--;
+        pumpRails();
+      });
+    }
+  }
+  async function fillRail(rail) {
+    if (rail.dataset.state && rail.dataset.state !== "queued") return;
     rail.dataset.state = "loading";
     const media = rails.media;
     const account = $("browseAccount").value;
@@ -517,7 +542,6 @@
     if (rails.io) rails.io.disconnect();
     let pick = cats.map(railRow);
     if (pick.length > 3) pick = pick.filter((r) => r.id !== "*");
-    pick = pick.slice(0, 10);
     const feature = $("dkFeature");
     box.innerHTML = pick
       .map(
@@ -525,10 +549,14 @@
           `<div class="dk-rail" data-cat="${esc(r.id)}" data-title="${esc(r.title)}"><div class="dk-rail-h"><h3 dir="auto">${esc(splitName(r.title).name)}</h3><button type="button" class="dk-rail-all">${T("See all", "عرض الكل")} <i>${AR ? "‹" : "›"}</i></button></div>` +
           `<div class="dk-rail-wrap"><button type="button" class="dk-rail-nav prev" aria-label="Previous">‹</button><div class="dk-rail-track">${'<span class="dk-rc sk"></span>'.repeat(8)}</div><button type="button" class="dk-rail-nav next" aria-label="Next">›</button></div></div>`
       )
-      .join("") +
-      `<div class="dk-rail-h dk-allcats-h"><h3>${T("All categories", "كل الأقسام")}</h3></div>`;
+      .join("");
+    const browse = document.createElement("div");
+    browse.className = "dk-rails-top";
+    browse.innerHTML = `<button type="button" class="dk-cats-open"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg><span>${T("All categories", "كل الأقسام")}</span><i>${pick.length}</i></button>`;
+    box.prepend(browse);
     if (feature && feature.parentNode === box) box.prepend(feature);
     box.onclick = (e) => {
+      if (e.target.closest(".dk-cats-open")) return catsModal(cats);
       const all = e.target.closest(".dk-rail-all");
       if (all) {
         const rail = all.closest(".dk-rail");
@@ -543,8 +571,47 @@
         track.scrollBy({ left: dir * track.clientWidth * 0.85 * (getComputedStyle(track).direction === "rtl" ? -1 : 1), behavior: "smooth" });
       }
     };
-    rails.io = new IntersectionObserver((list) => list.forEach((en) => en.isIntersecting && fillRail(en.target)), { rootMargin: "400px 0px" });
+    rails.io = new IntersectionObserver((list) => list.forEach((en) => en.isIntersecting && queueRail(en.target)), { rootMargin: "500px 0px" });
     box.querySelectorAll(".dk-rail").forEach((r) => rails.io.observe(r));
+  }
+
+  /* All categories in a searchable sheet (instead of a wall of chips). */
+  function catsModal(cats) {
+    let m = $("dkCats");
+    if (!m) {
+      m = document.createElement("div");
+      m.id = "dkCats";
+      m.className = "dk-cats";
+      m.innerHTML =
+        `<div class="dk-cats-card"><div class="dk-cats-head"><h3>${T("All categories", "كل الأقسام")}</h3><input type="search" placeholder="${T("Find a category…", "دوّر على قسم…")}" autocomplete="off"><button type="button" class="dk-bar-icon" aria-label="Close">${SVG.close}</button></div><div class="dk-cats-grid"></div></div>`;
+      document.body.appendChild(m);
+      m.addEventListener("click", (e) => {
+        if (e.target === m || e.target.closest(".dk-cats-head .dk-bar-icon")) m.classList.remove("on");
+      });
+      m.querySelector("input").addEventListener("input", (e) => {
+        const q = plain(e.target.value).toLowerCase();
+        m.querySelectorAll(".dk-cats-grid button").forEach((b) => (b.hidden = !!q && !b.dataset.q.includes(q)));
+      });
+      document.addEventListener("keydown", (e) => e.key === "Escape" && m.classList.remove("on"));
+    }
+    const grid = m.querySelector(".dk-cats-grid");
+    grid.innerHTML = cats
+      .map((c, i) => {
+        const r = railRow(c);
+        const n = splitName(r.title);
+        const name = r.id === "*" && AR ? "الكل" : n.name;
+        return `<button type="button" data-i="${i}" data-q="${esc((name + " " + n.tags.join(" ")).toLowerCase())}"><b dir="auto">${esc(name)}</b>${n.tags.length ? `<span>${n.tags.map((t) => `<i>${esc(t)}</i>`).join("")}</span>` : ""}</button>`;
+      })
+      .join("");
+    grid.onclick = (e) => {
+      const b = e.target.closest("button[data-i]");
+      if (!b) return;
+      m.classList.remove("on");
+      cats[+b.dataset.i].click();
+    };
+    m.querySelector("input").value = "";
+    m.classList.add("on");
+    setTimeout(() => m.querySelector("input").focus(), 50);
   }
 
   /* ------------------------------------------------ computer: Live opens straight into the TV screen */
@@ -577,7 +644,7 @@
     if (col.dataset.sig !== sig) {
       col.dataset.sig = sig;
       col.innerHTML =
-        `<div class="dk-tvc-h">${T("Categories", "الأقسام")} <i>${cats.length}</i></div><div class="dk-tvc-list">` +
+        `<div class="dk-tvc-h">${T("Categories", "الأقسام")} <i>${cats.length}</i></div><label class="dk-find">${SVG.search}<input type="search" placeholder="${T("Find", "دوّر")}" autocomplete="off"></label><div class="dk-tvc-list">` +
         cats
           .map((c) => {
             const r = railRow(c);
@@ -586,6 +653,10 @@
           })
           .join("") +
         "</div>";
+      col.querySelector("input").oninput = (e) => {
+        const q = plain(e.target.value).toLowerCase();
+        col.querySelectorAll(".dk-tvc-list button").forEach((b) => (b.hidden = !!q && !b.textContent.toLowerCase().includes(q)));
+      };
       col.onclick = (e) => {
         const b = e.target.closest("button[data-cat]");
         if (!b) return;
@@ -599,6 +670,10 @@
       };
     }
     col.querySelectorAll("button[data-cat]").forEach((b) => b.classList.toggle("on", b.dataset.cat === cur));
+    // eslint-disable-next-line no-undef
+    const curTitle = typeof activeCategory !== "undefined" && activeCategory ? activeCategory.title : "";
+    if ($("dkTvCat")) $("dkTvCat").textContent = cur === "*" ? T("All channels", "كل القنوات") : splitName(curTitle).name || "—";
+    if ($("dkTvCount")) $("dkTvCount").textContent = ($("itemsSummary") || {}).textContent || "";
   }
 
   function langSwitch() {
@@ -614,6 +689,57 @@
       if (b && window.USLang && b.dataset.l !== window.USLang.lang) window.USLang.set(b.dataset.l);
     });
     return el;
+  }
+
+  /* Computer: a top bar (logo, sections, search, source) and the old side menu
+     becomes a drawer that slides in from the menu button. */
+  const SVG = {
+    menu: '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>',
+    search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>',
+    close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  };
+  function deskBar(side) {
+    const bar = document.createElement("header");
+    bar.className = "dk-bar";
+    bar.id = "dkBar";
+    bar.innerHTML =
+      `<button type="button" class="dk-bar-icon" id="dkMenuBtn" aria-label="Menu">${SVG.menu}</button>` +
+      '<a class="dk-bar-brand" href="index.html" aria-label="Ultra Stalker"><img src="brand-logo-gold.webp" alt="Ultra Stalker"></a>' +
+      '<nav class="dk-bar-nav" id="dkBarNav"></nav>' +
+      `<div class="dk-bar-right"><div class="dk-bar-search" id="dkBarSearch"><button type="button" class="dk-bar-icon" id="dkSearchBtn" aria-label="Search">${SVG.search}</button></div><div class="dk-bar-src" id="dkBarSrc"></div></div>`;
+    document.body.prepend(bar);
+    $("dkBarNav").appendChild($("dkNav"));
+    if ($("dkSource")) $("dkBarSrc").appendChild($("dkSource"));
+    side.classList.add("dk-drawer");
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "dk-bar-icon dk-drawer-x";
+    close.setAttribute("aria-label", "Close");
+    close.innerHTML = SVG.close;
+    side.prepend(close);
+    const shade = document.createElement("div");
+    shade.className = "dk-drawer-shade";
+    document.body.appendChild(shade);
+    const toggle = (on) => document.body.classList.toggle("dk-drawer-open", on);
+    $("dkMenuBtn").onclick = () => toggle(!document.body.classList.contains("dk-drawer-open"));
+    close.onclick = shade.onclick = () => toggle(false);
+    side.addEventListener("click", (e) => e.target.closest("a[href]") && toggle(false));
+    $("dkSearchBtn").onclick = () => {
+      const on = !bar.classList.contains("searching");
+      bar.classList.toggle("searching", on);
+      const i = $("browseSearch");
+      if (on && i) setTimeout(() => i.focus(), 60);
+      if (!on && !BROWSE) location.href = "index.html";
+    };
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      toggle(false);
+      bar.classList.remove("searching");
+    });
+    const solid = () => bar.classList.toggle("solid", window.scrollY > 40 || !document.body.classList.contains("dk-hero-top"));
+    window.addEventListener("scroll", solid, { passive: true });
+    new MutationObserver(solid).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    solid();
   }
 
   function build() {
@@ -635,6 +761,7 @@
       "</nav>" +
       '<div class="dk-credit"><small>' + T("Design &amp; development", "تصميم وتطوير") + "</small>" + '<b>Ahmed L-HadarY</b><span id="dkVer"></span></div>';
     document.body.appendChild(side);
+    if (DESK) deskBar(side);
     if (!BROWSE) {
       if (DESK) side.querySelector(".dk-brand").after(langSwitch());
       else {
@@ -680,7 +807,7 @@
     if (!DESK) top.appendChild($("dkSource"));
     const sb = document.querySelector(".search-box");
     if (sb) {
-      $("dkSearch").appendChild(sb);
+      (DESK ? $("dkBarSearch") : $("dkSearch")).appendChild(sb);
       const input = $("browseSearch");
       input.placeholder = T("Search movies and series…", "ابحث عن فيلم أو مسلسل…");
       const sbtn = $("searchBtn");
@@ -833,8 +960,16 @@
     stage.querySelector(".items-head").after(cats);
     cats.after(panel);
     panel.after(list);
+    const head = document.createElement("div");
+    head.className = "dk-tvl-head";
+    head.innerHTML = `<div><b id="dkTvCat">—</b><small id="dkTvCount"></small></div><label class="dk-find">${SVG.search}<input type="search" id="dkTvFind" placeholder="${T("Find a channel", "دوّر على قناة")}" autocomplete="off"></label>`;
+    list.appendChild(head);
     list.appendChild($("browseItems"));
     list.appendChild($("itemInfinite"));
+    $("dkTvFind").addEventListener("input", (e) => {
+      const q = plain(e.target.value).toLowerCase();
+      document.querySelectorAll("#browseItems .live-card").forEach((c) => (c.hidden = !!q && !plain(c.title || c.textContent).toLowerCase().includes(q)));
+    });
     $("dkTvFull").onclick = () => window.USPlayer.fullscreen();
     // The screen and the list fit the window: keep the page itself at the top.
     window.addEventListener("scroll", () => tv.on && window.scrollY > 0 && window.scrollTo(0, 0), { passive: true });
@@ -984,6 +1119,10 @@
     $("dkSub").textContent = sub;
     railsSync();
     liveSync();
+    document.body.classList.toggle(
+      "dk-hero-top",
+      DESK && (visible("seasonsStage") || visible("movieStage"))
+    );
     featSync();
     tvMode(DESK && active && media === "itv" && visible("itemsStage") && !visible("favoritesStage") && !visible("searchStage"));
   }
@@ -1003,6 +1142,7 @@
       ft = setTimeout(featSync, 120);
       cleanItemTitles();
       watchEpg();
+      liveSync();
     }).observe($("browseItems"), { childList: true });
     drawWelcome();
     sync();

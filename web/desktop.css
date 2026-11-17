@@ -459,3 +459,172 @@ body.desk.dk-tv-mode #browseItems .live-card .favorite-action.live-favorite{widt
 /* the receiver page styles .shell with very specific selectors: out-rank them */
 html body.desk main.shell:not(#_):not(#__){background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important}
 html body.desk main.shell:not(#_):not(#__)::before,html body.desk main.shell:not(#_):not(#__)::after{display:none!important;content:none!important}
+
+/* ======================================================================
+   Computer, v3 — top bar + drawer, full-bleed heroes, premium Live TV.
+   ====================================================================== */
+body.desk{--pad:48px;--bar:76px}
+body.desk .wrap{margin:0!important;padding:0 0 70px!important;max-width:none!important}
+html.lang-en body.desk .wrap{margin:0!important}
+body.desk .dk-top{display:none!important}
+body.desk:not(.dk-hero-top) main.shell{padding-top:calc(var(--bar) + 22px)!important}
+html body.desk main.shell:not(#_):not(#__){padding-left:0!important;padding-right:0!important}
+
+/* ---- top bar */
+.dk-bar{display:none}
+body.desk .dk-bar{position:fixed;top:0;left:0;right:0;z-index:70;height:var(--bar);display:flex;align-items:center;gap:20px;padding:0 var(--pad);background:linear-gradient(180deg,rgba(5,5,4,.88),rgba(5,5,4,0));transition:background .3s ease,box-shadow .3s ease}
+body.desk .dk-bar.solid{background:rgba(9,8,7,.95);box-shadow:0 1px 0 rgba(255,232,170,.09),0 24px 40px -24px rgba(0,0,0,.9)}
+.dk-bar-icon{appearance:none;flex:none;width:44px;height:44px;border-radius:14px;border:1px solid rgba(255,232,170,.14);background:rgba(20,18,15,.55);display:grid;place-items:center;cursor:pointer;color:var(--gold-0);transition:background .2s,border-color .2s}
+.dk-bar-icon:hover{background:rgba(212,175,55,.14);border-color:rgba(212,175,55,.45)}
+.dk-bar-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.dk-bar-brand{flex:none;display:block}
+.dk-bar-brand img{height:42px;width:auto;display:block;filter:drop-shadow(0 4px 14px rgba(0,0,0,.6))}
+.dk-bar-nav{flex:1;display:flex;justify-content:center;min-width:0}
+body.desk .dk-bar #dkNav{flex-direction:row!important;gap:2px!important;padding:4px;border-radius:999px;background:rgba(14,12,10,.55);border:1px solid rgba(255,232,170,.08)}
+body.desk .dk-bar #dkNav>button{width:auto!important;min-height:0!important;height:40px;padding:0 18px!important;border-radius:999px!important;border:0!important;background:none!important;box-shadow:none!important;transform:none!important;gap:0!important}
+body.desk .dk-bar #dkNav .dk-ic,body.desk .dk-bar #dkNav .dk-tx small,body.desk .dk-bar #dkNav>button[data-go="search"]{display:none!important}
+body.desk .dk-bar #dkNav .dk-tx b{font-size:14.5px!important;font-weight:600!important;color:#cdc4b2;letter-spacing:0!important;background:none!important;-webkit-text-fill-color:initial}
+body.desk .dk-bar #dkNav>button:hover .dk-tx b{color:#fff}
+body.desk .dk-bar #dkNav>button.on{background:var(--gold-grad)!important}
+body.desk .dk-bar #dkNav>button.on .dk-tx b{color:#1a1306!important;-webkit-text-fill-color:#1a1306!important;font-weight:700!important}
+.dk-bar-right{flex:none;display:flex;align-items:center;gap:10px}
+.dk-bar-search{display:flex;align-items:center;gap:8px}
+body.desk .dk-bar-search .search-box{display:none!important}
+body.desk .dk-bar.searching .dk-bar-search .search-box{display:grid!important;grid-template-columns:300px auto;gap:8px;animation:dkRise .25s ease both}
+body.desk .dk-bar-search .search-input{height:44px!important;min-height:44px!important;border-radius:14px!important;background:rgba(14,12,10,.85)!important;border:1px solid rgba(212,175,55,.4)!important;font-size:14px!important}
+body.desk .dk-bar-search .utility-btn{height:44px!important;min-height:44px!important;border-radius:14px!important;background:var(--gold-grad)!important;color:#1a1306!important;border:0!important;padding:0 16px!important}
+body.desk .dk-bar-src #dkSource{width:230px}
+body.desk .dk-bar-src .dk-label{display:none!important}
+body.desk .dk-bar-src .select{height:44px!important;min-height:44px!important;border-radius:14px!important;font-size:13.5px!important;background:linear-gradient(rgba(14,12,10,.9),rgba(14,12,10,.9)) padding-box,var(--gold-edge) border-box!important;border:1px solid transparent!important}
+
+/* ---- drawer (the old side menu) */
+body.desk .dk-side.dk-drawer{top:0!important;bottom:0!important;left:0!important;right:auto!important;width:330px!important;z-index:90!important;transform:translateX(-104%);transition:transform .38s cubic-bezier(.2,.8,.2,1);border-right:1px solid rgba(255,232,170,.14)!important;border-left:0!important;padding:28px 22px 22px!important;box-shadow:40px 0 80px rgba(0,0,0,.6)!important}
+body.dk-drawer-open .dk-side.dk-drawer{transform:none}
+.dk-drawer-x{position:absolute!important;top:18px;right:18px;z-index:2}
+.dk-drawer-shade{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .3s}
+body.dk-drawer-open .dk-drawer-shade{opacity:1;pointer-events:auto}
+body.desk .dk-drawer .dk-brand{padding-top:18px!important}
+body.desk .dk-drawer .dk-brand img{max-width:220px!important}
+body.desk .dk-drawer .dk-sep{display:none}
+body.desk .dk-drawer .dk-tools{margin-top:18px;gap:8px!important}
+body.desk .dk-drawer .dk-tools>a{min-height:62px!important;padding:10px 14px!important;border-radius:16px!important;background:rgba(255,240,200,.03)!important;border:1px solid rgba(255,232,170,.08)!important}
+body.desk .dk-drawer .dk-tools>a:hover{background:rgba(212,175,55,.1)!important;border-color:rgba(212,175,55,.35)!important}
+
+/* ---- welcome */
+body.desk .dk-welcome{padding:calc(var(--bar) + 20px) var(--pad) 0}
+
+/* ---- full-bleed featured banner */
+body.desk .dk-feature{margin:0 0 30px!important;border-radius:0!important;border:0!important;box-shadow:none!important;min-height:min(84vh,860px)!important;background:#050505!important}
+body.desk .dk-f-shade{background:linear-gradient(90deg,rgba(5,5,5,.95) 0%,rgba(5,5,5,.75) 32%,rgba(5,5,5,.15) 62%,rgba(5,5,5,0)),linear-gradient(0deg,#050505 0%,rgba(5,5,5,.6) 22%,rgba(5,5,5,0) 50%),linear-gradient(180deg,rgba(5,5,5,.6),rgba(5,5,5,0) 18%)!important}
+body.desk .dk-f-copy{max-width:min(720px,52%)!important;padding:0 var(--pad) clamp(70px,11vh,120px)!important}
+body.desk .dk-f-logo{max-height:170px!important;max-width:min(520px,100%)!important}
+body.desk .dk-f-title{font-size:clamp(40px,4vw,68px)!important}
+body.desk .dk-f-plot{font-size:15.5px!important;-webkit-line-clamp:3}
+body.desk .dk-f-dots{right:var(--pad)!important;bottom:clamp(70px,11vh,120px)!important}
+
+/* ---- rails: every category, below the hero */
+body.desk.dk-rails-on .dk-rails{gap:30px!important}
+body.desk .dk-rails>.dk-rail,body.desk .dk-rails>.dk-rails-top{padding:0 var(--pad)}
+body.desk .dk-rails>.dk-feature+.dk-rails-top{margin-top:-96px;position:relative;z-index:3}
+.dk-rails-top{display:flex;justify-content:flex-start}
+.dk-cats-open{appearance:none;display:inline-flex;align-items:center;gap:10px;height:46px;padding:0 18px;border-radius:999px;cursor:pointer;font:inherit;font-size:14px;font-weight:600;color:var(--text);background:rgba(14,12,10,.8);border:1px solid rgba(255,232,170,.18);transition:background .2s,border-color .2s}
+.dk-cats-open:hover{background:rgba(212,175,55,.14);border-color:rgba(212,175,55,.5)}
+.dk-cats-open svg{width:18px;height:18px;fill:none;stroke:var(--gold-0);stroke-width:1.8}
+.dk-cats-open i{font-style:normal;min-width:28px;height:22px;padding:0 8px;border-radius:999px;display:inline-grid;place-items:center;font-size:11.5px;font-weight:700;background:var(--gold-grad);color:#1a1306}
+body.desk.dk-rails-on #browseCategories{display:none!important}
+body.desk .dk-rail-h h3{font-size:21px!important}
+body.desk .dk-rail-track{grid-auto-columns:clamp(160px,10.8vw,215px)!important}
+
+/* ---- category browser */
+.dk-cats{position:fixed;inset:0;z-index:95;display:none;align-items:flex-start;justify-content:center;padding:6vh 4vw;background:rgba(0,0,0,.72)}
+.dk-cats.on{display:flex;animation:dkFade .2s ease both}
+@keyframes dkFade{from{opacity:0}to{opacity:1}}
+.dk-cats-card{width:min(1180px,100%);max-height:88vh;display:flex;flex-direction:column;border-radius:26px;background:linear-gradient(180deg,#15120e,#0a0908) padding-box,var(--gold-edge) border-box;border:1px solid transparent;box-shadow:0 40px 100px rgba(0,0,0,.8);overflow:hidden}
+.dk-cats-head{display:flex;align-items:center;gap:16px;padding:20px 22px;border-bottom:1px solid rgba(255,232,170,.08)}
+.dk-cats-head h3{margin:0;font-size:22px;font-weight:700;color:var(--text);white-space:nowrap}
+.dk-cats-head input{flex:1;height:46px;border-radius:14px;padding:0 16px;font:inherit;font-size:14.5px;color:var(--text);background:rgba(255,240,200,.05);border:1px solid rgba(255,232,170,.14);outline:none}
+.dk-cats-head input:focus{border-color:rgba(212,175,55,.6)}
+.dk-cats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;padding:18px 22px 24px;overflow-y:auto}
+.dk-cats-grid button{appearance:none;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;min-height:68px;padding:12px 16px;border-radius:16px;cursor:pointer;font:inherit;text-align:start;color:var(--text);background:rgba(255,240,200,.03);border:1px solid rgba(255,232,170,.08);transition:background .15s,border-color .15s,transform .15s}
+.dk-cats-grid button:hover{background:rgba(212,175,55,.1);border-color:rgba(212,175,55,.45);transform:translateY(-2px)}
+.dk-cats-grid button[hidden]{display:none}
+.dk-cats-grid b{font-size:14.5px;font-weight:600;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;unicode-bidi:plaintext}
+.dk-cats-grid span{display:flex;flex-wrap:wrap;gap:4px}
+.dk-cats-grid i{font-style:normal;height:18px;padding:0 6px;border-radius:5px;display:inline-flex;align-items:center;font-size:9.5px;font-weight:700;letter-spacing:.05em;color:var(--gold-0);background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3)}
+
+/* ---- items page (See all) */
+body.desk:not(.dk-tv-mode) #itemsStage:not(.hidden){display:flex!important;flex-direction:column}
+body.desk #itemsStage>.dk-feature{order:-1}
+body.desk:not(.dk-tv-mode) #itemsStage>.items-head,body.desk:not(.dk-tv-mode) #itemsStage>.dk-tv-list{padding-left:var(--pad)!important;padding-right:var(--pad)!important}
+
+/* ---- details: the backdrop from the top of the screen */
+body.desk .series-detail-stage,body.desk .movie-detail-stage{border-radius:0!important;box-shadow:none!important;background:#050505!important}
+body.desk .series-cinematic{border-radius:0!important;min-height:100vh!important;background:#050505!important}
+body.desk .series-cinematic:after{display:none!important}
+body.desk .series-cinematic .series-backdrop{height:100vh!important;object-position:center 18%!important;opacity:1!important}
+body.desk .series-cinematic .series-backdrop-shade{background:linear-gradient(90deg,rgba(5,5,5,.92) 0%,rgba(5,5,5,.62) 30%,rgba(5,5,5,.08) 60%,rgba(5,5,5,0)),linear-gradient(0deg,#050505 0%,rgba(5,5,5,.75) 22%,rgba(5,5,5,0) 52%),linear-gradient(180deg,rgba(5,5,5,.7),rgba(5,5,5,0) 20%)!important}
+body.desk .series-cinematic .series-cinematic-content{min-height:100vh!important;padding:max(300px,46vh) var(--pad) 60px!important;grid-template-columns:clamp(220px,15vw,280px) minmax(0,1fr)!important}
+body.desk .series-cinematic .detail-back{top:calc(var(--bar) + 14px)!important;left:var(--pad)!important}
+body.desk .series-cinematic .series-detail-poster{top:calc(var(--bar) + 20px)!important}
+body.desk .series-cinematic .dk-logo{max-height:150px!important}
+
+/* ======================================================================
+   Live TV, v3: quiet columns, refined rows, the screen in front.
+   ====================================================================== */
+body.desk.dk-tv-mode main.shell{padding-top:0!important}
+body.desk.dk-tv-mode #itemsStage{box-sizing:border-box;height:100vh;padding:calc(var(--bar) + 18px) var(--pad) 22px!important;grid-template-columns:clamp(220px,14vw,270px) clamp(330px,22vw,410px) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;grid-template-areas:"cats list tv"!important;gap:20px!important;align-items:stretch!important}
+html.lang-ar body.desk.dk-tv-mode #itemsStage{grid-template-areas:"cats list tv"!important;grid-template-columns:clamp(220px,14vw,270px) clamp(330px,22vw,410px) minmax(0,1fr)!important}
+body.desk.dk-tv-mode .dk-tv-cats,body.desk.dk-tv-mode .dk-tv-list{max-height:none!important;height:100%;min-height:0}
+/* columns */
+body.desk.dk-tv-mode .dk-tv-cats{padding:16px 10px 10px!important;border-radius:22px!important;background:rgba(14,12,10,.72)!important;border:1px solid rgba(255,232,170,.08)!important}
+body.desk.dk-tv-mode .dk-tv-list{display:flex!important;flex-direction:column;margin:0!important;padding:0!important;border-radius:22px;background:rgba(14,12,10,.72);border:1px solid rgba(255,232,170,.08);overflow:hidden!important}
+.dk-tvl-head{display:none}
+body.desk.dk-tv-mode .dk-tvl-head{display:flex;flex-direction:column;gap:12px;padding:16px 16px 12px;border-bottom:1px solid rgba(255,232,170,.07)}
+.dk-tvl-head>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.dk-tvl-head b{font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dk-tvl-head small{font-size:11.5px;color:var(--dim);white-space:nowrap}
+.dk-find{display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:12px;background:rgba(255,240,200,.04);border:1px solid rgba(255,232,170,.1);cursor:text}
+.dk-find:focus-within{border-color:rgba(212,175,55,.5)}
+.dk-find svg{flex:none;width:16px;height:16px;fill:none;stroke:var(--dim);stroke-width:2;stroke-linecap:round}
+.dk-find input{flex:1;min-width:0;height:100%;border:0;outline:none;background:none;color:var(--text);font:inherit;font-size:13.5px}
+body.desk.dk-tv-mode .dk-tv-cats .dk-find{margin:0 4px 10px}
+body.desk.dk-tv-mode #browseItems{flex:1;min-height:0;overflow-y:auto;padding:8px!important;gap:2px!important;scrollbar-width:thin;scrollbar-color:rgba(212,175,55,.3) transparent}
+body.desk.dk-tv-mode #itemInfinite{padding:0 16px 10px!important;margin:0!important;font-size:12px}
+body.desk.dk-tv-mode .dk-tvc-h{padding:2px 10px 12px!important}
+body.desk.dk-tv-mode .dk-tvc-list button{padding:10px 12px!important;border-radius:12px!important;font-size:13.5px!important}
+body.desk.dk-tv-mode .dk-tvc-list button[hidden],body.desk.dk-tv-mode #browseItems .live-card[hidden]{display:none!important}
+/* channel rows: no boxes, a hairline, a gold marker when playing */
+html body.desk.dk-tv-mode #browseItems .live-card:not(#_){background:none!important;border:0!important;box-shadow:none!important;border-radius:14px!important;padding:9px 10px!important;min-height:0!important;grid-template-columns:50px minmax(0,1fr)!important;gap:12px!important;transform:none!important;filter:none!important;position:relative}
+html body.desk.dk-tv-mode #browseItems .live-card:not(#_)::before,html body.desk.dk-tv-mode #browseItems .live-card:not(#_)::after{display:none!important;content:none!important}
+html body.desk.dk-tv-mode #browseItems .live-card:not(#_):hover{background:rgba(255,240,200,.045)!important}
+html body.desk.dk-tv-mode #browseItems .live-card.dk-on:not(#_){background:linear-gradient(90deg,rgba(212,175,55,.2),rgba(212,175,55,.04))!important;box-shadow:inset 3px 0 0 var(--gold)!important}
+html body.desk.dk-tv-mode #browseItems .live-card:not(#_) .live-picon-frame{width:50px!important;height:50px!important;border-radius:12px!important;background:#0e0c0a!important;border:1px solid rgba(255,232,170,.1)!important;box-shadow:none!important}
+html body.desk.dk-tv-mode #browseItems .live-card:not(#_) .live-picon-frame:before,html body.desk.dk-tv-mode #browseItems .live-card:not(#_) .live-picon-frame:after{display:none!important}
+html body.desk.dk-tv-mode #browseItems .live-card:not(#_) .live-picon{padding:6px!important}
+html body.desk.dk-tv-mode #browseItems .live-card:not(#_) .item-title{font-size:13.5px!important;font-weight:600!important;color:#ece4d3!important}
+html body.desk.dk-tv-mode #browseItems .live-card.dk-on:not(#_) .item-title{color:var(--gold-0)!important}
+html body.desk.dk-tv-mode #browseItems .live-card:not(#_) .favorite-action.live-favorite{opacity:0;width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;background:none!important;border:0!important;box-shadow:none!important;transition:opacity .15s}
+html body.desk.dk-tv-mode #browseItems .live-card:not(#_):hover .favorite-action.live-favorite,html body.desk.dk-tv-mode #browseItems .live-card:not(#_) .favorite-action.live-favorite.on{opacity:1}
+body.desk.dk-tv-mode .dk-le-t{font-size:12px!important;color:#a99f8c!important}
+body.desk.dk-tv-mode .dk-le-tm{font-size:10.5px!important}
+body.desk.dk-tv-mode .dk-le-bar{height:3px!important}
+/* the screen column */
+body.desk.dk-tv-mode .dk-tv{position:static!important;display:flex!important;flex-direction:column;gap:16px!important;min-height:0;overflow-y:auto;scrollbar-width:none}
+body.desk.dk-tv-mode .dk-tv-screen{flex:none;border:1px solid rgba(255,232,170,.14)!important;border-radius:22px!important;background:radial-gradient(70% 70% at 50% 40%,#16130f,#050505)!important;box-shadow:0 40px 80px -30px rgba(0,0,0,.95)!important}
+body.desk.dk-tv-mode .dk-tv-idle img{width:min(260px,40%)!important;opacity:.85}
+body.desk.dk-tv-mode .dk-tv-idle b{font-size:20px!important}
+body.desk.dk-tv-mode .dk-tv-info{padding:18px 20px!important;border-radius:22px!important;background:rgba(14,12,10,.72)!important;border:1px solid rgba(255,232,170,.08)!important;box-shadow:none!important}
+body.desk.dk-tv-mode .dk-tv-logo{width:60px!important;height:60px!important;border-radius:16px!important;background:#0e0c0a!important;border:1px solid rgba(255,232,170,.12)!important}
+body.desk.dk-tv-mode .dk-tv-name b{font-size:23px!important}
+body.desk.dk-tv-mode .dk-tv-name small{color:#ff5a5a!important;font-weight:800!important}
+body.desk.dk-tv-mode .dk-tv-btn{height:42px!important;border-radius:13px!important;background:rgba(255,240,200,.05)!important;border:1px solid rgba(255,232,170,.14)!important}
+body.desk.dk-tv-mode .dk-epg-now{background:rgba(255,240,200,.035)!important;border:1px solid rgba(255,232,170,.07)!important;border-radius:16px!important}
+body.desk.dk-tv-mode .dk-epg-next>div{background:rgba(255,240,200,.025)!important;border-radius:12px!important}
+body.desk.dk-tv-mode .usp-msg.err{background:radial-gradient(70% 70% at 50% 40%,rgba(26,22,15,.94),rgba(5,5,5,.97))!important}
+html body.desk.dk-tv-mode #browseItems .live-card:not(#_){flex:none!important;height:auto!important}
+body.desk.dk-tv-mode .dk-tvc-list button{flex:none}
+/* no featured banner: rails start under the bar */
+body.desk.dk-rails-on .dk-rails{padding-top:6px}
+body.desk .dk-rails>.dk-rails-top{margin-top:0!important}
+body.desk .dk-welcome{padding-top:calc(var(--bar) + 22px)!important}
+html body.desk:not(.dk-hero-top):not(.dk-tv-mode) main.shell:not(#_):not(#__){padding-top:calc(var(--bar) + 22px)!important}

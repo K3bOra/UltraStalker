@@ -31,6 +31,9 @@
 .usp-msg .loader{margin-right:8px}
 @media(max-width:760px){.usp{padding:0}.usp-card{border-radius:0;border-left:0;border-right:0}.usp-stage{max-height:none}.usp-head .usp-btn.vlc{display:none}}
 .player-option.web{border-color:rgba(201,155,48,.5)!important}
+.usp-note{position:absolute;left:14px;right:14px;bottom:62px;z-index:3;display:none;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-radius:14px;background:rgba(10,9,7,.88);border:1px solid rgba(212,175,55,.35);color:#eadfc8;font-size:12.5px;line-height:1.5}
+.usp-note .ar{direction:rtl;flex:1 1 100%;color:#c9bfa9}
+.usp-note .usp-btn{height:32px;margin-inline-start:auto}
 .usp.docked{position:absolute;inset:0;z-index:2;padding:0;background:#000;backdrop-filter:none;border-radius:inherit;overflow:hidden}
 .usp.docked .usp-card{width:100%;height:100%;border:0;border-radius:inherit;background:#000;box-shadow:none;display:flex;flex-direction:column}
 .usp.docked .usp-head{display:none}
@@ -115,14 +118,51 @@
     video.addEventListener("playing", () => {
       started = true;
       show("");
+      if (current && current._noAudio) note("🔇 Playing without sound — this channel's audio format doesn't play in browsers. Use VLC for sound.", "الصوت بصيغة مش بتشتغل في المتصفح، فالقناة شغالة من غير صوت. للصوت شغّلها بـ VLC.");
     });
     video.addEventListener("waiting", () => started && show('<span class="loader"></span>Loading…'));
+    // The picture is moving: whatever an earlier attempt reported is no longer true.
+    let lastT = 0;
+    video.addEventListener("timeupdate", () => {
+      if (msg.classList.contains("err") && video.currentTime > lastT + 1 && !video.paused) show("");
+      if (video.currentTime < lastT) lastT = video.currentTime;
+      if (!msg.classList.contains("err")) lastT = video.currentTime;
+    });
     video.addEventListener("error", () => fail(video.error && video.error.code === 4 ? "format" : ""));
+  }
+  function note(en, ar) {
+    if (!box) return;
+    let n = box.querySelector(".usp-note");
+    if (!n) {
+      n = document.createElement("div");
+      n.className = "usp-note";
+      box.querySelector(".usp-stage").appendChild(n);
+    }
+    n.innerHTML = `<span>${esc(en)}</span><span class="ar">${esc(ar)}</span><a class="usp-btn" href="${esc(vlcHref(current || {}))}">▶ VLC</a>`;
+    n.style.display = "flex";
+    clearTimeout(note.t);
+    note.t = setTimeout(() => (n.style.display = "none"), 12000);
   }
   function show(html, err) {
     msg.innerHTML = html || "";
     msg.classList.toggle("err", !!err);
     msg.style.display = html ? "flex" : "none";
+  }
+  function badPart(kind) {
+    if (!info || !window.MediaSource || !MediaSource.isTypeSupported) return false;
+    const c = kind === "audio" ? info.audioCodec : info.videoCodec;
+    return !!c && !MediaSource.isTypeSupported((kind === "audio" ? "audio" : "video") + '/mp4; codecs="' + c + '"');
+  }
+  /* Many IPTV channels carry sound the browser can't decode (AC-3, E-AC-3, MP2).
+     The picture is usually fine (H.264): play it without sound rather than not at all. */
+  function retryWithoutSound(detail) {
+    if (!current || current._noAudio || !current.live) return false;
+    if (started && video && video.currentTime > 5) return false;
+    if (info && badPart("video")) return false;
+    const again = Object.assign({}, current, { _noAudio: true });
+    const host = box && box.classList.contains("docked") ? box.parentNode : null;
+    play(again, host ? { host } : undefined);
+    return true;
   }
   function unsupported() {
     if (!info || !window.MediaSource || !MediaSource.isTypeSupported) return "";
@@ -134,6 +174,8 @@
   async function fail(detail) {
     const my = alive;
     if (!current) return;
+    // A late error from a player that was already replaced while the picture plays: ignore.
+    if (started && video && video.readyState >= 2 && !video.paused && !video.error) return;
     const url = String(current.stream || current.url || "");
     let en = "This stream could not play inside the browser.", ar = "الستريم ده مش راضي يشتغل جوه المتصفح.", extra = detail && detail !== "format" ? String(detail) : "";
     const bad = unsupported();
@@ -181,6 +223,8 @@
     } catch (_) {}
     hls = ts = null;
     info = null;
+    const n = box && box.querySelector(".usp-note");
+    if (n) n.style.display = "none";
     started = false;
     if (video) {
       video.removeAttribute("src");
@@ -248,12 +292,19 @@
         const M = window.mpegts;
         if (!M || !M.isSupported()) video.src = src;
         else {
-          ts = M.createPlayer({ type: "mpegts", isLive: !!ticket.live, url: src }, { enableStashBuffer: true, stashInitialSize: 384 * 1024, liveBufferLatencyChasing: false, lazyLoad: !ticket.live });
+          const ds = { type: "mpegts", isLive: !!ticket.live, url: src };
+          if (ticket._noAudio) ds.hasAudio = false;
+          ts = M.createPlayer(ds, { enableStashBuffer: true, stashInitialSize: 384 * 1024, liveBufferLatencyChasing: false, lazyLoad: !ticket.live });
           ts.on(M.Events.MEDIA_INFO, (mi) => {
-            info = { videoCodec: mi && mi.videoCodec, audioCodec: mi && mi.audioCodec, hasVideo: mi && mi.hasVideo };
+            info = { videoCodec: mi && mi.videoCodec, audioCodec: ticket._noAudio ? "" : mi && mi.audioCodec, hasVideo: mi && mi.hasVideo };
+            if (badPart("audio") && retryWithoutSound()) return;
             if (unsupported()) fail();
           });
-          ts.on(M.Events.ERROR, (type, detail) => fail(String(detail || type)));
+          ts.on(M.Events.ERROR, (type, detail) => {
+            if (my !== alive) return;
+            if (/MSE|Media/i.test(String(detail || type)) && retryWithoutSound()) return;
+            fail(String(detail || type));
+          });
           ts.attachMediaElement(video);
           ts.load();
           // Data arrives but nothing can be decoded (MPEG-2 video has no browser decoder): say so.
