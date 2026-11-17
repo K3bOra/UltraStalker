@@ -24,7 +24,7 @@ from goldify import recolor_html  # noqa: E402  (black & gold theme)
 
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "web"
-WEB_VERSION = 14
+WEB_VERSION = 15
 PLUGIN_DIR = "usr/lib/enigma2/python/Plugins/Extensions/UltraStalker/"
 
 

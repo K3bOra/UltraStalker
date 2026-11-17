@@ -478,7 +478,7 @@
     pumpRails();
   }
   function pumpRails() {
-    while (railBusy < 3 && railQ.length) {
+    while (railBusy < 2 && railQ.length) {
       const r = railQ.shift();
       if (!r.isConnected) continue;
       railBusy++;
@@ -494,32 +494,52 @@
     const media = rails.media;
     const account = $("browseAccount").value;
     const track = rail.querySelector(".dk-rail-track");
-    try {
-      const url = "api/browse/items?account=" + encodeURIComponent(account) + "&type=" + encodeURIComponent(media) + "&category=" + encodeURIComponent(rail.dataset.cat) + "&title=" + encodeURIComponent(rail.dataset.title) + "&page=1";
-      const j = await (await fetch(url, { cache: "no-store" })).json();
-      const items = ((j && j.items) || []).slice(0, 24);
-      if (!items.length) {
-        rail.classList.add("empty");
-        return;
+    const url = "api/browse/items?account=" + encodeURIComponent(account) + "&type=" + encodeURIComponent(media) + "&category=" + encodeURIComponent(rail.dataset.cat) + "&title=" + encodeURIComponent(rail.dataset.title) + "&page=1";
+    // Portals often answer a burst of requests slowly or with an empty reply:
+    // try again (with a pause) before deciding a category is really empty.
+    let items = null, failed = false;
+    for (let attempt = 0; attempt < 3 && rail.isConnected; attempt++) {
+      if (attempt) await new Promise((r) => setTimeout(r, 900 * attempt));
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        const j = await res.json();
+        if (!res.ok) throw new Error((j && j.error) || "HTTP " + res.status);
+        items = ((j && j.items) || []).slice(0, 24);
+        failed = false;
+        if (items.length || (j && j.total === 0 && attempt)) break;
+      } catch (_) {
+        failed = true;
       }
-      const fb = media === "series" ? "poster-series.png" : "poster-movie.png";
-      track.innerHTML = items
-        .map((row, i) => {
-          const art = window.USEngine.art(row.id, media) || fb;
-          const facts = [row.year, row.rating ? "★ " + Number(row.rating).toFixed(1) : ""].filter(Boolean).join(" · ");
-          return `<button type="button" class="dk-rc" data-item="${esc(row.id)}" data-i="${i}"><span class="dk-rc-art"><img loading="lazy" decoding="async" src="${esc(art)}" alt="" onerror="this.onerror=null;this.src='${fb}'"></span><span class="dk-rc-t" dir="auto">${esc(plain(row.title || ""))}</span>${facts ? `<span class="dk-rc-m">${esc(facts)}</span>` : ""}</button>`;
-        })
-        .join("");
-      track.onclick = (e) => {
-        const b = e.target.closest(".dk-rc");
-        if (b) openRow(items[+b.dataset.i], media);
-      };
-      rail.dataset.state = "done";
-      featSync();
-    } catch (_) {
-      rail.dataset.state = "";
-      rail.classList.add("empty");
     }
+    if (!rail.isConnected || media !== rails.media) return;
+    if (!items || !items.length) {
+      if (failed) {
+        rail.dataset.state = "";
+        track.innerHTML = `<button type="button" class="dk-rail-retry">${T("Couldn't load this category · Try again", "القسم ماتحملش · حاول تاني")}</button>`;
+        track.querySelector("button").onclick = () => {
+          track.innerHTML = '<span class="dk-rc sk"></span>'.repeat(8);
+          queueRail(rail);
+        };
+      } else {
+        rail.dataset.state = "done";
+        rail.classList.add("empty");
+      }
+      return;
+    }
+    const fb = media === "series" ? "poster-series.png" : "poster-movie.png";
+    track.innerHTML = items
+      .map((row, i) => {
+        const art = window.USEngine.art(row.id, media) || fb;
+        const facts = [row.year, row.rating ? "★ " + Number(row.rating).toFixed(1) : ""].filter(Boolean).join(" · ");
+        return `<button type="button" class="dk-rc" data-item="${esc(row.id)}" data-i="${i}"><span class="dk-rc-art"><img loading="lazy" decoding="async" src="${esc(art)}" alt="" onerror="this.onerror=null;this.src='${fb}'"></span><span class="dk-rc-t" dir="auto">${esc(plain(row.title || ""))}</span>${facts ? `<span class="dk-rc-m">${esc(facts)}</span>` : ""}</button>`;
+      })
+      .join("");
+    track.onclick = (e) => {
+      const b = e.target.closest(".dk-rc");
+      if (b) openRow(items[+b.dataset.i], media);
+    };
+    rail.dataset.state = "done";
+    featSync();
   }
   function railsSync() {
     const media = (document.querySelector(".type.active") || {}).dataset?.media || "itv";
@@ -1025,16 +1045,7 @@
       },
       true
     );
-    document.addEventListener("keydown", (e) => {
-      if (!tv.on || !tv.id || !/^(ArrowUp|ArrowDown|PageUp|PageDown)$/.test(e.key)) return;
-      if (/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || "")) return;
-      const cards = [...document.querySelectorAll("#browseItems .live-card")];
-      const i = cards.findIndex((c) => c.dataset.item === tv.id);
-      const next = cards[i + (/Down/.test(e.key) ? 1 : -1)];
-      if (!next) return;
-      e.preventDefault();
-      tune(next);
-    });
+    // channel up/down keys are handled by the player (see zap)
   }
   function fmtTime(t) {
     const d = new Date(t * 1000);
@@ -1065,6 +1076,15 @@
       if (gen === tv.gen) box.innerHTML = "";
     }
   }
+  /* Channel up / down from the player (buttons, arrow keys). */
+  function zap(dir) {
+    const cards = [...document.querySelectorAll("#browseItems .live-card")].filter((c) => !c.hidden && c.offsetParent !== null);
+    if (!cards.length) return;
+    const at = cards.findIndex((c) => c.classList.contains("dk-on"));
+    const next = cards[(at + dir + cards.length) % cards.length];
+    next.scrollIntoView({ block: "nearest" });
+    tune(next);
+  }
   async function tune(card) {
     const id = card.dataset.item;
     if (!id) return;
@@ -1092,7 +1112,7 @@
       const href = window.USPlayer.vlcHref(j);
       vlc.href = href;
       if (/^data:/.test(href)) vlc.setAttribute("download", "ultra-stalker.m3u");
-      window.USPlayer.play(j, { host: screen });
+      window.USPlayer.play(j, { host: screen, key: "live:" + ($("browseAccount").value || "") + ":" + id, onPrev: () => zap(-1), onNext: () => zap(1) });
     } catch (err) {
       if (gen !== tv.gen) return;
       window.USPlayer.close();

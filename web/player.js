@@ -1,58 +1,130 @@
-/* Ultra Stalker Web — play inside the page.
+/* Ultra Stalker Web — the in-page player ("Ultra Player").
 
-   Adds "Play here" to the receiver's player chooser. Live channels (MPEG-TS) play
-   with mpegts.js, HLS with hls.js, and movie files with the browser's own player.
-   Portal streams arrive as relay /play tickets; other plain-http streams go through
-   the relay so an https page may load them.
+   One player, one set of controls, two engines underneath:
+     • Browser engine: the page's own <video> (hardware decoding) fed by mpegts.js for
+       live MPEG-TS, hls.js for HLS, or a plain src for movie files.
+     • Ultra engine: libmedia AVPlayer — FFmpeg decoders compiled to WebAssembly, so it
+       plays what browsers can't (AC-3 / E-AC-3 / MP2 sound, HEVC, MPEG-2, MKV…).
 
-   Browsers can't decode everything VLC can (MPEG-2 video, AC-3 / E-AC-3 audio, and
-   HEVC on some systems). When a stream uses one of those, the player says exactly
-   that and offers VLC / a copyable link, instead of failing silently. */
+   Like a desktop app with VLC built in, the user never chooses: each stream walks a
+   plan (browser → Ultra with hardware → Ultra in software → picture-only for live) and
+   the first step that plays wins. The step that worked is remembered per channel, so
+   the next time it opens straight away. A watchdog reconnects dropped live streams,
+   a start timer reports streams that never answer, and the settings menu offers audio
+   tracks, subtitles, picture fit, the engine choice, VLC and the link. */
 (function () {
   "use strict";
   const HERE = ((document.currentScript && document.currentScript.src) || location.href).replace(/[^/]*$/, "");
+  const ENGINE_WASM = "https://cdn.jsdelivr.net/gh/zhaohappy/libmedia@1.3.1/dist";
+  const START_TIMEOUT = 22000; // ms without a picture before moving on
+  const STALL_LIMIT = 9000; // ms a live picture may freeze before reconnecting
+  const MAX_RECONNECT = 4;
+
   const css = `
-.usp{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(1,6,4,.88);backdrop-filter:blur(14px);padding:18px}
+.usp{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(4,3,2,.86);backdrop-filter:blur(14px);padding:18px}
 .usp.hidden{display:none}
-.usp-card{position:relative;width:min(1320px,100%);border-radius:24px;overflow:hidden;border:3px solid transparent;background:linear-gradient(155deg,rgba(16,14,10,.98),rgba(10,8,6,.98) 58%,rgba(31,27,20,.6)) padding-box,linear-gradient(135deg,rgba(245,243,237,.48),rgba(201,153,41,.95) 30%,rgba(110,84,24,.58) 52%,rgba(155,105,56,.88) 77%,rgba(11,10,7,.92)) border-box;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+.usp-card{position:relative;width:min(1320px,100%);border-radius:24px;overflow:hidden;border:1.5px solid transparent;background:linear-gradient(155deg,rgba(26,20,12,.98),rgba(10,8,6,.98) 58%,rgba(31,25,16,.9)) padding-box,linear-gradient(135deg,rgba(255,240,190,.6),rgba(212,175,55,.9) 30%,rgba(110,84,24,.5) 55%,rgba(240,205,120,.8) 85%,rgba(40,30,12,.8)) border-box;box-shadow:0 30px 90px rgba(0,0,0,.65),0 0 90px -40px rgba(240,190,80,.6)}
 .usp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 12px 18px}
-.usp-title{min-width:0}.usp-title strong{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fbf9f3}.usp-title small{display:block;color:#ceb374;font-size:11px;margin-top:3px}
+.usp-title{min-width:0}.usp-title strong{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fbf6e6}.usp-title small{display:block;color:#e3c46f;font-size:11px;margin-top:3px;letter-spacing:.04em}
 .usp-btns{display:flex;gap:8px;flex:none}
-.usp-btn{appearance:none;height:40px;min-width:40px;padding:0 14px;border-radius:999px;border:2px solid transparent;color:#fff;font:inherit;font-size:12px;font-weight:800;line-height:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(rgba(8,7,5,.9),rgba(8,7,5,.9)) padding-box,linear-gradient(135deg,rgba(245,243,237,.3),rgba(201,155,48,.7),rgba(152,104,56,.56)) border-box}
+.usp-btn{appearance:none;height:40px;min-width:40px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,226,150,.28);color:#fff3d0;font:inherit;font-size:12.5px;font-weight:700;line-height:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:rgba(30,23,13,.85);transition:background .2s,color .2s}
+.usp-btn:hover{background:linear-gradient(135deg,#fbeeb5,#d9b44a 45%,#a87b22);color:#1a1306}
 .usp-btn.x{font-size:22px;padding:0;width:40px}
-.usp-stage{position:relative;background:#000;aspect-ratio:16/9;max-height:calc(100vh - 140px);width:100%}
-.usp-stage video{width:100%;height:100%;display:block;background:#000}
-.usp-msg{position:absolute;inset:0;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;color:#eadfc5;font-size:14px;line-height:1.7;pointer-events:none}
-.usp-msg.err{background:rgba(0,0,0,.74);pointer-events:auto}
-.usp-msg b{font-size:17px;color:#fff}
-.usp-msg .ar{direction:rtl;font-size:15px;color:#dabfa4}
-.usp-msg small{color:#dac595;font-size:12px;max-width:640px}
+.usp-stage{position:relative;background:#000;aspect-ratio:16/9;max-height:calc(100vh - 140px);width:100%;overflow:hidden;user-select:none;-webkit-user-select:none}
+.usp-stage video{width:100%;height:100%;display:block;background:#000;object-fit:contain}
+.usp-stage[data-fit=fill] video,.usp-stage[data-fit=fill] .usp-engine video{object-fit:cover!important}
+.usp-stage[data-fit=stretch] video{object-fit:fill!important}
+.usp-stage.idle{cursor:none}
+.usp-msg{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;color:#eadfc5;font-size:14px;line-height:1.7;pointer-events:none}
+.usp-msg.err{background:radial-gradient(70% 80% at 50% 40%,rgba(30,22,10,.92),rgba(4,3,2,.96));pointer-events:auto}
+.usp-msg b{font-size:18px;color:#fff6dc}
+.usp-msg .ar{direction:rtl;font-size:15px;color:#e5cfa4}
+.usp-msg small{color:#cdb98a;font-size:12px;max-width:640px}
 .usp-acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .usp-msg .loader{margin-right:8px}
-@media(max-width:760px){.usp{padding:0}.usp-card{border-radius:0;border-left:0;border-right:0}.usp-stage{max-height:none}.usp-head .usp-btn.vlc{display:none}}
-.player-option.web{border-color:rgba(201,155,48,.5)!important}
+.usp-spin{width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,226,150,.15);border-top-color:#f0c45a;animation:uspSpin .9s linear infinite;filter:drop-shadow(0 0 10px rgba(240,196,90,.6))}
+@keyframes uspSpin{to{transform:rotate(360deg)}}
 .usp-engine{position:absolute;inset:0;z-index:1;background:#000}
 .usp-engine canvas,.usp-engine video{width:100%!important;height:100%!important;object-fit:contain}
-.usp-ebar{position:absolute;left:0;right:0;bottom:0;z-index:4;display:none;align-items:center;gap:12px;padding:30px 16px 12px;background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,0));color:#f2e9d6;font-size:12.5px;opacity:0;transition:opacity .25s}
-.usp-stage:hover .usp-ebar,.usp-ebar:focus-within{opacity:1}
-.usp-ebar.on{display:flex}
-.usp-ebar button{appearance:none;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,232,170,.25);background:rgba(20,18,14,.7);color:#f6e7b8;cursor:pointer;font-size:14px;display:grid;place-items:center}
-.usp-ebar input[type=range]{accent-color:#d4af37}
-.usp-ebar .seek{flex:1}
-.usp-ebar .vol{width:90px}
-.usp-ebar .tag{padding:3px 9px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.08em;color:#1a1306;background:linear-gradient(135deg,#fbeeb5,#d9b44a 45%,#a87b22)}
-.usp-note{position:absolute;left:14px;right:14px;bottom:62px;z-index:3;display:none;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-radius:14px;background:rgba(10,9,7,.88);border:1px solid rgba(212,175,55,.35);color:#eadfc8;font-size:12.5px;line-height:1.5}
-.usp-note .ar{direction:rtl;flex:1 1 100%;color:#c9bfa9}
+/* controls */
+.usp-ui{position:absolute;inset:0;z-index:4;pointer-events:none}
+.usp-osd{position:absolute;left:18px;top:16px;display:flex;align-items:center;gap:10px;max-width:70%;padding:8px 14px 8px 10px;border-radius:14px;background:rgba(12,9,5,.72);border:1px solid rgba(255,226,150,.22);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:0;transform:translateY(-8px);transition:opacity .3s,transform .3s}
+.usp-osd.on{opacity:1;transform:none}
+.usp-osd b{font-size:14px;color:#fff6dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.usp-osd i,.usp-tag{font-style:normal;flex:none;padding:3px 8px;border-radius:999px;font-size:9.5px;font-weight:800;letter-spacing:.1em;color:#1a1306;background:linear-gradient(135deg,#fbeeb5,#d9b44a 45%,#a87b22)}
+.usp-osd i.b{color:#f3e2b4;background:rgba(255,226,150,.14)}
+.usp-bar{position:absolute;left:0;right:0;bottom:0;padding:44px 14px 12px;background:linear-gradient(0deg,rgba(6,4,2,.92),rgba(6,4,2,.55) 55%,rgba(6,4,2,0));pointer-events:auto;transition:opacity .3s,transform .3s}
+.usp-stage.idle .usp-bar,.usp-stage.idle .usp-osd{opacity:0;transform:translateY(10px);pointer-events:none}
+.usp-seek{display:flex;align-items:center;gap:10px;margin:0 6px 6px;font-size:12px;color:#e9dcbc;font-variant-numeric:tabular-nums}
+.usp-seek input{flex:1}
+.usp-row{display:flex;align-items:center;gap:6px}
+.usp-row .sp{flex:1}
+.usp-ic{appearance:none;flex:none;width:40px;height:40px;border-radius:12px;border:0;background:none;color:#f6e7b8;cursor:pointer;display:grid;place-items:center;transition:background .2s,color .2s,transform .15s}
+.usp-ic:hover{background:rgba(255,226,150,.12);color:#fff}
+.usp-ic:active{transform:scale(.92)}
+.usp-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.usp-ic.pp{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#fbeeb5,#d9b44a 45%,#a87b22);color:#1a1306;box-shadow:0 8px 24px -8px rgba(240,196,90,.8)}
+.usp-ic.pp svg{fill:currentColor;stroke:none}
+.usp-ic[hidden]{display:none}
+.usp-live{display:inline-flex;align-items:center;gap:6px;margin:0 6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.1em;color:#ffd9d9;background:rgba(255,70,70,.14);border:1px solid rgba(255,90,90,.35)}
+.usp-live:before{content:"";width:7px;height:7px;border-radius:50%;background:#ff4d4d;box-shadow:0 0 10px #ff4d4d;animation:uspBlink 1.6s ease-in-out infinite}
+@keyframes uspBlink{50%{opacity:.35}}
+.usp-time{margin:0 6px;font-size:12.5px;color:#e9dcbc;font-variant-numeric:tabular-nums}
+.usp-vol{display:flex;align-items:center}
+.usp-vol input{width:0;opacity:0;transition:width .25s,opacity .25s}
+.usp-vol:hover input,.usp-vol input:focus{width:90px;opacity:1}
+.usp input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:4px;background:linear-gradient(90deg,#f0c45a var(--p,0%),rgba(255,226,150,.22) var(--p,0%));cursor:pointer}
+.usp input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff3cf;box-shadow:0 0 0 3px rgba(240,196,90,.45)}
+.usp input[type=range]::-moz-range-thumb{width:14px;height:14px;border:0;border-radius:50%;background:#fff3cf}
+.usp-unmute{position:absolute;right:16px;top:16px;z-index:6;pointer-events:auto;display:none;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;border:0;cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;color:#1a1306;background:linear-gradient(135deg,#fbeeb5,#d9b44a 45%,#a87b22);box-shadow:0 10px 30px -10px rgba(240,196,90,.9)}
+.usp-unmute.on{display:inline-flex}
+/* settings */
+.usp-menu{position:absolute;right:14px;bottom:76px;z-index:7;width:min(300px,calc(100% - 28px));max-height:calc(100% - 100px);overflow:auto;pointer-events:auto;padding:8px;border-radius:18px;background:linear-gradient(165deg,rgba(60,44,18,.9),rgba(16,12,8,.95) 45%) padding-box,linear-gradient(150deg,rgba(255,226,150,.55),rgba(212,175,55,.15) 40%,rgba(212,175,55,.35)) border-box;border:1px solid transparent;box-shadow:0 30px 60px -20px rgba(0,0,0,.9);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:none;scrollbar-width:thin}
+.usp-menu.on{display:block;animation:uspPop .18s ease-out}
+@keyframes uspPop{from{opacity:0;transform:translateY(6px) scale(.98)}}
+.usp-menu h4{margin:8px 10px 6px;font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#f0c45a}
+.usp-menu button,.usp-menu a{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:11px;background:none;color:#efe4c9;font:inherit;font-size:13px;text-align:left;cursor:pointer;text-decoration:none}
+.usp-menu button:hover,.usp-menu a:hover{background:rgba(255,226,150,.1)}
+.usp-menu button.on{color:#fff6dc;background:rgba(240,196,90,.16)}
+.usp-menu button.on:after{content:"";width:8px;height:8px;border-radius:50%;background:#f0c45a;box-shadow:0 0 10px #f0c45a}
+.usp-menu small{color:#a99c80;font-size:11px}
+.usp-menu .row{display:flex;gap:6px;padding:2px 4px 6px}
+.usp-menu .row button{justify-content:center;padding:8px 6px;border:1px solid rgba(255,226,150,.14)}
+.usp-menu .row button.on{border-color:rgba(240,196,90,.6)}
+.usp-menu .row button.on:after{display:none}
+.usp-menu hr{border:0;border-top:1px solid rgba(255,226,150,.12);margin:6px 4px}
+.usp-note{position:absolute;left:14px;right:14px;bottom:86px;z-index:6;display:none;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-radius:14px;background:rgba(14,10,6,.9);border:1px solid rgba(240,196,90,.4);color:#eadfc8;font-size:12.5px;line-height:1.5;pointer-events:auto}
+.usp-note .ar{direction:rtl;flex:1 1 100%;color:#d6c7a6}
 .usp-note .usp-btn{height:32px;margin-inline-start:auto}
+@media(max-width:760px){.usp{padding:0}.usp-card{border-radius:0;border-left:0;border-right:0}.usp-stage{max-height:none}.usp-head .usp-btn.vlc{display:none}.usp-vol input{display:none}.usp-ic{width:38px;height:38px}.usp-bar{padding:36px 8px 8px}.usp-ic.pip{display:none}}
+.player-option.web{border-color:rgba(201,155,48,.5)!important}
 .usp.docked{position:absolute;inset:0;z-index:2;padding:0;background:#000;backdrop-filter:none;border-radius:inherit;overflow:hidden}
 .usp.docked .usp-card{width:100%;height:100%;border:0;border-radius:inherit;background:#000;box-shadow:none;display:flex;flex-direction:column}
 .usp.docked .usp-head{display:none}
 .usp.docked .usp-stage{flex:1;aspect-ratio:auto;max-height:none;height:100%}
-.usp.docked .usp-stage video{object-fit:contain}
+.usp-stage:fullscreen{max-height:none;aspect-ratio:auto}
 `;
+  // mpegts.js posts a few late messages after a stream is unloaded (its emitter is gone by
+  // then). They are harmless; keep them out of the console.
+  window.addEventListener("unhandledrejection", (e) => {
+    const r = e.reason;
+    if (r && /reading 'emit'|reading "emit"|_emitter/.test(String(r.message || r)) && /mpegts/.test(String(r.stack || ""))) e.preventDefault();
+  });
   const style = document.createElement("style");
   style.textContent = css;
   document.head.appendChild(style);
+
+  const I = {
+    play: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></svg>',
+    prev: '<svg viewBox="0 0 24 24"><path d="M18 6 9 12l9 6z"/><path d="M6 6v12"/></svg>',
+    next: '<svg viewBox="0 0 24 24"><path d="m6 6 9 6-9 6z"/><path d="M18 6v12"/></svg>',
+    vol: '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+    mute: '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="m16 9.5 5 5m0-5-5 5"/></svg>',
+    gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>',
+    pip: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11.5" width="7" height="5.5" rx="1"/></svg>',
+    full: '<svg viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
+  };
 
   const loaded = {};
   function lib(src) {
@@ -61,12 +133,31 @@
         const s = document.createElement("script");
         s.src = src;
         s.onload = resolve;
-        s.onerror = reject;
+        s.onerror = () => {
+          delete loaded[src];
+          reject(new Error("could not load " + src.split("/").pop()));
+        };
         document.head.appendChild(s);
       });
     }
     return loaded[src];
   }
+  const store = {
+    get(k, d) {
+      try {
+        const v = localStorage.getItem(k);
+        return v === null ? d : v;
+      } catch (_) {
+        return d;
+      }
+    },
+    set(k, v) {
+      try {
+        if (v === null) localStorage.removeItem(k);
+        else localStorage.setItem(k, String(v));
+      } catch (_) {}
+    },
+  };
   function viaRelay(url, headers) {
     try {
       const base = window.USEngine.relayBase();
@@ -92,8 +183,166 @@
     if (/mp4v|mpeg2|m2v/.test(s)) return "MPEG-2";
     return c || "";
   }
+  function fmtClock(sec) {
+    const t = Math.max(0, Math.floor(sec || 0));
+    const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+    return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s).padStart(2, "0");
+  }
 
-  let box, video, msg, title, sub, vlc, hls = null, ts = null, alive = 0, info = null, started = false, current = null;
+  /* ------------------------------------------------------------------ plans
+     A plan is the ordered list of ways to try one stream. */
+  const STEP_LABEL = { native: "Playing here", engine: "Ultra engine", soft: "Ultra engine · software", mute: "Picture only" };
+  function engineMode() {
+    return store.get("us-player-engine", "auto"); // auto | browser | ultra
+  }
+  function planFor(ticket, key) {
+    const live = !!ticket.live;
+    const mode = engineMode();
+    let plan;
+    if (mode === "browser") plan = ["native"];
+    else if (mode === "ultra" || (key && store.get("us-eng:" + key, "") === "1")) plan = ["engine", "soft", "native"];
+    else plan = ["native", "engine", "soft"];
+    if (live) plan.push("mute");
+    return plan;
+  }
+
+  /* ------------------------------------------------------------------ state */
+  let box, stage, video, msg, title, sub, vlc, ui, bar, osd, menu, unmuteBtn;
+  let hls = null, ts = null, eng = null, engBox = null;
+  let alive = 0, info = null, started = false, current = null, opts = {};
+  let lastT = 0, lastMove = 0, playingSince = 0, startTimer = 0, tick = 0, idleTimer = 0;
+
+  const step = () => (current && current._plan ? current._plan[current._step || 0] : "native");
+  const isEngine = () => step() === "engine" || step() === "soft";
+
+  /* ------------------------------------------------------------------ one API over both engines */
+  const A = {
+    paused() {
+      if (isEngine()) return !eng || eng.getStatus() === 8;
+      return !video || video.paused;
+    },
+    async toggle() {
+      if (isEngine()) {
+        if (!eng) return;
+        if (eng.getStatus() === 8) await eng.play().catch(() => {});
+        else await eng.pause().catch(() => {});
+      } else if (video) video.paused ? video.play().catch(() => {}) : video.pause();
+    },
+    time() {
+      if (isEngine()) return eng ? Number(eng.currentTime || 0) / 1000 : 0;
+      return video ? video.currentTime : 0;
+    },
+    duration() {
+      if (current && current.live) return 0;
+      if (isEngine()) return eng ? Number(eng.getDuration() || 0) / 1000 : 0;
+      return video && isFinite(video.duration) ? video.duration : 0;
+    },
+    seek(sec) {
+      if (current && current.live) return;
+      if (isEngine()) eng && eng.seek(BigInt(Math.max(0, Math.floor(sec * 1000)))).catch(() => {});
+      else if (video) video.currentTime = Math.max(0, sec);
+    },
+    vol() {
+      return Math.min(1, Math.max(0, +store.get("us-vol", "1") || 0));
+    },
+    muted() {
+      return store.get("us-muted", "0") === "1";
+    },
+    applyVol() {
+      const v = A.vol(), m = A.muted();
+      if (video) {
+        video.volume = v;
+        video.muted = m || !!(current && current._noAudio);
+      }
+      if (eng) {
+        try {
+          eng.setVolume(m ? 0 : v);
+        } catch (_) {}
+      }
+    },
+    setVol(v) {
+      store.set("us-vol", Math.min(1, Math.max(0, v)).toFixed(2));
+      if (v > 0) store.set("us-muted", "0");
+      A.applyVol();
+    },
+    toggleMute() {
+      store.set("us-muted", A.muted() ? "0" : "1");
+      A.applyVol();
+    },
+    audioTracks() {
+      if (isEngine() && eng) {
+        let cur = -1;
+        try {
+          cur = eng.getSelectedAudioStreamId();
+        } catch (_) {}
+        return (eng.getStreams() || [])
+          .filter((s) => /audio/i.test(String(s.mediaType)))
+          .map((s, i) => ({ id: s.id, on: s.id === cur, label: trackLabel(s.metadata, i, codecOf(s)) }));
+      }
+      if (hls && hls.audioTracks && hls.audioTracks.length > 1) return hls.audioTracks.map((t, i) => ({ id: i, on: i === hls.audioTrack, label: trackLabel({ language: t.lang, title: t.name }, i) }));
+      if (video && video.audioTracks && video.audioTracks.length > 1) return [...video.audioTracks].map((t, i) => ({ id: i, on: t.enabled, label: trackLabel({ language: t.language, title: t.label }, i) }));
+      return [];
+    },
+    selectAudio(id) {
+      if (isEngine() && eng) eng.selectAudio(id).catch(() => {});
+      else if (hls) hls.audioTrack = id;
+      else if (video && video.audioTracks) [...video.audioTracks].forEach((t, i) => (t.enabled = i === id));
+    },
+    subTracks() {
+      if (isEngine() && eng) {
+        let cur = -1;
+        try {
+          cur = eng.getSelectedSubtitleStreamId();
+        } catch (_) {}
+        return (eng.getStreams() || [])
+          .filter((s) => /subtitle/i.test(String(s.mediaType)))
+          .map((s, i) => ({ id: s.id, on: s.id === cur && store.get("us-subs", "1") === "1", label: trackLabel(s.metadata, i) }));
+      }
+      if (hls && hls.subtitleTracks && hls.subtitleTracks.length) return hls.subtitleTracks.map((t, i) => ({ id: i, on: i === hls.subtitleTrack, label: trackLabel({ language: t.lang, title: t.name }, i) }));
+      if (video && video.textTracks) return [...video.textTracks].filter((t) => /subtitles|captions/.test(t.kind)).map((t, i) => ({ id: i, on: t.mode === "showing", label: trackLabel({ language: t.language, title: t.label }, i) }));
+      return [];
+    },
+    selectSub(id) {
+      if (isEngine() && eng) {
+        if (id < 0) {
+          store.set("us-subs", "0");
+          eng.setSubtitleEnable(false);
+        } else {
+          store.set("us-subs", "1");
+          eng.setSubtitleEnable(true);
+          eng.selectSubtitle(id).catch(() => {});
+        }
+      } else if (hls) hls.subtitleTrack = id;
+      else if (video && video.textTracks) [...video.textTracks].filter((t) => /subtitles|captions/.test(t.kind)).forEach((t, i) => (t.mode = i === id ? "showing" : "disabled"));
+    },
+    setFit(fit) {
+      store.set("us-fit", fit);
+      if (stage) stage.dataset.fit = fit;
+      if (eng) {
+        try {
+          eng.setRenderMode(fit === "fill" ? 1 : 0);
+        } catch (_) {}
+      }
+    },
+  };
+  const LANGS = { ar: "Arabic", ara: "Arabic", en: "English", eng: "English", fr: "French", fre: "French", fra: "French", de: "German", ger: "German", deu: "German", es: "Spanish", spa: "Spanish", tr: "Turkish", tur: "Turkish", it: "Italian", ita: "Italian", ru: "Russian", rus: "Russian", fa: "Persian", per: "Persian", ku: "Kurdish", kur: "Kurdish", und: "" };
+  function trackLabel(meta, i, codec) {
+    const m = meta || {};
+    const lang = String(m.language || m.lang || "").toLowerCase();
+    const name = LANGS[lang] !== undefined ? LANGS[lang] : lang.toUpperCase();
+    const t = String(m.title || m.name || m.label || "").trim();
+    return [t || name || "Track " + (i + 1), codec].filter(Boolean).join(" · ");
+  }
+  function codecOf(s) {
+    try {
+      const id = s.codecparProxy && s.codecparProxy.codecId;
+      return { 86019: "AC-3", 86056: "E-AC-3", 86017: "MP3", 86016: "MP2", 86018: "AAC", 86076: "Opus", 86020: "DTS" }[id] || "";
+    } catch (_) {
+      return "";
+    }
+  }
+
+  /* ------------------------------------------------------------------ UI */
   function build() {
     if (box) return;
     box = document.createElement("div");
@@ -101,49 +350,218 @@
     box.innerHTML =
       '<div class="usp-card" role="dialog" aria-modal="true"><div class="usp-head"><div class="usp-title"><strong></strong><small></small></div>' +
       '<div class="usp-btns"><a class="usp-btn vlc">▶ VLC</a><button type="button" class="usp-btn x" aria-label="Close">×</button></div></div>' +
-      '<div class="usp-stage"><video controls playsinline autoplay></video><div class="usp-msg"></div></div></div>';
+      '<div class="usp-stage"><video playsinline autoplay></video><div class="usp-msg"></div>' +
+      '<div class="usp-ui"><div class="usp-osd"><b></b><i></i></div>' +
+      '<div class="usp-bar"><div class="usp-seek"><span class="c">0:00</span><input type="range" min="0" max="1000" value="0" aria-label="Seek"><span class="d">0:00</span></div>' +
+      '<div class="usp-row">' +
+      `<button type="button" class="usp-ic prev" aria-label="Previous channel" title="Previous channel (↑)">${I.prev}</button>` +
+      `<button type="button" class="usp-ic pp" aria-label="Play / pause">${I.pause}</button>` +
+      `<button type="button" class="usp-ic next" aria-label="Next channel" title="Next channel (↓)">${I.next}</button>` +
+      '<span class="usp-live">LIVE</span><span class="usp-time"></span>' +
+      `<div class="usp-vol"><button type="button" class="usp-ic mute" aria-label="Sound (M)">${I.vol}</button><input type="range" min="0" max="100" aria-label="Volume"></div>` +
+      '<span class="sp"></span><span class="usp-tag" hidden>ULTRA</span>' +
+      `<button type="button" class="usp-ic gear" aria-label="Settings">${I.gear}</button>` +
+      `<button type="button" class="usp-ic pip" aria-label="Picture in picture">${I.pip}</button>` +
+      `<button type="button" class="usp-ic full" aria-label="Full screen (F)">${I.full}</button>` +
+      "</div></div><div class=\"usp-menu\" role=\"menu\"></div></div>" +
+      '<button type="button" class="usp-unmute">' + I.mute.replace("<svg", '<svg width="16" height="16" style="fill:none;stroke:currentColor;stroke-width:2"') + " Tap for sound</button>" +
+      "</div></div>";
     document.body.appendChild(box);
+    stage = box.querySelector(".usp-stage");
     video = box.querySelector("video");
     msg = box.querySelector(".usp-msg");
     title = box.querySelector(".usp-title strong");
     sub = box.querySelector(".usp-title small");
     vlc = box.querySelector(".usp-btn.vlc");
+    ui = box.querySelector(".usp-ui");
+    bar = box.querySelector(".usp-bar");
+    osd = box.querySelector(".usp-osd");
+    menu = box.querySelector(".usp-menu");
+    unmuteBtn = box.querySelector(".usp-unmute");
+    stage.dataset.fit = store.get("us-fit", "fit");
     box.querySelector(".usp-btn.x").addEventListener("click", close);
     box.addEventListener("click", (e) => e.target === box && !box.classList.contains("docked") && close());
+
+    const q = (s) => bar.querySelector(s);
+    q(".pp").onclick = () => A.toggle().then(refresh);
+    q(".prev").onclick = () => opts.onPrev && opts.onPrev();
+    q(".next").onclick = () => opts.onNext && opts.onNext();
+    q(".mute").onclick = () => {
+      A.toggleMute();
+      refresh();
+    };
+    q(".usp-vol input").oninput = (e) => {
+      A.setVol(+e.target.value / 100);
+      refresh();
+    };
+    const seek = q(".usp-seek input");
+    seek.oninput = () => {
+      const d = A.duration();
+      q(".usp-seek .c").textContent = fmtClock((seek.value / 1000) * d);
+      paint(seek);
+    };
+    seek.onchange = () => A.seek((seek.value / 1000) * A.duration());
+    q(".gear").onclick = (e) => {
+      e.stopPropagation();
+      menu.classList.contains("on") ? menu.classList.remove("on") : openMenu();
+    };
+    q(".pip").onclick = () => {
+      if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
+      else if (video && video.requestPictureInPicture && !isEngine()) video.requestPictureInPicture().catch(() => {});
+    };
+    q(".full").onclick = fullscreen;
+    unmuteBtn.onclick = (e) => {
+      e.stopPropagation();
+      store.set("us-muted", "0");
+      if (eng && eng.isSuspended && eng.isSuspended()) eng.resume().catch(() => {});
+      A.applyVol();
+      if (video && !isEngine()) video.play().catch(() => {});
+      unmuteBtn.classList.remove("on");
+      refresh();
+    };
+    menu.addEventListener("click", (e) => e.stopPropagation());
+
+    // show the controls on movement, hide them when idle
+    const wake = () => {
+      stage.classList.remove("idle");
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => !menu.classList.contains("on") && !A.paused() && stage.classList.add("idle"), 3200);
+    };
+    stage.addEventListener("mousemove", wake);
+    stage.addEventListener("touchstart", wake, { passive: true });
+    stage.addEventListener("click", (e) => {
+      if (e.target.closest(".usp-bar,.usp-menu,.usp-msg.err,.usp-unmute,.usp-note")) return;
+      if (menu.classList.contains("on")) return menu.classList.remove("on");
+      if (matchMedia("(hover: none)").matches) return; // touch: a tap only wakes the controls
+      if (current && !current.live) A.toggle().then(refresh);
+    });
+    stage.addEventListener("dblclick", (e) => !e.target.closest(".usp-bar,.usp-menu") && fullscreen());
+
     document.addEventListener("keydown", (e) => {
       if (box.classList.contains("hidden")) return;
       const docked = box.classList.contains("docked");
-      if (docked && /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || "")) return;
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || "") && document.activeElement.type !== "range") return;
       const k = e.key;
+      const live = current && current.live;
       if (k === "Escape") {
-        if (docked) return;
-        close();
-      }
-      else if (k === " " && document.activeElement !== video) video.paused ? video.play() : video.pause();
-      else if ((k === "ArrowRight" || k === "ArrowLeft") && isFinite(video.duration)) video.currentTime = Math.max(0, video.currentTime + (k === "ArrowRight" ? 10 : -10));
-      else if (k === "f" || k === "F") document.fullscreenElement ? document.exitFullscreen() : box.querySelector(".usp-stage").requestFullscreen().catch(() => {});
+        if (menu.classList.contains("on")) menu.classList.remove("on");
+        else if (!docked) close();
+        else return;
+      } else if (k === " " || k === "k") A.toggle().then(refresh);
+      else if (k === "m" || k === "M") A.toggleMute();
+      else if (k === "f" || k === "F") fullscreen();
+      else if (!live && (k === "ArrowRight" || k === "ArrowLeft")) A.seek(A.time() + (k === "ArrowRight" ? 10 : -10));
+      else if (live && (k === "ArrowUp" || k === "PageUp" || k === "ChannelUp") && opts.onPrev) opts.onPrev();
+      else if (live && (k === "ArrowDown" || k === "PageDown" || k === "ChannelDown") && opts.onNext) opts.onNext();
+      else if (!live && (k === "ArrowUp" || k === "ArrowDown")) A.setVol(A.vol() + (k === "ArrowUp" ? 0.1 : -0.1));
       else return;
       e.preventDefault();
+      wake();
+      refresh();
     });
+
     video.addEventListener("playing", () => {
-      started = true;
-      show("");
-      if (current && current._noAudio) note("🔇 Playing without sound — this channel's audio format doesn't play in browsers. Use VLC for sound.", "الصوت بصيغة مش بتشتغل في المتصفح، فالقناة شغالة من غير صوت. للصوت شغّلها بـ VLC.");
+      if (isEngine()) return;
+      onStarted();
+      if (current && current._noAudio) note("Playing without sound — this channel's audio doesn't decode here. Use VLC for sound.", "القناة شغالة من غير صوت لأن صيغة الصوت مش بتشتغل هنا. للصوت شغّلها بـ VLC.");
     });
-    video.addEventListener("waiting", () => started && show('<span class="loader"></span>Loading…'));
-    // The picture is moving: whatever an earlier attempt reported is no longer true.
-    let lastT = 0;
+    video.addEventListener("waiting", () => started && !isEngine() && show('<div class="usp-spin"></div>'));
     video.addEventListener("timeupdate", () => {
+      if (isEngine()) return;
       if (msg.classList.contains("err") && video.currentTime > lastT + 1 && !video.paused) show("");
-      if (video.currentTime < lastT) lastT = video.currentTime;
-      if (!msg.classList.contains("err")) lastT = video.currentTime;
+      else if (started && !msg.classList.contains("err") && msg.style.display !== "none" && video.currentTime > lastT) show("");
     });
     video.addEventListener("error", () => {
-      if (current && current._engine) return;
+      if (isEngine() || !current) return;
       const fmt = video.error && (video.error.code === 4 || video.error.code === 3);
-      if (fmt && escalate()) return;
+      if (escalate(fmt ? "format" : "")) return;
       fail(fmt ? "format" : "");
     });
+    video.addEventListener("ended", () => current && current.live && reconnect("ended"));
+  }
+  function paint(range) {
+    range.style.setProperty("--p", (range.value / range.max) * 100 + "%");
+  }
+  function refresh() {
+    if (!box || box.classList.contains("hidden")) return;
+    const q = (s) => bar.querySelector(s);
+    const live = !!(current && current.live);
+    const paused = A.paused();
+    q(".pp").innerHTML = paused ? I.play : I.pause;
+    q(".pp").hidden = live && !paused;
+    q(".prev").hidden = q(".next").hidden = !(live && opts.onPrev);
+    q(".usp-live").style.display = live ? "" : "none";
+    const d = A.duration(), t = A.time();
+    q(".usp-seek").style.display = !live && d > 0 ? "" : "none";
+    q(".usp-time").textContent = !live && !d && t ? fmtClock(t) : "";
+    if (!live && d > 0) {
+      q(".usp-seek .c").textContent = fmtClock(t);
+      q(".usp-seek .d").textContent = fmtClock(d);
+      const s = q(".usp-seek input");
+      if (document.activeElement !== s) {
+        s.value = Math.round((t / d) * 1000) || 0;
+        paint(s);
+      }
+    }
+    const muted = A.muted() || !!(current && current._noAudio);
+    q(".mute").innerHTML = muted || !A.vol() ? I.mute : I.vol;
+    const v = q(".usp-vol input");
+    if (document.activeElement !== v) v.value = muted ? 0 : Math.round(A.vol() * 100);
+    paint(v);
+    q(".usp-tag").hidden = !isEngine();
+    q(".pip").hidden = isEngine() || !document.pictureInPictureEnabled;
+    if (paused) stage.classList.remove("idle");
+  }
+  function osdShow() {
+    if (!osd || !current) return;
+    osd.querySelector("b").textContent = current.title || "Ultra Stalker";
+    const i = osd.querySelector("i");
+    i.textContent = isEngine() ? "ULTRA ENGINE" : current._noAudio ? "PICTURE ONLY" : current.live ? "LIVE" : "HD";
+    i.className = isEngine() ? "" : "b";
+    osd.classList.add("on");
+    clearTimeout(osdShow.t);
+    osdShow.t = setTimeout(() => osd.classList.remove("on"), 3500);
+  }
+  function openMenu() {
+    const at = A.audioTracks(), st = A.subTracks();
+    const fit = store.get("us-fit", "fit");
+    const mode = engineMode();
+    const fits = isEngine() ? [["fit", "Fit"], ["fill", "Fill"]] : [["fit", "Fit"], ["fill", "Fill"], ["stretch", "Stretch"]];
+    let h = "";
+    if (at.length > 1) h += "<h4>Audio</h4>" + at.map((t) => `<button type="button" data-a="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
+    if (st.length) h += "<h4>Subtitles</h4>" + `<button type="button" data-s="-1" class="${st.some((t) => t.on) ? "" : "on"}">Off</button>` + st.map((t) => `<button type="button" data-s="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
+    h += '<h4>Picture</h4><div class="row">' + fits.map(([k, l]) => `<button type="button" data-f="${k}" class="${fit === k ? "on" : ""}">${l}</button>`).join("") + "</div>";
+    h +=
+      '<h4>Player engine</h4><div class="row">' +
+      [["auto", "Auto"], ["browser", "Browser"], ["ultra", "Ultra"]].map(([k, l]) => `<button type="button" data-e="${k}" class="${mode === k ? "on" : ""}">${l}</button>`).join("") +
+      `</div><button type="button" disabled><small>Now: ${esc(STEP_LABEL[step()] || "")}</small></button>`;
+    if (!isEngine() && mode !== "browser") h += '<button type="button" data-x="ultra">Play this with Ultra engine</button>';
+    const href = vlcHref(current || {});
+    h += `<hr><a href="${esc(href)}"${/^data:/.test(href) ? ' download="ultra-stalker.m3u"' : ""}>Open in VLC <small>▶</small></a><button type="button" data-x="copy">Copy stream link</button>`;
+    menu.innerHTML = h;
+    menu.onclick = (e) => {
+      e.stopPropagation();
+      const b = e.target.closest("button");
+      if (!b || b.disabled) return;
+      if (b.dataset.a !== undefined) A.selectAudio(+b.dataset.a);
+      else if (b.dataset.s !== undefined) A.selectSub(+b.dataset.s);
+      else if (b.dataset.f) A.setFit(b.dataset.f);
+      else if (b.dataset.e) {
+        store.set("us-player-engine", b.dataset.e);
+        if (current) restart(Object.assign({}, current, { _plan: null, _step: 0 }));
+        return menu.classList.remove("on");
+      } else if (b.dataset.x === "ultra") {
+        const plan = ["engine", "soft", "native"].concat(current.live ? ["mute"] : []);
+        restart(Object.assign({}, current, { _plan: plan, _step: 0, _manual: true }));
+        return menu.classList.remove("on");
+      } else if (b.dataset.x === "copy") {
+        const url = String((current && (current.stream || current.url)) || "");
+        if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => (b.textContent = "Copied ✓"));
+        return;
+      }
+      setTimeout(openMenu, 60);
+    };
+    menu.classList.add("on");
   }
   function note(en, ar) {
     if (!box) return;
@@ -151,7 +569,7 @@
     if (!n) {
       n = document.createElement("div");
       n.className = "usp-note";
-      box.querySelector(".usp-stage").appendChild(n);
+      stage.appendChild(n);
     }
     n.innerHTML = `<span>${esc(en)}</span><span class="ar">${esc(ar)}</span><a class="usp-btn" href="${esc(vlcHref(current || {}))}">▶ VLC</a>`;
     n.style.display = "flex";
@@ -163,117 +581,66 @@
     msg.classList.toggle("err", !!err);
     msg.style.display = html ? "flex" : "none";
   }
-  /* "Ultra engine": a full software player (FFmpeg decoders in WebAssembly, like VLC)
-     for streams the browser can't play itself — AC-3/E-AC-3/MP2 sound, HEVC, MPEG-2,
-     MKV. It loads only when needed. */
-  const ENGINE_WASM = "https://cdn.jsdelivr.net/gh/zhaohappy/libmedia@1.3.1/dist";
-  let eng = null, engBox = null, ebar = null, ebarTimer = 0;
-  function hostOpts() {
-    return box && box.classList.contains("docked") ? { host: box.parentNode } : undefined;
-  }
-  function escalate() {
-    if (!current) return false;
-    if (!current._engineTried) {
-      play(Object.assign({}, current, { _engine: true, _engineTried: true }), hostOpts());
-      return true;
-    }
-    if (current.live && !current._noAudio && !(info && badPart("video"))) {
-      play(Object.assign({}, current, { _engine: false, _noAudio: true }), hostOpts());
-      return true;
-    }
-    return false;
-  }
-  function fmtClock(ms) {
-    const t = Math.max(0, Math.floor(ms / 1000));
-    const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
-    return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(sec).padStart(2, "0");
-  }
-  function engineBar(live) {
-    if (!ebar) {
-      ebar = document.createElement("div");
-      ebar.className = "usp-ebar";
-      ebar.innerHTML = '<button type="button" class="pp" aria-label="Play / pause">❚❚</button><span class="t"></span><input class="seek" type="range" min="0" max="1000" value="0"><button type="button" class="mute" aria-label="Sound">🔊</button><input class="vol" type="range" min="0" max="100" value="100"><span class="tag">ULTRA ENGINE</span>';
-      box.querySelector(".usp-stage").appendChild(ebar);
-      ebar.querySelector(".pp").onclick = async () => {
-        if (!eng) return;
-        const st = eng.getStatus();
-        if (st === 8) {
-          await eng.play().catch(() => {});
-          ebar.querySelector(".pp").textContent = "❚❚";
-        } else {
-          await eng.pause().catch(() => {});
-          ebar.querySelector(".pp").textContent = "▶";
-        }
-      };
-      ebar.querySelector(".mute").onclick = () => {
-        if (!eng) return;
-        const v = eng.getVolume() > 0 ? 0 : (+ebar.querySelector(".vol").value || 100) / 100;
-        eng.setVolume(v);
-        ebar.querySelector(".mute").textContent = v ? "🔊" : "🔇";
-      };
-      ebar.querySelector(".vol").oninput = (e) => eng && eng.setVolume(+e.target.value / 100);
-      ebar.querySelector(".seek").onchange = (e) => {
-        if (!eng) return;
-        const d = Number(eng.getDuration() || 0);
-        if (d > 0) eng.seek(BigInt(Math.floor((+e.target.value / 1000) * d))).catch(() => {});
-      };
-    }
-    ebar.querySelector(".seek").style.display = live ? "none" : "";
-    ebar.querySelector(".pp").style.display = live ? "none" : "";
-    ebar.classList.add("on");
-    clearInterval(ebarTimer);
-    ebarTimer = setInterval(() => {
-      if (!eng || live) return;
-      const d = Number(eng.getDuration() || 0), c = Number(eng.currentTime || 0);
-      ebar.querySelector(".t").textContent = fmtClock(c) + (d ? " / " + fmtClock(d) : "");
-      if (d && document.activeElement !== ebar.querySelector(".seek")) ebar.querySelector(".seek").value = Math.round((c / d) * 1000);
-    }, 500);
-  }
-  async function startEngine(ticket, src, my) {
-    await lib(HERE + "vendor/libmedia/avplayer.js");
-    if (my !== alive) return;
-    const AV = window.AVPlayer && (window.AVPlayer.default || window.AVPlayer);
-    if (!AV) throw new Error("engine unavailable");
-    engBox = document.createElement("div");
-    engBox.className = "usp-engine";
-    box.querySelector(".usp-stage").insertBefore(engBox, msg);
-    video.style.visibility = "hidden";
-    eng = new AV({ container: engBox, wasmBaseUrl: ENGINE_WASM, isLive: !!ticket.live, enableHardware: true, enableWebCodecs: true, enableWorker: true, lowLatency: !!ticket.live });
-    eng.on("error", (e) => my === alive && !escalate() && fail(String((e && e.message) || e)));
-    await eng.load(src, { isLive: !!ticket.live });
-    if (my !== alive) return;
-    await eng.play();
-    if (my !== alive) return;
+
+  /* ------------------------------------------------------------------ lifecycle */
+  function onStarted() {
+    if (started) return;
     started = true;
+    playingSince = Date.now();
+    lastMove = Date.now();
+    clearTimeout(startTimer);
     show("");
-    engineBar(!!ticket.live);
+    A.applyVol();
+    osdShow();
+    refresh();
+    // Remember which way this channel plays, so next time it opens on the first try.
+    const key = opts.key;
+    if (key && !current._manual && engineMode() === "auto") {
+      if (isEngine()) store.set("us-eng:" + key, "1");
+      else if (step() === "native") store.set("us-eng:" + key, null);
+    }
+    // Autoplay with sound may be refused: play muted and offer one tap for sound.
+    if (!isEngine() && video && video.muted && !A.muted() && !current._noAudio) unmuteBtn.classList.add("on");
+    if (isEngine() && eng && eng.isSuspended && eng.isSuspended()) unmuteBtn.classList.add("on");
   }
-  function stopEngine() {
-    clearInterval(ebarTimer);
-    if (ebar) ebar.classList.remove("on");
-    const e = eng;
-    eng = null;
-    if (e) e.destroy().catch(() => {});
-    if (engBox) engBox.remove();
-    engBox = null;
-    if (video) video.style.visibility = "";
+  /* Move on to the next way of playing this stream. */
+  function escalate(why) {
+    if (!current || !current._plan) return false;
+    const n = (current._step || 0) + 1;
+    if (n >= current._plan.length) return false;
+    if (current._plan[n] === "mute" && info && badPart("video")) return false;
+    restart(Object.assign({}, current, { _step: n, _why: why || "" }));
+    return true;
+  }
+  /* The stream dropped: open it again the same way (like VLC's http-reconnect). */
+  function reconnect(why) {
+    if (!current) return;
+    const n = (current._reconnects || 0) + 1;
+    if (n > MAX_RECONNECT) return fail("dropped");
+    show('<div class="usp-spin"></div><small>Reconnecting… · بيعيد الاتصال</small>');
+    restart(Object.assign({}, current, { _reconnects: n, _why: why || "" }));
+  }
+  function restart(t) {
+    play(t, Object.assign({}, opts, { _again: true }));
+  }
+  function watchdog() {
+    if (!current || !box || box.classList.contains("hidden")) return;
+    refresh();
+    if (!started) return;
+    const t = A.time();
+    if (Math.abs(t - lastT) > 0.05) {
+      lastT = t;
+      lastMove = Date.now();
+      if (current._reconnects && Date.now() - playingSince > 60000) current._reconnects = 0;
+    } else if (current.live && !A.paused() && Date.now() - lastMove > STALL_LIMIT && navigator.onLine !== false) {
+      reconnect("stall");
+    }
   }
 
   function badPart(kind) {
     if (!info || !window.MediaSource || !MediaSource.isTypeSupported) return false;
     const c = kind === "audio" ? info.audioCodec : info.videoCodec;
     return !!c && !MediaSource.isTypeSupported((kind === "audio" ? "audio" : "video") + '/mp4; codecs="' + c + '"');
-  }
-  /* Many IPTV channels carry sound the browser can't decode (AC-3, E-AC-3, MP2).
-     The picture is usually fine (H.264): play it without sound rather than not at all. */
-  function retryWithoutSound(detail) {
-    if (!current || current._noAudio || !current.live) return false;
-    if (started && video && video.currentTime > 5) return false;
-    if (info && badPart("video")) return false;
-    const again = Object.assign({}, current, { _noAudio: true });
-    const host = box && box.classList.contains("docked") ? box.parentNode : null;
-    play(again, host ? { host } : undefined);
-    return true;
   }
   function unsupported() {
     if (!info || !window.MediaSource || !MediaSource.isTypeSupported) return "";
@@ -285,59 +652,76 @@
   async function fail(detail) {
     const my = alive;
     if (!current) return;
-    // A late error from a player that was already replaced while the picture plays: ignore.
-    if (started && video && video.readyState >= 2 && !video.paused && !video.error) return;
+    if (started && !isEngine() && video && video.readyState >= 2 && !video.paused && !video.error) return;
+    clearTimeout(startTimer);
     const url = String(current.stream || current.url || "");
-    let en = "This stream could not play inside the browser.", ar = "الستريم ده مش راضي يشتغل جوه المتصفح.", extra = detail && detail !== "format" ? String(detail) : "";
+    let en = "This stream could not play inside the browser.", ar = "الستريم ده مش راضي يشتغل جوه المتصفح.", extra = "";
     const bad = unsupported();
-    if (bad) {
-      en = "This stream uses " + bad + ", which web browsers can't play.";
-      ar = "الستريم ده معمول بصيغة " + bad + "، والمتصفحات مش بتعرف تشغلها. VLC بيشغلها عادي.";
-      extra = "";
-    } else if (detail === "format" || (info && info.hasVideo === false)) {
-      en = "This video format can't play in web browsers (often MPEG-2 or AC-3 sound).";
-      ar = "صيغة الفيديو دي مش بتشتغل في المتصفحات (غالباً MPEG-2 أو صوت AC-3). VLC بيشغلها عادي.";
+    if (detail === "timeout") {
+      en = "The stream timed out or is not supported.";
+      ar = "الستريم مردش أو صيغته مش مدعومة.";
+    } else if (detail === "dropped") {
+      en = "The stream keeps dropping. The server may be busy or the line is in use elsewhere.";
+      ar = "الستريم بيقطع كتير. ممكن السيرفر مشغول أو الاشتراك شغال في مكان تاني.";
+    } else if (bad && engineMode() === "browser") {
+      en = "This stream uses " + bad + ". Switch the player engine to Auto or Ultra to play it here.";
+      ar = "الستريم ده بصيغة " + bad + ". خلّي محرّك التشغيل Auto أو Ultra من الإعدادات وهيشتغل هنا.";
     } else if (/\/play\//.test(url)) {
-      // Ask the relay what the portal or stream server answered.
       try {
         const r = await fetch(url, { headers: { Range: "bytes=0-0" }, cache: "no-store" });
         if (my !== alive) return;
         if (!r.ok) extra = (await r.text()).slice(0, 180) || "Server answered " + r.status;
-        else {
-          en = "The stream opens, but its format can't play in this browser.";
-          ar = "الرابط شغال، بس صيغته مش بتشتغل في المتصفح. شغّله بـ VLC.";
-        }
       } catch (_) {}
-    }
+    } else if (detail && detail !== "format") extra = String(detail).slice(0, 160);
     if (my !== alive) return;
     const href = vlcHref(current);
     show(
       `<b>Can't play here</b><div class="ar">${esc(ar)}</div><small>${esc(en)}${extra ? "<br>" + esc(extra) : ""}</small>` +
-        `<div class="usp-acts"><a class="usp-btn" href="${esc(href)}"${/^data:/.test(href) ? ' download="ultra-stalker.m3u"' : ""}>▶ VLC</a><button type="button" class="usp-btn" data-copy>Copy link · انسخ الرابط</button></div>`,
+        `<div class="usp-acts"><button type="button" class="usp-btn" data-retry>↻ Try again · جرّب تاني</button><a class="usp-btn" href="${esc(href)}"${/^data:/.test(href) ? ' download="ultra-stalker.m3u"' : ""}>▶ VLC</a><button type="button" class="usp-btn" data-copy>Copy link · انسخ الرابط</button></div>`,
       true,
     );
     const copy = msg.querySelector("[data-copy]");
     if (copy) copy.onclick = () => navigator.clipboard && navigator.clipboard.writeText(url).then(() => (copy.textContent = "Copied · اتنسخ"));
+    const again = msg.querySelector("[data-retry]");
+    if (again) again.onclick = () => restart(Object.assign({}, current, { _plan: null, _step: 0, _reconnects: 0 }));
+  }
+  function stopEngine() {
+    const e = eng;
+    eng = null;
+    if (e) e.destroy().catch(() => {});
+    if (engBox) engBox.remove();
+    engBox = null;
+    if (video) video.style.visibility = "";
   }
   function stop() {
     alive++;
-    try {
-      if (hls) hls.destroy();
-    } catch (_) {}
-    try {
-      if (ts) {
-        ts.pause();
-        ts.unload();
-        ts.detachMediaElement();
-        ts.destroy();
-      }
-    } catch (_) {}
+    clearTimeout(startTimer);
+    const h = hls, t = ts;
     hls = ts = null;
+    try {
+      if (h) h.destroy();
+    } catch (_) {}
+    if (t) {
+      // Let mpegts finish its own teardown first; its late callbacks then find nothing.
+      try {
+        t.pause();
+        t.unload();
+        t.detachMediaElement();
+      } catch (_) {}
+      setTimeout(() => {
+        try {
+          t.destroy();
+        } catch (_) {}
+      }, 2500);
+    }
     stopEngine();
     info = null;
     const n = box && box.querySelector(".usp-note");
     if (n) n.style.display = "none";
+    if (menu) menu.classList.remove("on");
+    if (unmuteBtn) unmuteBtn.classList.remove("on");
     started = false;
+    lastT = 0;
     if (video) {
       video.removeAttribute("src");
       try {
@@ -348,14 +732,123 @@
   function close() {
     stop();
     current = null;
+    clearInterval(tick);
+    tick = 0;
+    if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
     if (box) box.classList.add("hidden");
     document.documentElement.style.overflow = "";
   }
-  /* opts.host: play inside that element (the Live TV screen) instead of the pop-up. */
-  async function play(ticket, opts) {
+
+  async function startEngine(ticket, src, my, soft) {
+    await lib(HERE + "vendor/libmedia/avplayer.js");
+    if (my !== alive) return;
+    const AV = window.AVPlayer && (window.AVPlayer.default || window.AVPlayer);
+    if (!AV) throw new Error("engine unavailable");
+    engBox = document.createElement("div");
+    engBox.className = "usp-engine";
+    stage.insertBefore(engBox, msg);
+    video.style.visibility = "hidden";
+    // Hardware first, software if that fails — like VLC's avcodec-hw then none.
+    eng = new AV({ container: engBox, wasmBaseUrl: ENGINE_WASM, isLive: !!ticket.live, enableHardware: !soft, enableWebCodecs: !soft, enableWorker: true, lowLatency: false, preLoadTime: ticket.live ? 1.5 : 4 });
+    const me = eng;
+    const onErr = (e) => {
+      if (my !== alive || eng !== me) return;
+      if (started && ticket.live) return reconnect("engine");
+      if (!escalate(String((e && e.message) || e || "engine"))) fail(String((e && e.message) || e));
+    };
+    eng.on("error", onErr);
+    eng.on("timeout", onErr);
+    eng.on("ended", () => my === alive && (ticket.live ? reconnect("ended") : refresh()));
+    eng.on("firstVideoRendered", () => my === alive && onStarted());
+    eng.on("firstAudioRendered", () => my === alive && setTimeout(() => my === alive && onStarted(), 1500));
+    await eng.load(src, { isLive: !!ticket.live });
+    if (my !== alive) return;
+    A.setFit(store.get("us-fit", "fit") === "fill" ? "fill" : "fit");
+    A.applyVol();
+    await eng.play();
+    if (my !== alive) return;
+    if (store.get("us-subs", "1") === "0") {
+      try {
+        eng.setSubtitleEnable(false);
+      } catch (_) {}
+    }
+    setTimeout(() => my === alive && eng === me && !started && eng.getStatus() >= 5 && onStarted(), 2500);
+  }
+
+  async function startNative(ticket, src, my) {
+    let path = "";
+    const url = String(ticket.stream || ticket.url || "");
+    try {
+      path = new URL(url).pathname.toLowerCase();
+    } catch (_) {}
+    const isHls = /\.m3u8$/.test(path) || /[?&](extension|type|output)=(m3u8|hls)/i.test(url);
+    const isTs = !isHls && (/\.ts$/.test(path) || /[?&](extension|output)=ts/i.test(url) || (ticket.live && !/\.(mp4|mkv|m4v|mov|webm|avi)$/.test(path)));
+    A.applyVol();
+    if (isHls) {
+      if (video.canPlayType("application/vnd.apple.mpegurl") && !window.MediaSource) video.src = src;
+      else {
+        await lib(HERE + "vendor/hls.min.js");
+        if (my !== alive) return;
+        hls = new window.Hls({ lowLatencyMode: false, maxBufferLength: 30, manifestLoadingMaxRetry: 3, levelLoadingMaxRetry: 4, fragLoadingMaxRetry: 6 });
+        hls.on(window.Hls.Events.MANIFEST_PARSED, (_, d) => {
+          const l = d && d.levels && d.levels[0];
+          if (l) info = { videoCodec: l.videoCodec, audioCodec: l.audioCodec };
+          if (unsupported() && my === alive) escalate("codec");
+        });
+        hls.on(window.Hls.Events.ERROR, (_, d) => {
+          if (!d || !d.fatal || my !== alive) return;
+          if (d.type === "mediaError") return escalate("media") || fail(d.details);
+          if (started && ticket.live) return reconnect("network");
+          fail(d.details);
+        });
+        hls.loadSource(src);
+        hls.attachMedia(video);
+      }
+    } else if (isTs) {
+      await lib(HERE + "vendor/mpegts.min.js");
+      if (my !== alive) return;
+      const M = window.mpegts;
+      if (!M || !M.isSupported()) video.src = src;
+      else {
+        const ds = { type: "mpegts", isLive: !!ticket.live, url: src };
+        if (ticket._noAudio) ds.hasAudio = false;
+        ts = M.createPlayer(ds, { enableStashBuffer: true, stashInitialSize: 384 * 1024, liveBufferLatencyChasing: false, lazyLoad: !ticket.live });
+        ts.on(M.Events.MEDIA_INFO, (mi) => {
+          if (my !== alive) return;
+          info = { videoCodec: mi && mi.videoCodec, audioCodec: ticket._noAudio ? "" : mi && mi.audioCodec, hasVideo: mi && mi.hasVideo };
+          if (unsupported()) escalate("codec") || fail();
+        });
+        ts.on(M.Events.ERROR, (type, detail) => {
+          if (my !== alive) return;
+          if (/MSE|Media/i.test(String(detail || type))) return escalate("media") || fail(String(detail || type));
+          if (started && ticket.live) return reconnect("network");
+          fail(String(detail || type));
+        });
+        ts.attachMediaElement(video);
+        ts.load();
+      }
+    } else video.src = src;
+    const p = video.play();
+    if (p && p.catch)
+      p.catch(() => {
+        if (my !== alive || started) return;
+        // Autoplay with sound refused: start muted, one tap brings the sound back.
+        video.muted = true;
+        video.play().catch(() => my === alive && !started && show('<button type="button" class="usp-ic pp" style="pointer-events:auto;width:64px;height:64px">' + I.play + "</button>"));
+        const b = msg.querySelector(".pp");
+        if (b) b.onclick = () => video.play();
+      });
+  }
+
+  /* opts.host: play inside that element (the Live TV screen) instead of the pop-up.
+     opts.key: a stable id for remembering how this stream plays.
+     opts.onPrev / opts.onNext: channel zapping for live. */
+  async function play(ticket, o) {
     build();
     stop();
-    const host = opts && opts.host;
+    o = o || {};
+    if (!o._again) opts = o;
+    const host = opts.host;
     if (host) {
       if (box.parentNode !== host) host.appendChild(box);
       box.classList.add("docked");
@@ -364,84 +857,41 @@
       document.body.appendChild(box);
     }
     const my = alive;
+    ticket = Object.assign({}, ticket);
+    if (!opts.key) opts.key = String(ticket.item || ticket.id || ticket.title || "");
+    if (!ticket._plan) {
+      ticket._plan = planFor(ticket, opts.key);
+      ticket._step = 0;
+    }
     current = ticket;
+    const how = step();
+    ticket._noAudio = how === "mute";
     const url = String(ticket.stream || ticket.url || "");
     const headers = ticket.headers || {};
     title.textContent = ticket.title || "Ultra Stalker";
-    sub.textContent = ticket.live ? "Live • playing in this browser" : "Playing in this browser";
+    sub.textContent = (ticket.live ? "Live · " : "") + STEP_LABEL[how];
     const href = vlcHref(ticket);
     vlc.href = href;
     if (/^data:/.test(href)) vlc.setAttribute("download", "ultra-stalker.m3u");
     else vlc.removeAttribute("download");
     box.classList.remove("hidden");
     if (!host) document.documentElement.style.overflow = "hidden";
-    show('<span class="loader"></span>Opening stream…');
-    let path = "";
-    try {
-      path = new URL(url).pathname.toLowerCase();
-    } catch (_) {}
-    const isHls = /\.m3u8$/.test(path) || /[?&](extension|type|output)=(m3u8|hls)/i.test(url);
-    const isTs = !isHls && (/\.ts$/.test(path) || /[?&](extension|output)=ts/i.test(url) || (ticket.live && !/\.(mp4|mkv|m4v|mov|webm|avi)$/.test(path)));
+    if (!ticket._reconnects || !msg.innerHTML) show('<div class="usp-spin"></div>' + (how === "engine" || how === "soft" ? "<small>Ultra engine</small>" : ""));
+    stage.classList.remove("idle");
+    refresh();
+    if (!tick) tick = setInterval(watchdog, 1000);
+    // A stream that never shows a picture: try the next way, then explain.
+    startTimer = setTimeout(() => my === alive && !started && (escalate("timeout") || fail("timeout")), how === "native" ? START_TIMEOUT : START_TIMEOUT + 8000);
     const src = (/^https:/i.test(url) && !Object.keys(headers).length) || ticket.ticket ? url : viaRelay(url, headers);
-    if (ticket._engine) {
-      show('<span class="loader"></span>Opening with Ultra engine…');
-      try {
-        await startEngine(ticket, src, my);
-      } catch (e) {
-        if (my === alive && !escalate()) fail(String((e && e.message) || e));
-      }
-      return;
-    }
     try {
-      if (isHls) {
-        if (video.canPlayType("application/vnd.apple.mpegurl") && !window.MediaSource) video.src = src;
-        else {
-          await lib(HERE + "vendor/hls.min.js");
-          if (my !== alive) return;
-          hls = new window.Hls({ lowLatencyMode: false, maxBufferLength: 30 });
-          hls.on(window.Hls.Events.MANIFEST_PARSED, (_, d) => {
-            const l = d && d.levels && d.levels[0];
-            if (l) info = { videoCodec: l.videoCodec, audioCodec: l.audioCodec };
-          });
-          hls.on(window.Hls.Events.ERROR, (_, d) => {
-            if (!d || !d.fatal || my !== alive) return;
-            if (d.type === "mediaError" && escalate()) return;
-            fail(d.details);
-          });
-          hls.loadSource(src);
-          hls.attachMedia(video);
-        }
-      } else if (isTs) {
-        await lib(HERE + "vendor/mpegts.min.js");
-        if (my !== alive) return;
-        const M = window.mpegts;
-        if (!M || !M.isSupported()) video.src = src;
-        else {
-          const ds = { type: "mpegts", isLive: !!ticket.live, url: src };
-          if (ticket._noAudio) ds.hasAudio = false;
-          ts = M.createPlayer(ds, { enableStashBuffer: true, stashInitialSize: 384 * 1024, liveBufferLatencyChasing: false, lazyLoad: !ticket.live });
-          ts.on(M.Events.MEDIA_INFO, (mi) => {
-            info = { videoCodec: mi && mi.videoCodec, audioCodec: ticket._noAudio ? "" : mi && mi.audioCodec, hasVideo: mi && mi.hasVideo };
-            if (unsupported() && escalate()) return;
-            if (unsupported()) fail();
-          });
-          ts.on(M.Events.ERROR, (type, detail) => {
-            if (my !== alive) return;
-            if (/MSE|Media/i.test(String(detail || type)) && escalate()) return;
-            fail(String(detail || type));
-          });
-          ts.attachMediaElement(video);
-          ts.load();
-          // Data arrives but nothing can be decoded (MPEG-2 video has no browser decoder): say so.
-          setTimeout(() => my === alive && !started && video.readyState < 2 && !escalate() && fail(info ? "format" : ""), 20000);
-        }
-      } else video.src = src;
-      const p = video.play();
-      if (p && p.catch) p.catch(() => my === alive && !started && show("Press ▶ to start"));
+      if (how === "engine" || how === "soft") await startEngine(ticket, src, my, how === "soft");
+      else await startNative(ticket, src, my);
     } catch (e) {
-      fail(e && e.message);
+      if (my !== alive) return;
+      if (!escalate(String((e && e.message) || e))) fail(String((e && e.message) || e));
     }
   }
+
   /* Called by the page right after a stream link is ready. */
   function offer(ticket) {
     const a = document.getElementById("playerWeb");
@@ -469,9 +919,10 @@
   }
   function fullscreen() {
     if (!box) return;
-    const st = box.querySelector(".usp-stage");
-    if (document.fullscreenElement) document.exitFullscreen();
-    else if (st && st.requestFullscreen) st.requestFullscreen().catch(() => {});
+    if (document.fullscreenElement) return document.exitFullscreen().catch(() => {});
+    if (stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
+    else if (stage.webkitRequestFullscreen) stage.webkitRequestFullscreen();
+    else if (video && video.webkitEnterFullscreen && !isEngine()) video.webkitEnterFullscreen();
   }
-  window.USPlayer = { play, offer, pending, close, vlcHref, fullscreen, video: () => video };
+  window.USPlayer = { play, offer, pending, close, vlcHref, fullscreen, video: () => video, engine: () => step() };
 })();

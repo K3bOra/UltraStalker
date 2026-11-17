@@ -648,16 +648,15 @@ body.ph .series-cinematic .dk-face:not(#_){width:64px;height:64px;background:lin
 body.app{--glass:linear-gradient(165deg,rgba(70,50,20,.48),rgba(26,19,11,.70) 34%,rgba(13,10,7,.84)) padding-box,linear-gradient(150deg,rgba(255,226,150,.42),rgba(212,175,55,.16) 30%,rgba(255,226,150,.05) 62%,rgba(212,175,55,.30)) border-box;--glass-shadow:0 30px 70px -36px rgba(0,0,0,.95),inset 0 1px rgba(255,236,190,.09)}
 body.app:before{opacity:.38!important}
 #usAura{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;background:radial-gradient(130% 85% at 50% -12%,rgba(58,38,12,.92) 0%,rgba(22,14,7,.9) 42%,rgba(8,6,4,.94) 78%)}
-#usAura i{position:absolute;display:block;border-radius:50%;will-change:transform}
-#usAura .a1{width:78vmax;height:78vmax;left:-22vmax;top:-34vmax;background:radial-gradient(closest-side,rgba(245,198,92,.30),rgba(245,198,92,.08) 55%,transparent);animation:usDrift1 28s ease-in-out infinite alternate}
-#usAura .a2{width:62vmax;height:62vmax;right:-24vmax;top:6vh;background:radial-gradient(closest-side,rgba(222,128,46,.22),rgba(222,128,46,.05) 58%,transparent);animation:usDrift2 34s ease-in-out infinite alternate}
-#usAura .a3{width:70vmax;height:70vmax;left:18vw;bottom:-46vmax;background:radial-gradient(closest-side,rgba(255,222,150,.16),transparent 70%);animation:usDrift3 40s ease-in-out infinite alternate}
-#usAura .a4{width:44vmax;height:44vmax;right:6vw;bottom:-18vmax;background:radial-gradient(closest-side,rgba(214,120,96,.13),transparent 70%);animation:usDrift1 46s ease-in-out infinite alternate-reverse}
-#usAura .rays{position:absolute;left:50%;top:-30vh;width:160vmax;height:160vmax;margin-left:-80vmax;background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(255,224,150,.055) 0deg 2.2deg,transparent 2.2deg 9deg);-webkit-mask:radial-gradient(closest-side,#000 0%,rgba(0,0,0,.6) 22%,transparent 46%);mask:radial-gradient(closest-side,#000 0%,rgba(0,0,0,.6) 22%,transparent 46%);animation:usSpin 160s linear infinite;opacity:.9}
-#usAura .dust{position:absolute;inset:-10%;background-repeat:repeat;will-change:opacity,transform}
-#usAura .d1{background-image:radial-gradient(1.4px 1.4px at 22px 34px,rgba(255,232,170,.9),transparent 70%),radial-gradient(1px 1px at 140px 90px,rgba(255,214,120,.8),transparent 70%),radial-gradient(1.8px 1.8px at 210px 180px,rgba(255,240,200,.75),transparent 70%),radial-gradient(1px 1px at 80px 230px,rgba(255,220,140,.7),transparent 70%);background-size:260px 280px;animation:usTwinkle 7s ease-in-out infinite,usFloat 60s linear infinite;opacity:.55}
-#usAura .d2{background-image:radial-gradient(1.2px 1.2px at 60px 60px,rgba(255,236,180,.85),transparent 70%),radial-gradient(2px 2px at 250px 140px,rgba(255,210,110,.55),transparent 70%),radial-gradient(1px 1px at 330px 300px,rgba(255,244,210,.8),transparent 70%);background-size:380px 360px;animation:usTwinkle 9s ease-in-out -4s infinite,usFloat 90s linear infinite reverse;opacity:.45}
-#usAura:after{content:"";position:absolute;inset:0;opacity:.07;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+#usAura i{position:absolute;display:block;border-radius:50%;}
+#usAura .a1{width:78vmax;height:78vmax;left:-22vmax;top:-34vmax;background:radial-gradient(closest-side,rgba(245,198,92,.30),rgba(245,198,92,.08) 55%,transparent)}
+#usAura .a2{width:62vmax;height:62vmax;right:-24vmax;top:6vh;background:radial-gradient(closest-side,rgba(222,128,46,.22),rgba(222,128,46,.05) 58%,transparent)}
+#usAura .a3{width:70vmax;height:70vmax;left:18vw;bottom:-46vmax;background:radial-gradient(closest-side,rgba(255,222,150,.16),transparent 70%)}
+#usAura .a4{width:44vmax;height:44vmax;right:6vw;bottom:-18vmax;background:radial-gradient(closest-side,rgba(214,120,96,.13),transparent 70%)}
+#usAura .rays{position:absolute;left:50%;top:-30vh;width:160vmax;height:160vmax;margin-left:-80vmax;background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(255,224,150,.055) 0deg 2.2deg,transparent 2.2deg 9deg);-webkit-mask:radial-gradient(closest-side,#000 0%,rgba(0,0,0,.6) 22%,transparent 46%);mask:radial-gradient(closest-side,#000 0%,rgba(0,0,0,.6) 22%,transparent 46%);opacity:.9}
+#usAura .dust{position:absolute;inset:-10%;background-repeat:repeat}
+#usAura .d1{background-image:radial-gradient(1.4px 1.4px at 22px 34px,rgba(255,232,170,.9),transparent 70%),radial-gradient(1px 1px at 140px 90px,rgba(255,214,120,.8),transparent 70%),radial-gradient(1.8px 1.8px at 210px 180px,rgba(255,240,200,.75),transparent 70%),radial-gradient(1px 1px at 80px 230px,rgba(255,220,140,.7),transparent 70%);background-size:260px 280px;opacity:.55}
+#usAura .d2{background-image:radial-gradient(1.2px 1.2px at 60px 60px,rgba(255,236,180,.85),transparent 70%),radial-gradient(2px 2px at 250px 140px,rgba(255,210,110,.55),transparent 70%),radial-gradient(1px 1px at 330px 300px,rgba(255,244,210,.8),transparent 70%);background-size:380px 360px;opacity:.45}
 @keyframes usDrift1{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(8vw,6vh,0) scale(1.08)}100%{transform:translate3d(-4vw,10vh,0) scale(.96)}}
 @keyframes usDrift2{0%{transform:translate3d(0,0,0) scale(1)}100%{transform:translate3d(-10vw,14vh,0) scale(1.12)}}
 @keyframes usDrift3{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(-12vw,-8vh,0) scale(1.1)}}
@@ -670,17 +669,17 @@ body.ph #usAura .a2{top:30vh}
 
 /* --- surfaces: smoked gold glass instead of flat black --- */
 html body.app main.shell:not(#_):not(#__){background:transparent!important;border-color:transparent!important;box-shadow:none!important}
-html body.ph main.shell:not(#_):not(#__){background:var(--glass)!important;border:1px solid transparent!important;box-shadow:var(--glass-shadow)!important;-webkit-backdrop-filter:blur(14px) saturate(1.25);backdrop-filter:blur(14px) saturate(1.25)}
+html body.ph main.shell:not(#_):not(#__){background:var(--glass)!important;border:1px solid transparent!important;box-shadow:var(--glass-shadow)!important;}
 html body.ph main.shell:not(#_):not(#__):before{display:none!important}
 html body.ph .browse-panel:not(#_):not(#__),html body.ph .browse-shell:not(#_):not(#__){background:transparent!important;box-shadow:none!important;border-color:transparent!important}
 body.ph .statusbar:not(#_){display:inline-flex!important;align-items:center;gap:10px;justify-content:flex-start;width:auto!important;padding:7px 14px!important;margin:4px 0 12px!important;border-radius:999px!important;background:rgba(255,226,150,.07)!important;border:1px solid rgba(255,226,150,.16)!important;font-size:12px!important}
 body.ph .statusbar:not(#_) strong{font-size:12.5px!important;font-weight:600!important;color:#f3e6c4!important}
 body.ph .statusbar:not(#_) #mediaLabel{display:none!important}
-body.app .status-dot{background:#f3c552!important;box-shadow:0 0 0 4px rgba(243,197,82,.16),0 0 14px rgba(243,197,82,.8)!important;animation:usPulse 2.4s ease-in-out infinite}
+body.app .status-dot{background:#f3c552!important;box-shadow:0 0 0 4px rgba(243,197,82,.16),0 0 14px rgba(243,197,82,.8)!important}
 @keyframes usPulse{50%{box-shadow:0 0 0 7px rgba(243,197,82,.05),0 0 18px rgba(243,197,82,.95)}}
 
 /* top bar + drawer: warmer glass with a glowing gold hairline */
-html body.app #dkBar.solid:not(#_){background:linear-gradient(180deg,rgba(26,18,9,.86),rgba(14,10,6,.78))!important;-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);border-bottom:0!important;box-shadow:0 18px 40px -26px rgba(0,0,0,.9)!important}
+html body.app #dkBar.solid:not(#_){background:linear-gradient(180deg,rgba(26,18,9,.86),rgba(14,10,6,.78))!important;border-bottom:0!important;box-shadow:0 18px 40px -26px rgba(0,0,0,.9)!important}
 html body.app #dkBar:not(#_):after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,214,120,.55) 30%,rgba(255,240,200,.9) 50%,rgba(255,214,120,.55) 70%,transparent);opacity:.55;pointer-events:none}
 html body.app #dkBar:not(.solid):not(#_):after{opacity:0}
 
@@ -691,7 +690,7 @@ body.desk .dk-rail-h .dk-rail-all{order:2}
 body.desk .dk-rails-top .dk-cats-open{background:var(--glass)!important;border:1px solid transparent!important;box-shadow:var(--glass-shadow)!important}
 
 /* --- Live (computer): glass columns, warm rows, live equaliser on the playing channel --- */
-body.desk.dk-tv-mode .dk-tv-cats:not(#_),body.desk.dk-tv-mode .dk-tv-list:not(#_),body.desk.dk-tv-mode .dk-tv-info:not(#_){background:var(--glass)!important;border:1px solid transparent!important;box-shadow:var(--glass-shadow)!important;-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2)}
+body.desk.dk-tv-mode .dk-tv-cats:not(#_),body.desk.dk-tv-mode .dk-tv-list:not(#_),body.desk.dk-tv-mode .dk-tv-info:not(#_){background:var(--glass)!important;border:1px solid transparent!important;box-shadow:var(--glass-shadow)!important;}
 body.desk.dk-tv-mode .dk-tvl-head{background:linear-gradient(180deg,rgba(255,226,150,.07),transparent);border-bottom:1px solid rgba(255,226,150,.10)!important}
 body.desk.dk-tv-mode .dk-tvl-head b{background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent!important;font-size:18px!important}
 body.desk.dk-tv-mode .dk-tvc-h{color:#f3d58a!important}
@@ -760,3 +759,15 @@ body.app #favoritesResults .empty:not(#_):not(#__){border-radius:22px!important;
 html body.app #seasonsStage:not(#_),html body.app #movieStage:not(#_),html body.app .series-cinematic:not(#_):not(#__){background:transparent!important}
 body.app .series-cinematic .series-backdrop,body.app .series-cinematic .series-backdrop-shade{-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 58%,rgba(0,0,0,.6) 78%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 58%,rgba(0,0,0,.6) 78%,transparent 100%)}
 body.app .series-cinematic .series-overview:not(#_):not(#__){background:var(--glass)!important;border:1px solid transparent!important;box-shadow:var(--glass-shadow)!important}
+/* performance: the ambient layer is painted once on its own compositor layer */
+#usAura{contain:strict;transform:translateZ(0)}
+#usAura .rays{width:130vmax;height:130vmax;margin-left:-65vmax}
+html body.app #dkBar.solid:not(#_){background:linear-gradient(180deg,rgba(28,20,10,.97),rgba(16,11,6,.95))!important}
+body.desk.dk-tv-mode .dk-tv-cats:not(#_),body.desk.dk-tv-mode .dk-tv-list:not(#_),body.desk.dk-tv-mode .dk-tv-info:not(#_){contain:layout paint}
+.dk-rail-retry{appearance:none;margin:30px 4px;padding:12px 18px;border-radius:14px;border:1px dashed rgba(255,226,150,.35);background:rgba(255,226,150,.06);color:#f0dcae;font:inherit;font-size:13.5px;cursor:pointer}
+.dk-rail-retry:hover{background:rgba(255,226,150,.14)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+body.ph *,body.ph *:before,body.ph *:after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+/* source picker: as wide as the name needs (up to a limit), never clipped mid-word */
+body.desk .dk-bar-src #dkSource{width:auto!important;min-width:200px;max-width:min(380px,30vw)}
+html body.desk .dk-bar-src .select:not(#_):not(#__){width:auto!important;min-width:200px;max-width:min(380px,30vw);field-sizing:content;padding:0 44px 0 16px!important;font-size:14px!important;font-weight:600!important;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
