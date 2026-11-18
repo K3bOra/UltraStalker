@@ -1430,13 +1430,8 @@ body.usp-direct #playerSheet{display:none!important}
     const ext = streamExt(ticket);
     A.applyVol();
     if (ext === "m3u8") {
-      const nativeHls = video.canPlayType("application/vnd.apple.mpegurl");
-      // Keep Safari's own HLS path when only Managed Media Source is available.
-      if (nativeHls && (ticket._nativeHls || !window.MediaSource)) video.src = src;
-      else {
-        await startHls(ticket, src, my, nativeHls);
-        if (my !== alive) return;
-      }
+      await startHls(ticket, src, my);
+      if (my !== alive) return;
     } else if (ext === "ts") {
       await lib(HERE + "vendor/mpegts.min.js");
       if (my !== alive) return;
@@ -1493,8 +1488,9 @@ body.usp-direct #playerSheet{display:none!important}
       });
   }
 
-  async function startHls(ticket, src, my, nativeHls) {
-    if (!ticket._nativeHls) {
+  async function startHls(ticket, src, my) {
+    const nativeHls = video.canPlayType("application/vnd.apple.mpegurl");
+    if (!ticket._nativeHls && (window.MediaSource || window.ManagedMediaSource || !nativeHls)) {
       try {
         await lib(HERE + "vendor/hls.min.js");
       } catch (error) {
@@ -1517,7 +1513,6 @@ body.usp-direct #playerSheet{display:none!important}
           if (my !== alive) return;
           const level = player.levels[data.level];
           if (level) info = { videoCodec: level.videoCodec, audioCodec: level.audioCodec, width: level.width, height: level.height, fps: level.frameRate };
-          if (!player.audioTracks.length && badPart("audio")) tryNativeHls() || escalate("codec");
         });
         player.on(H.Events.ERROR, (_, data) => {
           if (!data?.fatal || my !== alive) return;
