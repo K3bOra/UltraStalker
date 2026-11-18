@@ -997,7 +997,7 @@
         const cover = str(row.cover_tmdb || row.cover_big || row.cover || row.stream_icon || row.movie_image);
         let bd = row.backdrop_path || row.backdrop || "";
         if (Array.isArray(bd)) bd = bd[0] || "";
-        return { id: "xt-series-" + sid, series_id: str(sid), movie_id: "xt-series-" + sid, name: cleanTitle(rawName), title: cleanTitle(rawName), _raw_name: rawName, genre: group, category: group, category_id: group, _xtream_category_id: c, logo: cover, cover, cover_url: cover, poster: cover, poster_url: cover, backdrop: str(bd), backdrop_url: str(bd), rating: row.rating || row.rating_5based || "", rating_imdb: row.rating_imdb || row.rating || "", year: row.year || row.releaseDate || row.release_date || "", tmdb_id: row.tmdb_id || row.tmdb || "", imdb_id: row.imdb_id || "", plot: row.plot || "", _m3u_series: true, _xtream: true, _xtream_kind: "series" };
+        return { id: "xt-series-" + sid, series_id: str(sid), movie_id: "xt-series-" + sid, name: cleanTitle(rawName), title: cleanTitle(rawName), _raw_name: rawName, genre: group, category: group, category_id: group, _xtream_category_id: c, logo: cover, cover, cover_url: cover, poster: cover, poster_url: cover, backdrop: str(bd), backdrop_url: str(bd), rating: row.rating || row.rating_5based || "", rating_imdb: row.rating_imdb || row.rating || "", year: row.year || row.releaseDate || row.release_date || "", tmdb_id: row.tmdb_id || row.tmdb || "", imdb_id: row.imdb_id || "", plot: row.plot || "", season_count: suppliedSeasonCount(row), _m3u_series: true, _xtream: true, _xtream_kind: "series" };
       });
     }
     async list(media, category) {
@@ -1210,7 +1210,7 @@
       }
       const series = [...groups.values()].map((b) => {
         const eps = b.episodes.sort((x, y) => x.season - y.season || x.episode - y.episode);
-        return { id: b.id, series_id: b.id, movie_id: b.id, name: b.name, title: b.name, genre: b.group, category: b.group, category_id: b.group, logo: b.logo, cover: b.logo, cover_url: b.logo, _m3u_series: true, _episodes: eps };
+        return { id: b.id, series_id: b.id, movie_id: b.id, name: b.name, title: b.name, genre: b.group, category: b.group, category_id: b.group, logo: b.logo, cover: b.logo, cover_url: b.logo, season_count: new Set(eps.map((episode) => episode.season)).size, _m3u_series: true, _episodes: eps };
       });
       return { itv: live, vod: movies, series };
     }
@@ -1275,6 +1275,31 @@
     return c;
   }
 
+  /* Series counts come from the same provider and season list used by Details. */
+  const SEASON_COUNTS = new Map();
+  const SEASON_JOBS = new Map();
+  function suppliedSeasonCount(row) {
+    const values = [row.season_count, row.seasons_count, row.total_seasons, row.num_seasons, row.number_of_seasons];
+    if (Array.isArray(row.seasons)) values.push(row.seasons.length);
+    return values.map(Number).find((count) => Number.isSafeInteger(count) && count > 0) || 0;
+  }
+  function recentSeasonCount(token) {
+    const known = SEASON_COUNTS.get(token);
+    if (known && known.until > Date.now()) return known.count;
+    SEASON_COUNTS.delete(token);
+  }
+  function providerSeasons(token, entry) {
+    if (SEASON_JOBS.has(token)) return SEASON_JOBS.get(token);
+    const profile = findProfile(entry.account);
+    const request = client(profile).seasons(entry.item).then((seasons) => {
+      if (SEASON_COUNTS.size >= 512) SEASON_COUNTS.delete(SEASON_COUNTS.keys().next().value);
+      SEASON_COUNTS.set(token, { count: seasons.length, until: Date.now() + (seasons.length ? 300000 : 60000) });
+      return seasons;
+    }).finally(() => SEASON_JOBS.delete(token));
+    SEASON_JOBS.set(token, request);
+    return request;
+  }
+
   /* ---------------------------------------------------------- card fields */
   function yearOf(v) {
     const m = str(v).match(/(19|20)\d{2}/);
@@ -1316,6 +1341,10 @@
       favorite: keys.has(contentKey(profile, media, row)),
       source_kind: profileKind(profile),
     };
+    if (media === "series") {
+      const count = recentSeasonCount(token) ?? suppliedSeasonCount(row);
+      if (count > 0) item.season_count = count;
+    }
     if (media !== "itv") {
       const y = yearOf(row.year || row.releaseDate || row.release_date || row.added);
       if (y && (row.year || row.releaseDate || row.release_date)) item.year = y;
@@ -1596,12 +1625,20 @@
     return out;
   };
 
+  API["browse/season-count"] = async (url) => {
+    const token = q(url, "item");
+    const entry = cached(token);
+    if (entry.media !== "series") throw new WebError("not a series");
+    const supplied = suppliedSeasonCount(entry.item);
+    const count = recentSeasonCount(token) ?? (supplied || (await providerSeasons(token, entry)).length);
+    return { ok: true, count };
+  };
+
   API["browse/seasons"] = async (url) => {
     const token = q(url, "item");
     const entry = cached(token);
     if (entry.media !== "series") throw new WebError("not a series");
-    const p = findProfile(entry.account);
-    const seasons = await client(p).seasons(entry.item);
+    const seasons = await providerSeasons(token, entry);
     const out = seasons.map((s, i) => {
       const id = remember(entry.account, "season", s, { parent: token });
       const eps = Array.isArray(s.episodes) ? s.episodes.length : Array.isArray(s.series) ? s.series.length : undefined;

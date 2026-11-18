@@ -259,6 +259,7 @@ body.usp-direct #playerSheet{display:none!important}
   let hls = null, ts = null, eng = null, engBox = null;
   let vs = null, vlcOn = false, vlcPoll = 0, vlcPlace = 0, vlcLast = "", pausedAt = 0;
   let alive = 0, info = null, started = false, current = null, opts = {};
+  let autoplayMuted = false;
   let lastT = 0, lastMove = 0, playingSince = 0, startTimer = 0, tick = 0, idleTimer = 0, gate = 0;
   function ahead() {
     try {
@@ -376,7 +377,7 @@ body.usp-direct #playerSheet{display:none!important}
       if (vlcOn) NV.cmd("volume", String(m ? 0 : Math.round(v * 256)));
       if (video) {
         video.volume = v;
-        video.muted = m || !!(current && current._noAudio);
+        video.muted = m || autoplayMuted || !!(current && current._noAudio);
       }
       if (eng) {
         try {
@@ -386,11 +387,12 @@ body.usp-direct #playerSheet{display:none!important}
     },
     setVol(v) {
       store.set("us-vol", Math.min(1, Math.max(0, v)).toFixed(2));
-      if (v > 0) store.set("us-muted", "0");
-      A.applyVol();
+      if (v > 0) enableSound();
+      else A.applyVol();
     },
     toggleMute() {
-      store.set("us-muted", A.muted() ? "0" : "1");
+      if (A.muted() || !A.vol() || soundBlocked()) return enableSound();
+      store.set("us-muted", "1");
       A.applyVol();
     },
     audioTracks() {
@@ -472,6 +474,29 @@ body.usp-direct #playerSheet{display:none!important}
     },
   };
   const LANGS = { ar: "Arabic", ara: "Arabic", en: "English", eng: "English", fr: "French", fre: "French", fra: "French", de: "German", ger: "German", deu: "German", es: "Spanish", spa: "Spanish", tr: "Turkish", tur: "Turkish", it: "Italian", ita: "Italian", ru: "Russian", rus: "Russian", fa: "Persian", per: "Persian", ku: "Kurdish", kur: "Kurdish", und: "" };
+  function soundBlocked() {
+    return autoplayMuted || (isEngine() && !!eng?.isSuspended?.());
+  }
+  function enableSound() {
+    const my = alive;
+    const wasBlocked = autoplayMuted;
+    autoplayMuted = false;
+    store.set("us-muted", "0");
+    if (!A.vol()) store.set("us-vol", "1");
+    A.applyVol();
+    if (isEngine() && eng?.isSuspended?.()) {
+      eng.resume().catch(() => {}).finally(() => my === alive && refresh());
+    } else if (wasBlocked) {
+      video.play().catch((error) => {
+        if (my !== alive || error?.name !== "NotAllowedError") return;
+        autoplayMuted = true;
+        A.applyVol();
+        video.play().catch(() => {});
+        refresh();
+      });
+    }
+    refresh();
+  }
   function trackLabel(meta, i, codec) {
     const m = meta || {};
     const lang = String(m.language || m.lang || "").toLowerCase();
@@ -567,12 +592,7 @@ body.usp-direct #playerSheet{display:none!important}
     if (window.ResizeObserver) new ResizeObserver(resizeEngine).observe(stage);
     unmuteBtn.onclick = (e) => {
       e.stopPropagation();
-      store.set("us-muted", "0");
-      if (eng && eng.isSuspended && eng.isSuspended()) eng.resume().catch(() => {});
-      A.applyVol();
-      if (video && !isEngine()) video.play().catch(() => {});
-      unmuteBtn.classList.remove("on");
-      refresh();
+      enableSound();
     };
     menu.addEventListener("click", (e) => e.stopPropagation());
 
@@ -664,7 +684,9 @@ body.usp-direct #playerSheet{display:none!important}
       }
     }
     const muted = A.muted() || !!(current && current._noAudio);
-    q(".mute").innerHTML = muted || !A.vol() ? I.mute : I.vol;
+    const blocked = !!current && !current._noAudio && soundBlocked();
+    unmuteBtn.classList.toggle("on", blocked && !muted && A.vol() > 0);
+    q(".mute").innerHTML = muted || blocked || !A.vol() ? I.mute : I.vol;
     const v = q(".usp-vol input");
     if (document.activeElement !== v) v.value = muted ? 0 : Math.round(A.vol() * 100);
     paint(v);
@@ -956,9 +978,6 @@ body.usp-direct #playerSheet{display:none!important}
       else if (isVlc()) store.set("us-eng:" + key, "vlc");
       else if (step() === "native") store.set("us-eng:" + key, null);
     }
-    // Autoplay with sound may be refused: play muted and offer one tap for sound.
-    if (!isEngine() && video && video.muted && !A.muted() && !current._noAudio) unmuteBtn.classList.add("on");
-    if (isEngine() && eng && eng.isSuspended && eng.isSuspended()) unmuteBtn.classList.add("on");
     if (isVlc()) vlcTracks();
     if (current._resumeAt > 1 && !current.live) {
       const at = current._resumeAt;
@@ -1168,6 +1187,7 @@ body.usp-direct #playerSheet{display:none!important}
     stopEngine();
     stopVlc();
     pausedAt = 0;
+    autoplayMuted = false;
     info = null;
     const n = box && box.querySelector(".usp-note");
     if (n) n.style.display = "none";
@@ -1243,6 +1263,8 @@ body.usp-direct #playerSheet{display:none!important}
     };
     eng.on("error", onErr);
     eng.on("timeout", onErr);
+    eng.on("resume", () => my === alive && refresh());
+    eng.on("audioContextRunning", () => my === alive && refresh());
     eng.on("ended", () => my === alive && (ticket.live ? reconnect("ended") : refresh()));
     eng.on("firstVideoRendered", () => {
       if (my !== alive) return;
@@ -1260,7 +1282,10 @@ body.usp-direct #playerSheet{display:none!important}
       await eng.play();
     } catch (e) {
       if (my !== alive) return;
-      if (e && e.name === "NotAllowedError") return askTap(() => eng && eng.play().then(() => eng.resume && eng.resume()));
+      if (e && e.name === "NotAllowedError") return askTap(() => {
+        me.resume().catch(() => {});
+        return me.play();
+      });
       throw e;
     }
     if (my !== alive) return;
@@ -1405,8 +1430,13 @@ body.usp-direct #playerSheet{display:none!important}
     const ext = streamExt(ticket);
     A.applyVol();
     if (ext === "m3u8") {
-      await startHls(ticket, src, my);
-      if (my !== alive) return;
+      const nativeHls = video.canPlayType("application/vnd.apple.mpegurl");
+      // Keep Safari's own HLS path when only Managed Media Source is available.
+      if (nativeHls && (ticket._nativeHls || !window.MediaSource)) video.src = src;
+      else {
+        await startHls(ticket, src, my, nativeHls);
+        if (my !== alive) return;
+      }
     } else if (ext === "ts") {
       await lib(HERE + "vendor/mpegts.min.js");
       if (my !== alive) return;
@@ -1452,14 +1482,19 @@ body.usp-direct #playerSheet{display:none!important}
       p.catch((e) => {
         if (my !== alive || started || !e || e.name !== "NotAllowedError") return;
         // Autoplay with sound refused: start muted, one tap brings the sound back.
-        video.muted = true;
-        video.play().catch(() => my === alive && !started && askTap(() => video.play()));
+        autoplayMuted = true;
+        A.applyVol();
+        refresh();
+        video.play().catch(() => my === alive && !started && askTap(() => {
+          autoplayMuted = false;
+          A.applyVol();
+          return video.play();
+        }));
       });
   }
 
-  async function startHls(ticket, src, my) {
-    const nativeHls = video.canPlayType("application/vnd.apple.mpegurl");
-    if (!ticket._nativeHls && (window.MediaSource || window.ManagedMediaSource || !nativeHls)) {
+  async function startHls(ticket, src, my, nativeHls) {
+    if (!ticket._nativeHls) {
       try {
         await lib(HERE + "vendor/hls.min.js");
       } catch (error) {
@@ -1482,6 +1517,7 @@ body.usp-direct #playerSheet{display:none!important}
           if (my !== alive) return;
           const level = player.levels[data.level];
           if (level) info = { videoCodec: level.videoCodec, audioCodec: level.audioCodec, width: level.width, height: level.height, fps: level.frameRate };
+          if (!player.audioTracks.length && badPart("audio")) tryNativeHls() || escalate("codec");
         });
         player.on(H.Events.ERROR, (_, data) => {
           if (!data?.fatal || my !== alive) return;
