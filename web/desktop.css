@@ -1183,3 +1183,43 @@ html body.desk.dk-vg-mode .dk-tvc-list:not(#_):not(#__){-webkit-mask-image:linea
 /* thin gold scrollbars on the computer (Windows otherwise shows its grey bar) */
 html:has(body.desk){scrollbar-width:thin;scrollbar-color:rgba(226,192,124,.42) transparent}
 html body.desk *:not(#_){scrollbar-width:thin;scrollbar-color:rgba(226,192,124,.38) transparent}
+
+/* Movies & Series: the category column runs the full height under the bar, from the
+   window's left edge (an app sidebar), with a fine gold rule on its inner side. */
+html body.desk.dk-vg-mode{--vgw:clamp(272px,17.5vw,340px)}
+html body.desk.dk-vg-mode main.shell:not(#_):not(#__):not(#___){padding-top:var(--bar)!important}
+html body.desk.dk-vg-mode #itemsStage:not(#_):not(#__):not(#___){grid-template-columns:var(--vgw) minmax(0,1fr)!important;gap:0 clamp(30px,2.6vw,48px)!important;padding:0 var(--pad) 0 0!important}
+html.lang-ar body.desk.dk-vg-mode #itemsStage:not(#_):not(#__):not(#___){padding:0 0 0 var(--pad)!important}
+html body.desk.dk-vg-mode .dk-tv-cats:not(#_):not(#__):not(#___){top:var(--bar)!important;height:calc(100vh - var(--bar))!important;border-radius:0!important;padding:24px 14px 0 18px!important;border:0!important;background:linear-gradient(180deg,rgba(255,240,210,.045),rgba(255,240,210,.012) 40%,rgba(0,0,0,.18)),linear-gradient(165deg,rgba(44,39,32,.78),rgba(20,18,15,.88) 40%,rgba(12,11,10,.92))!important;box-shadow:inset -1px 0 rgba(226,192,124,.30),18px 0 50px -30px rgba(0,0,0,.85)!important}
+html.lang-ar body.desk.dk-vg-mode .dk-tv-cats:not(#_):not(#__):not(#___){padding:24px 18px 0 14px!important;box-shadow:inset 1px 0 rgba(226,192,124,.30),-18px 0 50px -30px rgba(0,0,0,.85)!important}
+html body.desk.dk-vg-mode .dk-tvc-h:not(#_):not(#__){padding:0 12px 16px!important}
+html body.desk.dk-vg-mode .dk-tv-cats .dk-find:not(#_):not(#__){margin:0 4px 14px!important;height:44px}
+html body.desk.dk-vg-mode .dk-tv-list:not(#_):not(#__):not(#___){padding-top:26px!important;padding-bottom:56px!important}
+html body.desk.dk-vg-mode .dk-tvc-list:not(#_):not(#__):not(#___){padding-bottom:30px}
+/* …and it starts at the very top: the menu button and the logo sit on it, one piece;
+   the top bar's glass and its gold line begin where the column ends. */
+html body.desk{--us-barbg:linear-gradient(128deg,rgba(255,244,220,.13) 0%,rgba(255,244,220,.043) 26%,rgba(255,244,220,0) 46%,rgba(255,244,220,0) 78%,rgba(255,244,220,.04) 100%),linear-gradient(rgba(34,30,25,.66),rgba(16,14,12,.72))}
+html body.desk.dk-vg-mode #dkBar:not(#_):not(#__):not(#___):not(#____){background:none!important;box-shadow:none!important}
+html body.desk.dk-vg-mode #dkBar:not(#_):not(#__):not(#___)::before{content:""!important;display:block!important;position:absolute!important;top:0;bottom:0;left:var(--vgw);right:0;z-index:-1;pointer-events:none;background:var(--us-barbg)!important;box-shadow:0 18px 40px -22px rgba(0,0,0,.95),inset 0 -1px rgba(240,222,180,.06)!important}
+html body.desk.dk-vg-mode #dkBar:not(#_):not(#__):not(#___)::after{left:var(--vgw)!important}
+html.lang-ar body.desk.dk-vg-mode #dkBar:not(#_):not(#__):not(#___)::before{left:0;right:var(--vgw)}
+html.lang-ar body.desk.dk-vg-mode #dkBar:not(#_):not(#__):not(#___)::after{left:0!important;right:var(--vgw)!important}
+html body.desk.dk-vg-mode .dk-tv-cats:not(#_):not(#__):not(#___):not(#____){top:0!important;margin-top:calc(-1 * var(--bar))!important;height:100vh!important;padding-top:calc(var(--bar) + 26px)!important}
+/* Movies & Series: the top bar and the category column are ONE glass piece (an "L"):
+   the same tint, no gold line between them, one soft shadow along the inner edge. */
+html body.desk{--us-frame:linear-gradient(rgba(31,27,22,.84),rgba(31,27,22,.84))}
+html body.desk.dk-vg-mode #dkBar:not(#_):not(#__):not(#___):not(#____){background:var(--us-frame)!important;box-shadow:none!important;border:0!important}
+html body.desk.dk-vg-mode #dkBar:not(#_):not(#__):not(#___)::before{left:var(--vgw)!important;right:0!important;background:none!important;box-shadow:0 22px 40px -26px rgba(0,0,0,.9)!important}
+html.lang-ar body.desk.dk-vg-mode #dkBar:not(#_):not(#__):not(#___)::before{left:0!important;right:var(--vgw)!important}
+html body.desk.dk-vg-mode #dkBar:not(#_):not(#__):not(#___)::after{display:none!important;content:none!important}
+html body.desk.dk-vg-mode .dk-tv-cats:not(#_):not(#__):not(#___):not(#____){background:var(--us-frame)!important;box-shadow:22px 0 40px -26px rgba(0,0,0,.9)!important;border:0!important}
+html.lang-ar body.desk.dk-vg-mode .dk-tv-cats:not(#_):not(#__):not(#___):not(#____){box-shadow:-22px 0 40px -26px rgba(0,0,0,.9)!important}
+/* one sheet of glass: a single reflection runs across the bar and the column together
+   (fixed to the window, so both parts share it) over the warm tint */
+html body.desk{--us-frame:linear-gradient(128deg,rgba(255,244,220,.12) 0%,rgba(255,244,220,.045) 22%,rgba(255,244,220,0) 42%,rgba(255,244,220,0) 80%,rgba(255,244,220,.035) 100%) fixed,linear-gradient(rgba(36,31,25,.80),rgba(30,26,21,.84)) fixed}
+/* one layer of glass everywhere: the column starts under the bar (same tint, same fixed reflection) */
+html body.desk.dk-vg-mode .dk-tv-cats:not(#_):not(#__):not(#___):not(#____):not(#_____){top:var(--bar)!important;margin-top:0!important;height:calc(100vh - var(--bar))!important;padding-top:24px!important}
+html body.desk.dk-vg-mode .dk-tvc-list:not(#_):not(#__):not(#___){scrollbar-width:none}
+html body.desk.dk-vg-mode .dk-tvc-list::-webkit-scrollbar{display:none}
+/* the frame is dense enough that posters scrolling under the bar don't show through */
+html body.desk{--us-frame:linear-gradient(128deg,rgba(255,244,220,.11) 0%,rgba(255,244,220,.04) 22%,rgba(255,244,220,0) 42%,rgba(255,244,220,0) 80%,rgba(255,244,220,.03) 100%) fixed,linear-gradient(rgba(33,29,23,.95),rgba(27,24,19,.96)) fixed}
