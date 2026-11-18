@@ -125,13 +125,7 @@ body.usp-direct #playerSheet{display:none!important}
 .usp.docked .usp-card{width:100%;height:100%;border:0;border-radius:inherit;background:#000;box-shadow:none;display:flex;flex-direction:column}
 .usp.docked .usp-head{display:none}
 .usp.docked .usp-stage{flex:1;aspect-ratio:auto;max-height:none;height:100%}
-.usp-stage:fullscreen{width:100%;height:100%;max-height:none;aspect-ratio:auto}
-.usp.expanded{position:fixed;inset:0;z-index:1000;width:100%;height:100%;height:100dvh;box-sizing:border-box;
-  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  background:#000;backdrop-filter:none;border-radius:0}
-.usp.expanded .usp-card{width:100%;height:100%;display:flex;flex-direction:column;border:0;border-radius:0;background:#000;box-shadow:none}
-.usp.expanded .usp-head{flex:none}
-.usp.expanded .usp-stage{flex:1;min-height:0;height:auto;max-height:none;aspect-ratio:auto}
+.usp-stage:fullscreen{max-height:none;aspect-ratio:auto}
 `;
   // mpegts.js posts a few late messages after a stream is unloaded (its emitter is gone by
   // then). They are harmless; keep them out of the console.
@@ -155,7 +149,6 @@ body.usp-direct #playerSheet{display:none!important}
     stop: '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.2"/></svg>',
     pip: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11.5" width="7" height="5.5" rx="1"/></svg>',
     full: '<svg viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
-    exitFull: '<svg viewBox="0 0 24 24"><path d="M4 9h5V4m6 0v5h5M4 15h5v5m6 0v-5h5"/></svg>',
   };
 
   const loaded = {};
@@ -248,7 +241,7 @@ body.usp-direct #playerSheet{display:none!important}
     else if (mode === "ultra") plan = ["engine", "soft", "native"];
     // The program: whatever the browser can't play smoothly goes to VLC.
     else if (hasVlc()) plan = mem ? ["vlc", "native", "engine", "soft"] : ["native", "vlc", "engine", "soft"];
-    else if (mem === "1" || streamExt(ticket) === "mkv") plan = ["engine", "soft", "native"];
+    else if (mem === "1") plan = ["engine", "soft", "native"];
     else plan = ["native", "engine", "soft"];
     if (live) plan.push("mute");
     return plan;
@@ -259,7 +252,6 @@ body.usp-direct #playerSheet{display:none!important}
   let hls = null, ts = null, eng = null, engBox = null;
   let vs = null, vlcOn = false, vlcPoll = 0, vlcPlace = 0, vlcLast = "", pausedAt = 0;
   let alive = 0, info = null, started = false, current = null, opts = {};
-  let autoplayMuted = false;
   let lastT = 0, lastMove = 0, playingSince = 0, startTimer = 0, tick = 0, idleTimer = 0, gate = 0;
   function ahead() {
     try {
@@ -377,7 +369,7 @@ body.usp-direct #playerSheet{display:none!important}
       if (vlcOn) NV.cmd("volume", String(m ? 0 : Math.round(v * 256)));
       if (video) {
         video.volume = v;
-        video.muted = m || autoplayMuted || !!(current && current._noAudio);
+        video.muted = m || !!(current && current._noAudio);
       }
       if (eng) {
         try {
@@ -387,12 +379,11 @@ body.usp-direct #playerSheet{display:none!important}
     },
     setVol(v) {
       store.set("us-vol", Math.min(1, Math.max(0, v)).toFixed(2));
-      if (v > 0) enableSound();
-      else A.applyVol();
+      if (v > 0) store.set("us-muted", "0");
+      A.applyVol();
     },
     toggleMute() {
-      if (A.muted() || !A.vol() || soundBlocked()) return enableSound();
-      store.set("us-muted", "1");
+      store.set("us-muted", A.muted() ? "0" : "1");
       A.applyVol();
     },
     audioTracks() {
@@ -474,29 +465,6 @@ body.usp-direct #playerSheet{display:none!important}
     },
   };
   const LANGS = { ar: "Arabic", ara: "Arabic", en: "English", eng: "English", fr: "French", fre: "French", fra: "French", de: "German", ger: "German", deu: "German", es: "Spanish", spa: "Spanish", tr: "Turkish", tur: "Turkish", it: "Italian", ita: "Italian", ru: "Russian", rus: "Russian", fa: "Persian", per: "Persian", ku: "Kurdish", kur: "Kurdish", und: "" };
-  function soundBlocked() {
-    return autoplayMuted || (isEngine() && !!eng?.isSuspended?.());
-  }
-  function enableSound() {
-    const my = alive;
-    const wasBlocked = autoplayMuted;
-    autoplayMuted = false;
-    store.set("us-muted", "0");
-    if (!A.vol()) store.set("us-vol", "1");
-    A.applyVol();
-    if (isEngine() && eng?.isSuspended?.()) {
-      eng.resume().catch(() => {}).finally(() => my === alive && refresh());
-    } else if (wasBlocked) {
-      video.play().catch((error) => {
-        if (my !== alive || error?.name !== "NotAllowedError") return;
-        autoplayMuted = true;
-        A.applyVol();
-        video.play().catch(() => {});
-        refresh();
-      });
-    }
-    refresh();
-  }
   function trackLabel(meta, i, codec) {
     const m = meta || {};
     const lang = String(m.language || m.lang || "").toLowerCase();
@@ -588,11 +556,14 @@ body.usp-direct #playerSheet{display:none!important}
       else if (video && video.requestPictureInPicture && !isEngine()) video.requestPictureInPicture().catch(() => {});
     };
     q(".full").onclick = fullscreen;
-    document.addEventListener("fullscreenchange", updateFullscreenButton);
-    if (window.ResizeObserver) new ResizeObserver(resizeEngine).observe(stage);
     unmuteBtn.onclick = (e) => {
       e.stopPropagation();
-      enableSound();
+      store.set("us-muted", "0");
+      if (eng && eng.isSuspended && eng.isSuspended()) eng.resume().catch(() => {});
+      A.applyVol();
+      if (video && !isEngine()) video.play().catch(() => {});
+      unmuteBtn.classList.remove("on");
+      refresh();
     };
     menu.addEventListener("click", (e) => e.stopPropagation());
 
@@ -620,7 +591,6 @@ body.usp-direct #playerSheet{display:none!important}
       const live = current && current.live;
       if (k === "Escape") {
         if (menu.classList.contains("on")) menu.classList.remove("on");
-        else if (box.classList.contains("expanded") || document.fullscreenElement === stage) fullscreen();
         else if (!docked) close();
         else return;
       } else if (k === " " || k === "k") Promise.resolve(A.toggle()).then(refresh);
@@ -653,7 +623,7 @@ body.usp-direct #playerSheet{display:none!important}
     video.addEventListener("error", () => {
       if (isEngine() || !current) return;
       const fmt = video.error && (video.error.code === 4 || video.error.code === 3);
-      if ((video.error?.code === 2 && retryViaRelay()) || tryNativeHls() || escalate(fmt ? "format" : "")) return;
+      if (escalate(fmt ? "format" : "")) return;
       fail(fmt ? "format" : "");
     });
     video.addEventListener("ended", () => current && current.live && reconnect("ended"));
@@ -684,9 +654,7 @@ body.usp-direct #playerSheet{display:none!important}
       }
     }
     const muted = A.muted() || !!(current && current._noAudio);
-    const blocked = !!current && !current._noAudio && soundBlocked();
-    unmuteBtn.classList.toggle("on", blocked && !muted && A.vol() > 0);
-    q(".mute").innerHTML = muted || blocked || !A.vol() ? I.mute : I.vol;
+    q(".mute").innerHTML = muted || !A.vol() ? I.mute : I.vol;
     const v = q(".usp-vol input");
     if (document.activeElement !== v) v.value = muted ? 0 : Math.round(A.vol() * 100);
     paint(v);
@@ -737,7 +705,7 @@ body.usp-direct #playerSheet{display:none!important}
       return;
     }
     const fits = isEngine() || isVlc() ? [["fit", "Fit"], ["fill", "Fill"]] : [["fit", "Fit"], ["fill", "Fill"], ["stretch", "Stretch"]];
-    let h = qualityMenu();
+    let h = "";
     if (current && !current.live && !canListTracks()) h += tracksHtml(at, st);
     else if (at.length > 1) h += "<h4>Audio</h4>" + at.map((t) => `<button type="button" data-a="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
     if (st.length) h += "<h4>Subtitles</h4>" + `<button type="button" data-s="-1" class="${st.some((t) => t.on) ? "" : "on"}">Off</button>` + st.map((t) => `<button type="button" data-s="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
@@ -770,13 +738,7 @@ body.usp-direct #playerSheet{display:none!important}
       if (!b || b.disabled) return;
       if (b.dataset.a !== undefined) A.selectAudio(+b.dataset.a);
       else if (b.dataset.s !== undefined) A.selectSub(+b.dataset.s);
-      else if (b.dataset.q !== undefined && hls) {
-        const level = Number(b.dataset.q);
-        if (level === -1 || hls.levels[level]) {
-          current._quality = level < 0 ? "" : qualityKey(hls.levels[level]);
-          hls.nextLevel = level;
-        }
-      } else if (b.dataset.f) A.setFit(b.dataset.f);
+      else if (b.dataset.f) A.setFit(b.dataset.f);
       else if (b.dataset.b) {
         store.set("us-buffer", b.dataset.b);
         if (current) restart(Object.assign({}, current, { _reconnects: 0 }));
@@ -831,25 +793,6 @@ body.usp-direct #playerSheet{display:none!important}
     if (v >= 1000) return "FHD 1080p";
     if (v >= 700) return "HD 720p";
     return "SD " + (h || v) + "p";
-  }
-  function qualityKey(level) {
-    return [level.width, level.height, level.frameRate, level.bitrate, level.videoCodec].join("|");
-  }
-  function qualityMenu() {
-    if (!hls || hls.levels.length < 2) return "";
-    const active = hls.levels[hls.currentLevel];
-    const selected = hls.manualLevel;
-    const labelFor = (level) => qualityOf(level.width, level.height) || level.name;
-    const activeLabel = active ? labelFor(active) : "";
-    const autoLabel = activeLabel ? "Auto · " + activeLabel : "Auto";
-    const auto = `<button type="button" data-q="-1" class="${selected < 0 ? "on" : ""}">${esc(autoLabel)}</button>`;
-    const levels = hls.levels.map((level, index) => {
-      const fps = level.frameRate > 0 ? Math.round(level.frameRate) + " fps" : "";
-      const rate = level.bitrate > 0 ? (level.bitrate / 1e6).toFixed(1) + " Mb/s" : "";
-      const label = [labelFor(level) || "Quality " + (index + 1), fps, rate].filter(Boolean).join(" · ");
-      return `<button type="button" data-q="${index}" class="${index === selected ? "on" : ""}">${esc(label)}</button>`;
-    });
-    return "<h4>Quality</h4>" + auto + levels.join("");
   }
   function channelsOf(n) {
     return !n ? "" : n === 1 ? "Mono" : n === 2 ? "Stereo" : n === 6 ? "5.1" : n === 8 ? "7.1" : n + " ch";
@@ -978,15 +921,14 @@ body.usp-direct #playerSheet{display:none!important}
       else if (isVlc()) store.set("us-eng:" + key, "vlc");
       else if (step() === "native") store.set("us-eng:" + key, null);
     }
+    // Autoplay with sound may be refused: play muted and offer one tap for sound.
+    if (!isEngine() && video && video.muted && !A.muted() && !current._noAudio) unmuteBtn.classList.add("on");
+    if (isEngine() && eng && eng.isSuspended && eng.isSuspended()) unmuteBtn.classList.add("on");
     if (isVlc()) vlcTracks();
     if (current._resumeAt > 1 && !current.live) {
       const at = current._resumeAt;
-      const my = alive;
-      setTimeout(() => {
-        if (my !== alive) return;
-        A.seek(at);
-        current._resumeAt = 0;
-      }, isVlc() ? 300 : 0);
+      current._resumeAt = 0;
+      setTimeout(() => A.seek(at), isVlc() ? 300 : 0);
     }
     if (current._openTracks) {
       current._openTracks = false;
@@ -1065,23 +1007,7 @@ body.usp-direct #playerSheet{display:none!important}
     restart(Object.assign({}, current, { _reconnects: n, _why: why || "" }));
   }
   function restart(t) {
-    if (started && !t.live) t._resumeAt = Math.max(t._resumeAt || 0, A.time() || 0);
     play(t, Object.assign({}, opts, { _again: true }));
-  }
-
-  function retryViaRelay() {
-    const url = String(current.stream || current.url || "");
-    if (current.ticket || current._viaRelay || !/^https:/i.test(url) || current._src !== url) return false;
-    const alternate = viaRelay(url, current.headers);
-    if (alternate === url) return false;
-    restart(Object.assign({}, current, { _viaRelay: true }));
-    return true;
-  }
-
-  function tryNativeHls() {
-    if (!hls || current._nativeHls || !video.canPlayType("application/vnd.apple.mpegurl")) return false;
-    restart(Object.assign({}, current, { _nativeHls: true }));
-    return true;
   }
   function watchdog() {
     if (!current || !box || box.classList.contains("hidden")) return;
@@ -1159,9 +1085,6 @@ body.usp-direct #playerSheet{display:none!important}
     engBox = null;
     if (video) video.style.visibility = "";
   }
-  function resizeEngine() {
-    if (eng && stage.clientWidth && stage.clientHeight) eng.resize(stage.clientWidth, stage.clientHeight);
-  }
   function stop() {
     alive++;
     clearTimeout(startTimer);
@@ -1187,7 +1110,6 @@ body.usp-direct #playerSheet{display:none!important}
     stopEngine();
     stopVlc();
     pausedAt = 0;
-    autoplayMuted = false;
     info = null;
     const n = box && box.querySelector(".usp-note");
     if (n) n.style.display = "none";
@@ -1203,11 +1125,6 @@ body.usp-direct #playerSheet{display:none!important}
     }
   }
   function close() {
-    if (stage && document.fullscreenElement === stage) document.exitFullscreen().catch(() => {});
-    if (box) {
-      box.classList.remove("expanded");
-      updateFullscreenButton();
-    }
     stop();
     current = null;
     if (directWatch) directWatch.disconnect();
@@ -1230,13 +1147,13 @@ body.usp-direct #playerSheet{display:none!important}
     const url = String(ticket.stream || ticket.url || "");
     let ext = "";
     try {
-      const outer = new URL(url);
-      const inner = outer.searchParams.get("u");
-      const actual = inner && /^https?:\/\//i.test(inner) ? new URL(inner) : outer;
-      const m = actual.pathname.toLowerCase().match(/\.([a-z0-9]{2,4})$/);
+      const u = new URL(url);
+      let inner = u.searchParams.get("u");
+      const path = (inner ? new URL(inner).pathname : u.pathname).toLowerCase();
+      const m = path.match(/\.([a-z0-9]{2,4})$/);
       ext = m ? m[1] : "";
-      const q = actual.search.match(/[?&](?:extension|output|type)=(ts|m3u8|hls|mp4|mkv)(?:&|$)/i);
-      if (q) ext = q[1].toLowerCase() === "hls" ? "m3u8" : q[1].toLowerCase();
+      const q = (inner || url).match(/[?&](?:extension|output|type)=(ts|m3u8|hls|mp4|mkv)/i);
+      if (!ext && q) ext = q[1].toLowerCase() === "hls" ? "m3u8" : q[1].toLowerCase();
     } catch (_) {}
     if (!ext || !/^(ts|m3u8|mp4|mkv|m4v|mov|webm|avi|flv|mpg|mpeg)$/.test(ext)) ext = ticket.live ? "ts" : "mp4";
     return ext;
@@ -1263,14 +1180,8 @@ body.usp-direct #playerSheet{display:none!important}
     };
     eng.on("error", onErr);
     eng.on("timeout", onErr);
-    eng.on("resume", () => my === alive && refresh());
-    eng.on("audioContextRunning", () => my === alive && refresh());
     eng.on("ended", () => my === alive && (ticket.live ? reconnect("ended") : refresh()));
-    eng.on("firstVideoRendered", () => {
-      if (my !== alive) return;
-      resizeEngine();
-      onStarted();
-    });
+    eng.on("firstVideoRendered", () => my === alive && onStarted());
     eng.on("firstAudioRendered", () => my === alive && setTimeout(() => my === alive && onStarted(), 1500));
     // The engine picks its demuxer from the file extension; relay links (/p?u=…) have
     // none, so tell it what the original link was (ts, m3u8, mp4, mkv…).
@@ -1282,10 +1193,7 @@ body.usp-direct #playerSheet{display:none!important}
       await eng.play();
     } catch (e) {
       if (my !== alive) return;
-      if (e && e.name === "NotAllowedError") return askTap(() => {
-        me.resume().catch(() => {});
-        return me.play();
-      });
+      if (e && e.name === "NotAllowedError") return askTap(() => eng && eng.play().then(() => eng.resume && eng.resume()));
       throw e;
     }
     if (my !== alive) return;
@@ -1427,12 +1335,35 @@ body.usp-direct #playerSheet{display:none!important}
   }
 
   async function startNative(ticket, src, my) {
-    const ext = streamExt(ticket);
+    let path = "";
+    const url = String(ticket.stream || ticket.url || "");
+    try {
+      path = new URL(url).pathname.toLowerCase();
+    } catch (_) {}
+    const isHls = /\.m3u8$/.test(path) || /[?&](extension|type|output)=(m3u8|hls)/i.test(url);
+    const isTs = !isHls && (/\.ts$/.test(path) || /[?&](extension|output)=ts/i.test(url) || (ticket.live && !/\.(mp4|mkv|m4v|mov|webm|avi)$/.test(path)));
     A.applyVol();
-    if (ext === "m3u8") {
-      await startHls(ticket, src, my);
-      if (my !== alive) return;
-    } else if (ext === "ts") {
+    if (isHls) {
+      if (video.canPlayType("application/vnd.apple.mpegurl") && !window.MediaSource) video.src = src;
+      else {
+        await lib(HERE + "vendor/hls.min.js");
+        if (my !== alive) return;
+        hls = new window.Hls({ lowLatencyMode: false, maxBufferLength: 30, manifestLoadingMaxRetry: 3, levelLoadingMaxRetry: 4, fragLoadingMaxRetry: 6 });
+        hls.on(window.Hls.Events.MANIFEST_PARSED, (_, d) => {
+          const l = d && d.levels && d.levels[0];
+          if (l) info = { videoCodec: l.videoCodec, audioCodec: l.audioCodec, width: l.width, height: l.height, fps: l.frameRate };
+          if (unsupported() && my === alive) escalate("codec");
+        });
+        hls.on(window.Hls.Events.ERROR, (_, d) => {
+          if (!d || !d.fatal || my !== alive) return;
+          if (d.type === "mediaError") return escalate("media") || fail(d.details);
+          if (started && ticket.live) return reconnect("network");
+          fail(d.details);
+        });
+        hls.loadSource(src);
+        hls.attachMedia(video);
+      }
+    } else if (isTs) {
       await lib(HERE + "vendor/mpegts.min.js");
       if (my !== alive) return;
       const M = window.mpegts;
@@ -1450,8 +1381,7 @@ body.usp-direct #playerSheet{display:none!important}
           if (my !== alive) return;
           if (/MSE|Media/i.test(String(detail || type))) return escalate("media") || fail(String(detail || type));
           if (started && ticket.live) return reconnect("network");
-          if (/network/i.test(String(type)) && retryViaRelay()) return;
-          escalate(String(detail || type)) || fail(String(detail || type));
+          fail(String(detail || type));
         });
         ts.attachMediaElement(video);
         ts.load();
@@ -1477,57 +1407,9 @@ body.usp-direct #playerSheet{display:none!important}
       p.catch((e) => {
         if (my !== alive || started || !e || e.name !== "NotAllowedError") return;
         // Autoplay with sound refused: start muted, one tap brings the sound back.
-        autoplayMuted = true;
-        A.applyVol();
-        refresh();
-        video.play().catch(() => my === alive && !started && askTap(() => {
-          autoplayMuted = false;
-          A.applyVol();
-          return video.play();
-        }));
+        video.muted = true;
+        video.play().catch(() => my === alive && !started && askTap(() => video.play()));
       });
-  }
-
-  async function startHls(ticket, src, my) {
-    const nativeHls = video.canPlayType("application/vnd.apple.mpegurl");
-    if (!ticket._nativeHls && (window.MediaSource || window.ManagedMediaSource || !nativeHls)) {
-      try {
-        await lib(HERE + "vendor/hls.min.js");
-      } catch (error) {
-        if (!nativeHls) throw error;
-      }
-      if (my !== alive) return;
-      const H = window.Hls;
-      if (H?.isSupported()) {
-        const player = hls = new H({ autoStartLoad: false, lowLatencyMode: false, maxBufferLength: 30, manifestLoadingMaxRetry: 3, levelLoadingMaxRetry: 4, fragLoadingMaxRetry: 6 });
-        player.on(H.Events.MANIFEST_PARSED, () => {
-          if (my !== alive) return;
-          const selected = ticket._quality ? player.levels.findIndex((level) => qualityKey(level) === ticket._quality) : -1;
-          if (selected >= 0) {
-            player.startLevel = selected;
-            player.loadLevel = selected;
-          } else ticket._quality = "";
-          player.startLoad(ticket._resumeAt > 1 ? ticket._resumeAt : -1);
-        });
-        player.on(H.Events.LEVEL_SWITCHED, (_, data) => {
-          if (my !== alive) return;
-          const level = player.levels[data.level];
-          if (level) info = { videoCodec: level.videoCodec, audioCodec: level.audioCodec, width: level.width, height: level.height, fps: level.frameRate };
-        });
-        player.on(H.Events.ERROR, (_, data) => {
-          if (!data?.fatal || my !== alive) return;
-          const network = data.type === H.ErrorTypes.NETWORK_ERROR;
-          if (network && !started && retryViaRelay()) return;
-          if (network && started && ticket.live) return reconnect("network");
-          tryNativeHls() || escalate(data.details) || fail(data.details);
-        });
-        player.loadSource(src);
-        player.attachMedia(video);
-        return;
-      }
-    }
-    if (!nativeHls) throw new Error("HLS playback is unavailable in this browser");
-    video.src = src;
   }
 
   /* The browser refused to start playback by itself (autoplay blocked): that is not a
@@ -1588,11 +1470,11 @@ body.usp-direct #playerSheet{display:none!important}
     startTimer = setTimeout(() => {
       if (my !== alive || started) return;
       if (how === "native" && video.readyState >= 2 && video.paused) return askTap(() => video.play());
-      tryNativeHls() || escalate("timeout") || fail("timeout");
+      escalate("timeout") || fail("timeout");
     }, how === "native" ? START_TIMEOUT : how === "vlc" ? START_TIMEOUT + 35000 : START_TIMEOUT + 8000);
-    let src = (ticket.ticket || (!ticket._viaRelay && /^https:/i.test(url) && !Object.keys(headers).length)) ? url : viaRelay(url, headers);
+    let src = (/^https:/i.test(url) && !Object.keys(headers).length) || ticket.ticket ? url : viaRelay(url, headers);
     // Retries ask the relay for a fresh portal link (live links usually work once).
-    if ((ticket._step || ticket._reconnects || ticket._nativeHls) && /\/play\/[^?]+$/.test(src)) src += "?fresh=" + Date.now().toString(36);
+    if ((ticket._step || ticket._reconnects) && /\/play\/[^?]+$/.test(src)) src += "?fresh=" + Date.now().toString(36);
     // Give the previous connection a moment to close: many lines allow one stream at a time.
     if (o._again && ticket.live) await new Promise((r) => setTimeout(r, 700));
     if (my !== alive) return;
@@ -1603,9 +1485,7 @@ body.usp-direct #playerSheet{display:none!important}
       else await startNative(ticket, src, my);
     } catch (e) {
       if (my !== alive) return;
-      const reason = String((e && e.message) || e);
-      if (/failed to fetch|networkerror|cors/i.test(reason) && retryViaRelay()) return;
-      if (!escalate(reason)) fail(reason);
+      if (!escalate(String((e && e.message) || e))) fail(String((e && e.message) || e));
     }
   }
 
@@ -1696,32 +1576,12 @@ body.usp-direct #playerSheet{display:none!important}
       play(ticket);
     };
   }
-  function updateFullscreenButton() {
-    const active = box.classList.contains("expanded") || document.fullscreenElement === stage;
-    const button = bar.querySelector(".full");
-    button.innerHTML = active ? I.exitFull : I.full;
-    button.setAttribute("aria-label", active ? "Exit full screen" : "Full screen (F)");
-    button.setAttribute("aria-pressed", String(active));
-  }
-  async function fullscreen() {
-    if (!box || box.classList.contains("hidden")) return;
-    if (box.classList.contains("expanded")) {
-      box.classList.remove("expanded");
-      updateFullscreenButton();
-      return;
-    }
-    if (document.fullscreenElement === stage) return document.exitFullscreen().catch(() => {});
-    if (stage.requestFullscreen && document.fullscreenEnabled !== false) {
-      try {
-        await stage.requestFullscreen();
-        if (document.fullscreenElement === stage) return;
-      } catch (_) {
-        // The player can still fill the browser viewport if fullscreen is denied.
-      }
-    }
-    if (box.classList.contains("hidden")) return;
-    box.classList.add("expanded");
-    updateFullscreenButton();
+  function fullscreen() {
+    if (!box) return;
+    if (document.fullscreenElement) return document.exitFullscreen().catch(() => {});
+    if (stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
+    else if (stage.webkitRequestFullscreen) stage.webkitRequestFullscreen();
+    else if (video && video.webkitEnterFullscreen && !isEngine()) video.webkitEnterFullscreen();
   }
   window.USPlayer = { play, offer, pending, close, vlcHref, fullscreen, video: () => video, engine: () => step(), facts };
 })();
