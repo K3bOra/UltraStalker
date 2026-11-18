@@ -1238,3 +1238,73 @@ html body.desk{--us-frame:linear-gradient(128deg,rgba(255,244,220,.11) 0%,rgba(2
   html body.desk #dkNav button:not(#_):not(#__){padding:0 9px!important;font-size:13.5px!important}
   html body.desk .dk-bar-icon:not(#_):not(#__){width:40px;height:40px}
 }
+
+/* ======================================================================
+   Navigation, v2: Live · Movies · Series in a capsule under the logo (top of the
+   category column); Portals and Favorites as capsules next to search.
+   ====================================================================== */
+html body.desk #dkNav button:is([data-go="portals"],[data-go="search"],[data-go="fav"]):not(#_):not(#__){display:none!important}
+html body.desk.dk-frame #dkBarNav:not(#_):not(#__){visibility:hidden!important;pointer-events:none}
+.dk-bar-quick{display:flex;align-items:center;gap:8px;margin-right:4px}
+html.lang-ar .dk-bar-quick{margin-right:0;margin-left:4px}
+.dk-qb{appearance:none;display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 17px 0 13px;border-radius:14px;border:1px solid transparent;background:var(--glass-soft,rgba(255,240,210,.05));box-shadow:inset 0 1px rgba(255,246,225,.07);color:#efe4cc;font:inherit;font-size:14px;font-weight:600;letter-spacing:.01em;cursor:pointer;white-space:nowrap;transition:background .2s,color .2s,box-shadow .2s}
+.dk-qb .dk-ic{display:grid;place-items:center;width:20px;height:20px;color:#e2c07c}
+.dk-qb .dk-ic svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.dk-qb:hover{background:rgba(226,192,124,.13);box-shadow:inset 0 0 0 1px rgba(226,192,124,.35)}
+.dk-qb.on{background:var(--foil)!important;color:#1a1306;box-shadow:0 10px 26px -12px rgba(226,192,124,.75),inset 0 1px rgba(255,255,255,.45)!important}
+.dk-qb.on .dk-ic{color:#1a1306}
+@media (max-width:1279px){.dk-qb{padding:0 12px}.dk-qb>span:not(.dk-ic){display:none}}
+
+/* the section capsule at the top of the column */
+.dk-secseg{display:none}
+html body.desk.dk-frame .dk-secseg:not(#_){display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:0 4px 22px;padding:5px;border-radius:18px;background:rgba(0,0,0,.30);box-shadow:inset 0 1px 2px rgba(0,0,0,.5),0 0 0 1px rgba(255,236,190,.08),0 1px 0 rgba(255,246,225,.05)}
+.dk-secseg button{appearance:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:62px;padding:6px 4px;border:0;border-radius:14px;background:none;color:#cfc3aa;font:inherit;font-size:12.5px;font-weight:700;letter-spacing:.03em;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
+.dk-secseg button img{width:24px;height:24px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));transition:transform .2s}
+.dk-secseg button:hover{background:rgba(226,192,124,.10);color:#f3e6c8}
+.dk-secseg button:hover img{transform:translateY(-1px)}
+.dk-secseg button.on{background:var(--foil);color:#1a1306;box-shadow:0 10px 24px -12px rgba(226,192,124,.85),inset 0 1px rgba(255,255,255,.5)}
+.dk-secseg button.on img{filter:brightness(.25) sepia(1) saturate(2) drop-shadow(0 1px 0 rgba(255,255,255,.25))}
+.dk-tvc-body{display:flex;flex-direction:column;min-height:0;flex:1}
+
+/* ---- the frame (top bar + category column as one glass "L") for Live as well ---- */
+html body.desk.dk-frame #dkBar:not(#_):not(#__):not(#___):not(#____):not(#_____){background:var(--us-frame)!important;box-shadow:none!important;border:0!important}
+html body.desk.dk-frame #dkBar:not(#_):not(#__):not(#___):not(#____)::before{content:""!important;display:block!important;position:absolute!important;top:0;bottom:0;left:var(--vgw)!important;right:0!important;z-index:-1;pointer-events:none;background:none!important;box-shadow:0 22px 40px -26px rgba(0,0,0,.9)!important}
+html.lang-ar body.desk.dk-frame #dkBar:not(#_):not(#__):not(#___):not(#____)::before{left:0!important;right:var(--vgw)!important}
+html body.desk.dk-frame #dkBar:not(#_):not(#__):not(#___):not(#____)::after{display:none!important;content:none!important}
+html body.desk.dk-frame{--vgw:clamp(272px,17.5vw,340px)}
+
+/* Live: column | channels | screen, under the bar, the column full height from the edge */
+html body.desk.dk-tv-mode #itemsStage:not(#_):not(#__):not(#___):not(#____){box-sizing:border-box;height:100vh!important;padding:var(--bar) var(--pad) 0 0!important;grid-template-columns:var(--vgw) clamp(330px,22vw,410px) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;grid-template-areas:"cats list tv"!important;gap:0 26px!important;align-items:stretch!important}
+html.lang-ar body.desk.dk-tv-mode #itemsStage:not(#_):not(#__):not(#___):not(#____){padding:var(--bar) 0 0 var(--pad)!important}
+html body.desk.dk-tv-mode .dk-tv-cats:not(#_):not(#__):not(#___):not(#____):not(#_____){height:auto!important;max-height:none!important;align-self:stretch;margin:0!important;border-radius:0!important;padding:24px 14px 0 18px!important;border:0!important;background:var(--us-frame)!important;box-shadow:22px 0 40px -26px rgba(0,0,0,.9)!important}
+html.lang-ar body.desk.dk-tv-mode .dk-tv-cats:not(#_):not(#__):not(#___):not(#____):not(#_____){padding:24px 18px 0 14px!important;box-shadow:-22px 0 40px -26px rgba(0,0,0,.9)!important}
+html body.desk.dk-tv-mode .dk-tv-list:not(#_):not(#__):not(#___),html body.desk.dk-tv-mode .dk-tv:not(#_):not(#__):not(#___){margin:22px 0!important;height:auto!important;align-self:stretch}
+html body.desk.dk-tv-mode .dk-tvc-h:not(#_):not(#__){padding:0 12px 14px!important}
+html body.desk.dk-tv-mode .dk-tv-cats .dk-find:not(#_):not(#__){margin:0 4px 14px!important;height:44px}
+html body.desk.dk-tv-mode .dk-tvc-list:not(#_):not(#__):not(#___){scrollbar-width:none;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 10px,#000 calc(100% - 34px),transparent);mask-image:linear-gradient(180deg,transparent 0,#000 10px,#000 calc(100% - 34px),transparent);padding-bottom:26px}
+html body.desk.dk-tv-mode .dk-tvc-list::-webkit-scrollbar{display:none}
+.dk-secseg button svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;color:#e2c07c;transition:transform .2s,color .2s}
+.dk-secseg button svg .f{fill:currentColor;stroke:none}
+.dk-secseg button:hover svg{transform:translateY(-1px);color:#f3d58a}
+.dk-secseg button.on svg{color:#1a1306}
+/* names in pure white: categories (Live · Movies · Series), channels, movies and series */
+html body.desk.dk-frame .dk-tvc-list button:not(#_):not(#__):not(#___) span{color:#fff!important;font-weight:600!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+html body.desk.dk-frame .dk-tvc-list button.on:not(#_):not(#__):not(#___) span{color:#fff!important;font-weight:700!important}
+html body.desk.dk-tv-mode #browseItems .live-card:not(#_):not(#__):not(#___) .item-title{color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+html body.desk.dk-vg-mode #browseItems .poster-card:not(#_):not(#__):not(#___) .item-title{color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+html body.desk.dk-vg-mode #browseItems .poster-card:hover:not(#_):not(#__):not(#___) .item-title{color:#f6dc9c!important}
+/* Live: the channel list joins the frame too — categories and channels are one glass
+   piece with the top bar, full height; the screen sits beside it. */
+html body.desk.dk-tv-mode{--livew:clamp(340px,22vw,420px);--framew:calc(var(--vgw) + var(--livew))}
+html body.desk.dk-tv-mode #dkBar:not(#_):not(#__):not(#___):not(#____)::before{left:var(--framew)!important}
+html.lang-ar body.desk.dk-tv-mode #dkBar:not(#_):not(#__):not(#___):not(#____)::before{left:0!important;right:var(--framew)!important}
+html body.desk.dk-tv-mode #itemsStage:not(#_):not(#__):not(#___):not(#____):not(#_____){grid-template-columns:var(--vgw) var(--livew) minmax(0,1fr)!important;gap:0!important}
+html body.desk.dk-tv-mode .dk-tv-cats:not(#_):not(#__):not(#___):not(#____):not(#_____):not(#______){box-shadow:none!important}
+html body.desk.dk-tv-mode .dk-tv-list:not(#_):not(#__):not(#___):not(#____){margin:0!important;border-radius:0!important;border:0!important;background:var(--us-frame)!important;box-shadow:inset 1px 0 rgba(255,236,190,.07),22px 0 40px -26px rgba(0,0,0,.9)!important}
+html.lang-ar body.desk.dk-tv-mode .dk-tv-list:not(#_):not(#__):not(#___):not(#____){box-shadow:inset -1px 0 rgba(255,236,190,.07),-22px 0 40px -26px rgba(0,0,0,.9)!important}
+html body.desk.dk-tv-mode .dk-tvl-head:not(#_):not(#__):not(#___){background:none!important;border-bottom:1px solid rgba(255,236,190,.07)!important;padding:24px 18px 14px!important}
+html body.desk.dk-tv-mode .dk-tv:not(#_):not(#__):not(#___):not(#____){margin:22px 0 22px 28px!important}
+html.lang-ar body.desk.dk-tv-mode .dk-tv:not(#_):not(#__):not(#___):not(#____){margin:22px 28px 22px 0!important}
+/* no "Loading more…" line under the channels: the space is a row; more channels still load as you scroll */
+html body.desk.dk-tv-mode #itemInfinite:not(#_):not(#__):not(#___){height:1px!important;min-height:0!important;padding:0!important;margin:0!important;overflow:hidden!important;opacity:0!important;pointer-events:none}
+html body.desk.dk-tv-mode #itemsStage:not(#_):not(#__):not(#___):not(#____):not(#_____){margin:0!important}

@@ -679,7 +679,7 @@
     tvCats(cats, media);
   }
   function tvCats(cats, media) {
-    const col = $("dkTvCats");
+    const col = $("dkTvCats") && $("dkTvCats").querySelector(".dk-tvc-body");
     if (!col) return;
     media = media || "itv";
     const account = $("browseAccount").value;
@@ -769,6 +769,16 @@
       `<div class="dk-bar-right"><div class="dk-bar-search" id="dkBarSearch"><button type="button" class="dk-bar-icon" id="dkSearchBtn" aria-label="Search">${SVG.search}</button></div><div class="dk-bar-src" id="dkBarSrc"></div></div>`;
     document.body.prepend(bar);
     $("dkBarNav").appendChild($("dkNav"));
+    // Portals and Favorites sit on the right, next to search
+    const quick = document.createElement("div");
+    quick.className = "dk-bar-quick";
+    quick.innerHTML = [["portals", T("Portals", "البورتلات"), NAV[0][3]], ["fav", T("Favorites", "المفضلة"), ICON.star]].map(([k, l, ic]) => `<button type="button" class="dk-qb" data-go="${k}"><span class="dk-ic">${ic}</span><span>${l}</span></button>`).join("");
+    bar.querySelector(".dk-bar-right").prepend(quick);
+    quick.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-go]");
+      const nav = b && $("dkNav").querySelector(`button[data-go="${b.dataset.go}"]`);
+      if (nav) nav.click();
+    });
     if ($("dkSource")) $("dkBarSrc").appendChild($("dkSource"));
     side.classList.add("dk-drawer");
     const close = document.createElement("button");
@@ -1185,6 +1195,18 @@
     const cats = document.createElement("nav");
     cats.id = "dkTvCats";
     cats.className = "dk-tv-cats";
+    // Live · Movies · Series as one capsule at the top of the column
+    const SEC = [
+      ["itv", T("Live", "لايف"), '<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12.5" rx="2.6"/><path d="M8.5 21h7M9 2.8l3 3 3-3"/><circle cx="17.6" cy="9.4" r=".9" class="f"/></svg>'],
+      ["vod", T("Movies", "أفلام"), '<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="11" rx="2.2"/><path d="m3.6 9-.8-3.3 16.6-4 .8 3.3z"/><path d="m7.4 4.9 2.4 3.4M12.4 3.7l2.4 3.4"/></svg>'],
+      ["series", T("Series", "مسلسلات"), '<svg viewBox="0 0 24 24"><rect x="3" y="7.5" width="18" height="12.5" rx="2.6"/><path d="M6 4.5h12M8.5 2h7"/><path d="m10.4 11.3 4.2 2.45-4.2 2.45z" class="f"/></svg>'],
+    ];
+    cats.innerHTML = '<div class="dk-secseg" role="tablist">' + SEC.map(([k, l, ic]) => `<button type="button" role="tab" data-go="${k}">${ic}<span>${l}</span></button>`).join("") + '</div><div class="dk-tvc-body"></div>';
+    cats.querySelector(".dk-secseg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-go]");
+      const nav = b && $("dkNav").querySelector(`button[data-go="${b.dataset.go}"]`);
+      if (nav && !b.classList.contains("on")) nav.click();
+    });
     stage.querySelector(".items-head").after(cats);
     cats.after(panel);
     panel.after(list);
@@ -1336,7 +1358,7 @@
     let go = media;
     if (visible("favoritesStage")) go = "fav";
     else if (visible("searchStage")) go = "search";
-    document.querySelectorAll("#dkNav button").forEach((b) => b.classList.toggle("on", active ? b.dataset.go === go : b.dataset.go === "portals"));
+    document.querySelectorAll("#dkNav button, .dk-bar-quick button, .dk-secseg button").forEach((b) => b.classList.toggle("on", active ? b.dataset.go === go : b.dataset.go === "portals"));
     document.body.dataset.media = media;
     const ar = { itv: "Live TV", vod: "Movies", series: "Series", search: "Search", fav: "Favorites" };
     const names = { itv: "البث المباشر", vod: "الأفلام", series: "المسلسلات", search: "البحث", fav: "المفضلة" };
@@ -1366,6 +1388,7 @@
     featSync();
     tvMode(DESK && active && media === "itv" && visible("itemsStage") && !visible("favoritesStage") && !visible("searchStage"));
     const vg = DESK && active && (media === "vod" || media === "series") && visible("itemsStage") && !visible("favoritesStage") && !visible("searchStage");
+    document.body.classList.toggle("dk-frame", vg || document.body.classList.contains("dk-tv-mode"));
     if (vg !== document.body.classList.contains("dk-vg-mode")) {
       document.body.classList.toggle("dk-vg-mode", vg);
       if (vg) wallReturn();

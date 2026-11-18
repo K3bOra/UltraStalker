@@ -35,6 +35,15 @@
 .usp-stage[data-fit=fill] video,.usp-stage[data-fit=fill] .usp-engine video{object-fit:cover!important}
 .usp-stage[data-fit=stretch] video{object-fit:fill!important}
 .usp-stage.idle{cursor:none}
+/* subtitles from the engine: clear white, above the controls while they show */
+.usp-engine .ASS-box{transform:translateY(-78px);transition:transform .3s ease}
+.usp-stage.idle .usp-engine .ASS-box{transform:translateY(-20px)}
+.usp-engine .ASS-dialogue span{color:#fff!important;font-weight:600!important;text-shadow:0 2px 6px rgba(0,0,0,.95),0 0 2px #000,0 0 1px #000!important;-webkit-text-stroke:0!important}
+.usp-mh{padding:2px 4px 10px;font-size:15px;font-weight:700;color:#fff}
+.usp-empty{padding:9px 12px;border-radius:12px;font-size:13px;color:#a99f8c;background:rgba(255,240,210,.035)}
+.usp-menu button.usp-cta{margin-top:14px;justify-content:center;text-align:center;background:var(--foil)!important;color:#1a1306!important;font-weight:700;border-radius:14px;box-shadow:0 10px 24px -12px rgba(226,192,124,.8)}
+.usp-hint{margin:8px 4px 2px;font-size:11.5px;line-height:1.5;color:#a99f8c}
+.usp-hint .ar{display:block;direction:rtl;margin-top:4px}
 .usp-ic.stop svg{fill:currentColor;stroke:none;width:17px;height:17px}
 .usp-vlchole{position:absolute;inset:0;z-index:1;background:#000;display:none}
 .usp-stage.vlcmode .usp-vlchole{display:block}
@@ -136,6 +145,7 @@ body.usp-direct #playerSheet{display:none!important}
     vol: '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
     mute: '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="m16 9.5 5 5m0-5-5 5"/></svg>',
     gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>',
+    tracks: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3.2"/><path d="M6.8 12.6h3.4M12.6 12.6h4.6M6.8 15.6h6.2M15.4 15.6h1.8"/></svg>',
     stop: '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.2"/></svg>',
     pip: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11.5" width="7" height="5.5" rx="1"/></svg>',
     full: '<svg viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
@@ -318,13 +328,25 @@ body.usp-direct #playerSheet{display:none!important}
     },
     time() {
       if (isVlc()) return vs ? vs.time || 0 : 0;
-      if (isEngine()) return eng ? Number(eng.currentTime || 0) / 1000 : 0;
+      if (isEngine()) {
+        try {
+          return eng ? Number(eng.currentTime || 0) / 1000 : 0;
+        } catch (_) {
+          return 0;
+        }
+      }
       return video ? video.currentTime : 0;
     },
     duration() {
       if (current && current.live) return 0;
       if (isVlc()) return vs ? vs.length || 0 : 0;
-      if (isEngine()) return eng ? Number(eng.getDuration() || 0) / 1000 : 0;
+      if (isEngine()) {
+        try {
+          return eng ? Number(eng.getDuration() || 0) / 1000 : 0;
+        } catch (_) {
+          return 0; // not loaded yet
+        }
+      }
       return video && isFinite(video.duration) ? video.duration : 0;
     },
     seek(sec) {
@@ -365,6 +387,13 @@ body.usp-direct #playerSheet{display:none!important}
       A.applyVol();
     },
     audioTracks() {
+      try {
+        return A._audioTracks();
+      } catch (_) {
+        return [];
+      }
+    },
+    _audioTracks() {
       if (isVlc()) return vs && vs.atracks && vs.atracks.length > 1 ? vs.atracks : [];
       if (isEngine() && eng) {
         let cur = -1;
@@ -386,6 +415,13 @@ body.usp-direct #playerSheet{display:none!important}
       else if (video && video.audioTracks) [...video.audioTracks].forEach((t, i) => (t.enabled = i === id));
     },
     subTracks() {
+      try {
+        return A._subTracks();
+      } catch (_) {
+        return [];
+      }
+    },
+    _subTracks() {
       if (isVlc()) return vs && vs.stracks ? vs.stracks : [];
       if (isEngine() && eng) {
         let cur = -1;
@@ -464,6 +500,7 @@ body.usp-direct #playerSheet{display:none!important}
       '<span class="usp-live">LIVE</span><span class="usp-time"></span>' +
       `<div class="usp-vol"><button type="button" class="usp-ic mute" aria-label="Sound (M)">${I.vol}</button><input type="range" min="0" max="100" aria-label="Volume"></div>` +
       '<span class="sp"></span><span class="usp-tag" hidden>ULTRA</span>' +
+      `<button type="button" class="usp-ic trk" aria-label="Audio &amp; subtitles" title="Audio &amp; subtitles">${I.tracks}</button>` +
       `<button type="button" class="usp-ic gear" aria-label="Settings">${I.gear}</button>` +
       `<button type="button" class="usp-ic pip" aria-label="Picture in picture">${I.pip}</button>` +
       `<button type="button" class="usp-ic full" aria-label="Full screen (F)">${I.full}</button>` +
@@ -508,7 +545,11 @@ body.usp-direct #playerSheet{display:none!important}
     seek.onchange = () => A.seek((seek.value / 1000) * A.duration());
     q(".gear").onclick = (e) => {
       e.stopPropagation();
-      menu.classList.contains("on") ? menu.classList.remove("on") : openMenu();
+      menu.classList.contains("on") && menu.dataset.kind !== "tracks" ? menu.classList.remove("on") : openMenu();
+    };
+    q(".trk").onclick = (e) => {
+      e.stopPropagation();
+      menu.classList.contains("on") && menu.dataset.kind === "tracks" ? menu.classList.remove("on") : openMenu("tracks");
     };
     q(".pip").onclick = () => {
       if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
@@ -621,6 +662,8 @@ body.usp-direct #playerSheet{display:none!important}
     tag.hidden = !isEngine() && !isVlc();
     tag.textContent = isVlc() ? "VLC" : "ULTRA";
     q(".pip").hidden = isEngine() || isVlc() || !document.pictureInPictureEnabled;
+    // Audio & subtitles: always for movies and episodes; for live when there is a choice
+    q(".trk").hidden = !current || (!current.stream && !current.url) || (live && A.audioTracks().length < 2 && !A.subTracks().length);
     if (paused) stage.classList.remove("idle");
   }
   function osdShow() {
@@ -633,13 +676,38 @@ body.usp-direct #playerSheet{display:none!important}
     clearTimeout(osdShow.t);
     osdShow.t = setTimeout(() => osd.classList.remove("on"), 3500);
   }
-  function openMenu() {
+  /* Can this way of playing list the file's own audio and subtitle tracks? (A browser
+     playing an MP4 / MKV directly can't: only the first sound track and no subtitles.) */
+  function canListTracks() {
+    return isEngine() || isVlc() || !!hls || !!(video && video.audioTracks);
+  }
+  function tracksHtml(at, st) {
+    const list = canListTracks();
+    let h = "<h4>Audio</h4>";
+    if (at.length) h += at.map((t) => `<button type="button" data-a="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
+    else h += `<div class="usp-empty">${list ? "One sound track" : "Main sound track"}</div>`;
+    h += "<h4>Subtitles</h4>";
+    if (st.length) h += `<button type="button" data-s="-1" class="${st.some((t) => t.on) ? "" : "on"}">Off</button>` + st.map((t) => `<button type="button" data-s="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
+    else h += `<div class="usp-empty">${list ? "No subtitles in this video" : "Not shown by this player"}</div>`;
+    if (!list && current && !current.live)
+      h += `<button type="button" data-x="alltracks" class="usp-cta">Show all audio &amp; subtitles</button><div class="usp-hint">Continues from the same moment with ${hasVlc() ? "VLC" : "the Ultra engine"}, which reads every track in the file.<span class="ar">بيكمّل من نفس اللحظة بمحرك بيقرا كل الأصوات والترجمات.</span></div>`;
+    return h;
+  }
+  function openMenu(kind) {
     const at = A.audioTracks(), st = A.subTracks();
     const fit = store.get("us-fit", "fit");
     const mode = engineMode();
+    if (kind === "tracks") {
+      menu.innerHTML = '<div class="usp-mh">Audio &amp; subtitles</div>' + tracksHtml(at, st);
+      menu.dataset.kind = "tracks";
+      menu.onclick = menuClick;
+      menu.classList.add("on");
+      return;
+    }
     const fits = isEngine() || isVlc() ? [["fit", "Fit"], ["fill", "Fill"]] : [["fit", "Fit"], ["fill", "Fill"], ["stretch", "Stretch"]];
     let h = "";
-    if (at.length > 1) h += "<h4>Audio</h4>" + at.map((t) => `<button type="button" data-a="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
+    if (current && !current.live && !canListTracks()) h += tracksHtml(at, st);
+    else if (at.length > 1) h += "<h4>Audio</h4>" + at.map((t) => `<button type="button" data-a="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
     if (st.length) h += "<h4>Subtitles</h4>" + `<button type="button" data-s="-1" class="${st.some((t) => t.on) ? "" : "on"}">Off</button>` + st.map((t) => `<button type="button" data-s="${t.id}" class="${t.on ? "on" : ""}">${esc(t.label)}</button>`).join("");
     h += '<h4>Picture</h4><div class="usp-seg">' + fits.map(([k, l]) => `<button type="button" data-f="${k}" class="${fit === k ? "on" : ""}">${l}</button>`).join("") + "</div>";
     if (current && current.live) {
@@ -660,7 +728,11 @@ body.usp-direct #playerSheet{display:none!important}
     if (window.usNative && window.usNative.openLogs) h += '<button type="button" data-x="logs">Open program log</button>';
     h += `<hr><a href="${esc(href)}"${/^data:/.test(href) ? ' download="ultra-stalker.m3u"' : ""}>Open in VLC <small>▶</small></a><button type="button" data-x="copy">Copy stream link</button>`;
     menu.innerHTML = h;
-    menu.onclick = (e) => {
+    menu.dataset.kind = "";
+    menu.onclick = menuClick;
+    menu.classList.add("on");
+  }
+  function menuClick(e) {
       e.stopPropagation();
       const b = e.target.closest("button");
       if (!b || b.disabled) return;
@@ -675,6 +747,11 @@ body.usp-direct #playerSheet{display:none!important}
       else if (b.dataset.e) {
         store.set("us-player-engine", b.dataset.e);
         if (current) restart(Object.assign({}, current, { _plan: null, _step: 0 }));
+        return menu.classList.remove("on");
+      } else if (b.dataset.x === "alltracks") {
+        // same movie, same moment, with an engine that reads every track
+        const plan = (hasVlc() ? ["vlc", "engine", "soft"] : ["engine", "soft"]).concat(["native"]);
+        restart(Object.assign({}, current, { _plan: plan, _step: 0, _manual: true, _resumeAt: A.time(), _openTracks: true }));
         return menu.classList.remove("on");
       } else if (b.dataset.x === "logs") {
         window.usNative.openLogs();
@@ -691,9 +768,7 @@ body.usp-direct #playerSheet{display:none!important}
         if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => (b.textContent = "Copied ✓"));
         return;
       }
-      setTimeout(openMenu, 60);
-    };
-    menu.classList.add("on");
+      setTimeout(() => openMenu(menu.dataset.kind), 60);
   }
   /* Stream facts for badges: quality, frame rate, video / audio codec, channels. */
   const VCODEC = { 27: "H.264", 173: "HEVC", 2: "MPEG-2", 1: "MPEG-1", 225: "AV1", 167: "VP9", 12: "MPEG-4" };
@@ -850,6 +925,15 @@ body.usp-direct #playerSheet{display:none!important}
     if (!isEngine() && video && video.muted && !A.muted() && !current._noAudio) unmuteBtn.classList.add("on");
     if (isEngine() && eng && eng.isSuspended && eng.isSuspended()) unmuteBtn.classList.add("on");
     if (isVlc()) vlcTracks();
+    if (current._resumeAt > 1 && !current.live) {
+      const at = current._resumeAt;
+      current._resumeAt = 0;
+      setTimeout(() => A.seek(at), isVlc() ? 300 : 0);
+    }
+    if (current._openTracks) {
+      current._openTracks = false;
+      setTimeout(() => started && openMenu("tracks"), 1400);
+    }
     const vlcWhy = (current._log || []).find((l) => /^VLC: /.test(l));
     if (!isVlc() && hasVlc() && vlcWhy) note("VLC couldn't play this channel, so it plays here instead (" + vlcWhy.replace(/^VLC: /, "") + ").", "VLC مقدرش يشغّل القناة دي فاشتغلت هنا. السبب في الإعدادات ← Stream info");
   }
@@ -1178,7 +1262,7 @@ body.usp-direct #playerSheet{display:none!important}
       if (my !== alive || !vs || !t) return;
       vs.atracks = (t.audio || []).filter((x) => x.id >= 0).map((x, i) => ({ id: x.id, on: x.on, label: trackLabel({ title: x.name }, i) }));
       vs.stracks = (t.subs || []).filter((x) => x.id >= 0).map((x, i) => ({ id: x.id, on: x.on, label: trackLabel({ title: x.name }, i) }));
-      if (menu && menu.classList.contains("on")) openMenu();
+      if (menu && menu.classList.contains("on")) openMenu(menu.dataset.kind);
     } catch (_) {}
   }
   /* Keep VLC's picture exactly over the free part of the player: above the control bar,
