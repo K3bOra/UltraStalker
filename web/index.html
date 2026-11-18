@@ -1584,6 +1584,9 @@ body.web-premium.web-browse-premium .series-detail-poster{box-shadow:0 0 0 1px r
  body.web-premium.web-browse-premium .poster-fact{height:23px;min-height:23px!important;padding:0 7px!important;font-size:10.5px!important}
  body.web-premium.web-browse-premium .poster-frame{margin:7px 7px 0!important;border-radius:18px!important}
 }
+body.ph .poster-series-summary{display:flex;flex:1 0 100%;min-width:0;gap:5px;direction:ltr}
+body.ph.web-browse-premium .poster-series-summary .poster-fact.rating{flex:0 0 auto}
+body.ph.web-browse-premium .poster-series-summary .poster-fact.seasons{flex:1 1 0%}
 .trailer-actions{display:flex;flex:1 0 100%;align-items:center;justify-content:center;gap:9px}
 .trailer-actions:empty{display:none}
 body.app :is(#movieStage,#seasonsStage) .detail-actions:is(#movieHeroActions,#seriesHeroActions) .trailer-actions > button:is(.favorite-action,.detail-trailer){
@@ -1612,7 +1615,7 @@ body.app :is(#movieStage,#seasonsStage) .detail-actions:is(#movieHeroActions,#se
 .trailer-frame iframe{display:block;width:100%;aspect-ratio:16/9;min-height:200px;border:0;background:#000}
 .trailer-dialog footer{display:flex;justify-content:center;padding:8px 12px}
 </style>
-<link rel="stylesheet" href="fonts.css?v=35"><link rel="stylesheet" href="theme.css?v=35"><link rel="stylesheet" href="desktop.css?v=35"><script src="coi.js?v=35"></script><script src="i18n.js?v=35"></script><script src="config.js?v=35"></script><script src="hash.js?v=35"></script><script src="engine.js?v=35"></script><script src="player.js?v=36"></script><script src="desktop.js?v=35"></script>
+<link rel="stylesheet" href="fonts.css?v=35"><link rel="stylesheet" href="theme.css?v=35"><link rel="stylesheet" href="desktop.css?v=35"><script src="coi.js?v=35"></script><script src="i18n.js?v=35"></script><script src="config.js?v=35"></script><script src="hash.js?v=35"></script><script src="engine.js?v=37"></script><script src="player.js?v=37"></script><script src="desktop.js?v=35"></script>
 <script defer src="trailer.js?v=1"></script>
 </head>
 <body class="web-premium web-browse-premium">
@@ -1845,9 +1848,105 @@ function renderCategories(rows){const box=$('browseCategories');box.innerHTML=''
 function playChooserAction(row,label='▶ Play'){const b=document.createElement('button');b.type='button';b.className='play-action native only';b.textContent=label;b.addEventListener('click',e=>{e.stopPropagation();openPlayerSheet(row)});return b}
 function starIcon(on){return '<svg viewBox="0 0 24 24" fill="'+(on?'currentColor':'none')+'" aria-hidden="true" focusable="false"><path d="M12 2.8l2.8 5.9 6.4.9-4.7 4.5 1.2 6.4L12 17.4l-5.7 3.1 1.2-6.4L2.8 9.6l6.4-.9z"/></svg>'}
 function favoriteAction(row,onChanged){const b=document.createElement('button');b.type='button';b.className='favorite-action'+(row.favorite?' on':'');const paint=()=>{b.innerHTML='<span class="favorite-star">'+starIcon(!!row.favorite)+'</span><span>Favorite</span>';b.classList.toggle('on',!!row.favorite)};paint();b.addEventListener('click',async e=>{e.stopPropagation();if(!row.id||b.disabled)return;b.disabled=true;try{const res=await fetch('api/browse/favorite',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:row.id})});const j=await res.json();if(!res.ok)throw new Error(j.error||'Unable to update Favorites');row.favorite=!!j.favorite;paint();if(typeof onChanged==='function')onChanged(row)}catch(err){b.innerHTML='<span class="favorite-star">'+starIcon(false)+'</span><span>Try again</span>';setTimeout(paint,1000)}finally{b.disabled=false}});return b}
-function cardMeta(row,media){const bits=[];if(row.number)bits.push('#'+row.number);bits.push(itemKind(media));if(media==='series'){const count=Number(row.season_count);if(Number.isFinite(count)&&count>0)bits.push(count+' Season'+(count===1?'':'s'));else if(['portal','xtream'].includes(String(row.source_kind||'').toLowerCase()))bits.push('1 Season');else bits.push('Seasons');return bits.join(' • ')}if(row.year)bits.push(row.year);return bits.join(' • ')}
+function cardMeta(row,media){const bits=[];if(row.number)bits.push('#'+row.number);bits.push(itemKind(media));if(media==='series'){const count=Number(row.season_count);if(Number.isFinite(count)&&count>0)bits.push(count+' Season'+(count===1?'':'s'));else bits.push('Seasons');return bits.join(' • ')}if(row.year)bits.push(row.year);return bits.join(' • ')}
 function factIcon(kind){const p={year:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',age:'<path d="M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6z"/>',rating:'<path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/>',seasons:'<path d="M12 3.5l9 4.8-9 4.8-9-4.8z"/><path d="M3.5 12.4L12 17l8.5-4.6"/><path d="M3.5 16.4L12 21l8.5-4.6"/>'}[kind];return p?'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+p+'</svg>':''}
-function posterFacts(row,media){const wrap=document.createElement('div');wrap.className='poster-facts';const add=(text,kind='')=>{const value=String(text||'').trim();if(!value)return;const chip=document.createElement('span');chip.className='poster-fact'+(kind?' '+kind:'');if(kind==='rating'||kind==='seasons')chip.innerHTML=factIcon(kind);const label=document.createElement('span');label.className='poster-fact-text';label.textContent=value;chip.appendChild(label);wrap.appendChild(chip)};if(row&&row.year)add(row.year,'year');if(row&&row.age_rating)add(row.age_rating,'age');const rating=Number(row&&row.rating);if(Number.isFinite(rating)&&rating>0)add(rating.toFixed(1),'rating');if(media==='series'){const count=Number(row&&row.season_count);if(Number.isFinite(count)&&count>0)add(count+' Season'+(count===1?'':'s'),'seasons')}return wrap}
+const seasonBadges = new Map();
+const visibleSeasonBadges = new Set();
+let seasonBadgeLoads = 0;
+let checkingSeasonBadges = false;
+
+const seasonBadgeObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+  for (const entry of entries) {
+    if (entry.isIntersecting) visibleSeasonBadges.add(entry.target);
+    else visibleSeasonBadges.delete(entry.target);
+  }
+  loadSeasonBadges();
+}, {rootMargin:'80px 0px'}) : null;
+
+function seasonCountLabel(count) {
+  return count + (count === 1 ? ' Season' : ' Seasons');
+}
+
+function watchSeasonBadge(label, item) {
+  if (!seasonBadgeObserver || !item) return;
+  seasonBadges.set(label,item);
+  seasonBadgeObserver.observe(label);
+  if (checkingSeasonBadges) return;
+  checkingSeasonBadges = true;
+  queueMicrotask(() => {
+    checkingSeasonBadges = false;
+    for (const badge of seasonBadges.keys()) {
+      if (badge.isConnected) continue;
+      seasonBadgeObserver.unobserve(badge);
+      seasonBadges.delete(badge);
+      visibleSeasonBadges.delete(badge);
+    }
+  });
+}
+
+async function loadSeasonBadge(label,item) {
+  try {
+    const res = await fetch('api/browse/season-count?item='+encodeURIComponent(item),{cache:'no-store'});
+    if (!res.ok) return;
+    const {count} = await res.json();
+    if (Number.isSafeInteger(count) && count > 0) label.textContent = seasonCountLabel(count);
+  } catch (_) {
+    // Keep the season label when the provider does not return a count.
+  } finally {
+    seasonBadgeLoads--;
+    loadSeasonBadges();
+  }
+}
+
+function loadSeasonBadges() {
+  for (const label of visibleSeasonBadges) {
+    if (seasonBadgeLoads >= 2) break;
+    visibleSeasonBadges.delete(label);
+    const item = seasonBadges.get(label);
+    if (!item || label.closest('.hidden')) continue;
+    seasonBadgeObserver.unobserve(label);
+    seasonBadges.delete(label);
+    if (!label.isConnected) continue;
+    seasonBadgeLoads++;
+    loadSeasonBadge(label,item);
+  }
+}
+
+function posterFacts(row,media) {
+  const wrap = document.createElement('div');
+  wrap.className = 'poster-facts';
+  const add = (text,kind,parent=wrap) => {
+    const value = String(text || '').trim();
+    if (!value) return;
+    const chip = document.createElement('span');
+    chip.className = 'poster-fact '+kind;
+    if (kind === 'rating' || kind === 'seasons') chip.innerHTML = factIcon(kind);
+    const label = document.createElement('span');
+    label.className = 'poster-fact-text';
+    label.textContent = value;
+    chip.appendChild(label);
+    parent.appendChild(chip);
+    return label;
+  };
+  if (row.year) add(row.year,'year');
+  if (row.age_rating) add(row.age_rating,'age');
+  const rating = Number(row.rating);
+  const score = Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : '';
+  const count = Number(row.season_count);
+  const seasonLabel = Number.isSafeInteger(count) && count > 0 ? seasonCountLabel(count) : '';
+  if (media === 'series' && document.body.classList.contains('ph')) {
+    const summary = document.createElement('div');
+    summary.className = 'poster-series-summary';
+    add(score,'rating',summary);
+    const label = add(seasonLabel || 'Seasons','seasons',summary);
+    wrap.appendChild(summary);
+    if (!seasonLabel && !row.local) watchSeasonBadge(label,row.id);
+  } else {
+    add(score,'rating');
+    if (media === 'series') add(seasonLabel,'seasons');
+  }
+  return wrap;
+}
 function buildContentCard(row,media,origin,onFavoriteChanged){const isLive=media==='itv';const isMovie=media==='vod';const isSeries=media==='series';const poster=isMovie||isSeries;const clickable=isLive||isMovie||isSeries;const el=document.createElement('div');el.className='item-card result-card'+(poster?' poster-card':'')+(isLive?' live-card':'')+(clickable?' item-action':'')+(isSeries?' series-result':'')+(isMovie?' movie-result':'');el.dataset.item=row.id||'';el.title=row.title||itemKind(media);if(clickable){el.setAttribute('role','button');el.tabIndex=0}const title=document.createElement('span');title.className='item-title';title.textContent=row.title||itemKind(media);const actions=document.createElement('div');actions.className='item-actions';const fav=favoriteAction(row,onFavoriteChanged);if(isLive)fav.classList.add('live-favorite');actions.appendChild(fav);if(poster){const glow=document.createElement('span');glow.className='poster-glow';el.appendChild(glow);const pframe=posterFrame(row.id,media,'');pframe.appendChild(actions);el.appendChild(pframe);const copy=document.createElement('div');copy.className='poster-copy';copy.appendChild(title);const facts=posterFacts(row,media);if(facts.childNodes.length)copy.appendChild(facts);el.appendChild(copy)}else if(isLive){el.appendChild(livePiconFrame(row));const copy=document.createElement('div');copy.className='live-copy';copy.appendChild(title);copy.appendChild(actions);el.appendChild(copy)}else{const meta=document.createElement('span');meta.className='item-meta';meta.textContent=cardMeta(row,media);el.appendChild(title);el.appendChild(meta);el.appendChild(actions)}if(clickable){const open=()=>isLive?openPlayerSheet(row):(isSeries?openSeries(row,origin,true):openMovie(row,origin,true));el.addEventListener('click',e=>{if(e.target.closest('.favorite-action'))return;open()});el.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!e.target.closest('.favorite-action')){e.preventDefault();open()}})}return el}
 function renderItems(rows,append=false){
  const box=$('browseItems');if(!append){box.innerHTML='';resetGrid(box)}
