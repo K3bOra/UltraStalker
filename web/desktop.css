@@ -1223,3 +1223,18 @@ html body.desk.dk-vg-mode .dk-tvc-list:not(#_):not(#__):not(#___){scrollbar-widt
 html body.desk.dk-vg-mode .dk-tvc-list::-webkit-scrollbar{display:none}
 /* the frame is dense enough that posters scrolling under the bar don't show through */
 html body.desk{--us-frame:linear-gradient(128deg,rgba(255,244,220,.11) 0%,rgba(255,244,220,.04) 22%,rgba(255,244,220,0) 42%,rgba(255,244,220,0) 80%,rgba(255,244,220,.03) 100%) fixed,linear-gradient(rgba(33,29,23,.95),rgba(27,24,19,.96)) fixed}
+/* smaller computer screens (and Windows scaling): the bar keeps everything on one line */
+@media (max-width:1279px){
+  html body.desk #dkBar:not(#_):not(#__){gap:12px!important}
+  html body.desk .dk-bar-brand img:not(#_){height:34px!important;width:auto}
+  html body.desk #dkNav button:not(#_):not(#__){padding:0 12px!important;white-space:nowrap!important;font-size:14px!important}
+  html body.desk #dkNav button *:not(#_){white-space:nowrap!important}
+  html body.desk .dk-srcbtn .dk-sp-t:not(#_):not(#__){display:none!important}
+  html body.desk .dk-srcbtn:not(#_):not(#__){padding-right:10px!important;gap:6px!important;min-width:0!important;width:auto!important}
+  html.us-app .usw:not(#_){gap:6px;margin-left:8px;padding-left:10px}
+  html.us-app .usw .dk-bar-icon:not(#_){width:36px;height:36px;border-radius:11px}
+}
+@media (max-width:1100px){
+  html body.desk #dkNav button:not(#_):not(#__){padding:0 9px!important;font-size:13.5px!important}
+  html body.desk .dk-bar-icon:not(#_):not(#__){width:40px;height:40px}
+}

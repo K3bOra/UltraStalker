@@ -8,7 +8,8 @@
 (function () {
   "use strict";
   const WIDE = window.matchMedia("(min-width: 1100px)");
-  const DESK = WIDE.matches && !/[?&]phone=1/.test(location.search);
+  // The Windows program is always laid out for a computer, whatever its window size.
+  const DESK = (WIDE.matches || document.documentElement.classList.contains("us-app") || /[?&]desk=1/.test(location.search)) && !/[?&]phone=1/.test(location.search);
   WIDE.addEventListener("change", () => location.reload());
   const $ = (id) => document.getElementById(id);
   const AR = !(window.USLang && !window.USLang.ar);
