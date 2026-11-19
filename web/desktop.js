@@ -19,6 +19,7 @@
     star: '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.9-4.7 4.5 1.2 6.4L12 17.4l-5.7 3.1 1.2-6.4L2.8 9.6l6.4-.9z"/></svg>',
     plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
     servers: '<svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="6.5" rx="2"/><rect x="3.5" y="13.5" width="17" height="6.5" rx="2"/><path d="M7 7.3h.01M7 16.8h.01"/></svg>',
+    importFile: '<svg viewBox="0 0 24 24"><path d="M13 3.5H6a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5zM13 3.5v6h6M12 11.5v6m-2.5-2.5L12 17.5l2.5-2.5"/></svg>',
     backup: '<svg viewBox="0 0 24 24"><path d="M6.5 17.5a4.5 4.5 0 0 1 .6-9 6 6 0 0 1 11.6 1.6 3.7 3.7 0 0 1 .3 7.4"/><path d="M12 11v9"/><path d="m8.6 16.6 3.4 3.4 3.4-3.4"/></svg>',
     home: '<svg viewBox="0 0 24 24"><path d="M3 10.8 12 3l9 7.8"/><path d="M5.6 9.6V21h12.8V9.6"/></svg>',
   };
@@ -834,6 +835,7 @@
       '<nav class="dk-nav dk-tools">' +
       `<a href="sources.html#connectionPanel" data-sec="connectionPanel"><span class="dk-ic">${ICON.plus}</span><span class="dk-tx"><b>${T("Add Connection", "إضافة مصدر")}</b><small>${T("إضافة مصدر", "Add Connection")}</small></span></a>` +
       `<a href="sources.html#managerPanel" data-sec="managerPanel"><span class="dk-ic">${ICON.servers}</span><span class="dk-tx"><b>${T("Manage Servers", "إدارة السيرفرات")}</b><small>${T("إدارة السيرفرات", "Manage Servers")}</small></span></a>` +
+      `<a href="sources.html#importPanel" data-sec="importPanel"><span class="dk-ic">${ICON.importFile}</span><span class="dk-tx"><b>${T("Import Servers", "استيراد السيرفرات")}</b><small>${T("استيراد السيرفرات", "Import Servers")}</small></span></a>` +
       `<a href="sources.html#backupPanel" data-sec="backupPanel"><span class="dk-ic">${ICON.backup}</span><span class="dk-tx"><b>${T("Backup &amp; Restore", "باك اب الرسيفر")}</b><small>${T("باك اب الرسيفر", "Backup &amp; Restore")}</small></span></a>` +
       "</nav>" +
       '<div class="dk-credit"><small>' + T("Design &amp; development", "تصميم وتطوير") + "</small>" + '<b>Ahmed L-HadarY</b><span id="dkVer"></span></div>';
@@ -1092,6 +1094,7 @@
       `<a href="sources.html#connectionPanel"><span>${ICON.plus}</span><b>${T("Add Connection", "إضافة مصدر")}</b></a>` +
       `<a href="sources.html#managerPanel"><span>${ICON.servers}</span><b>${T("Manage Servers", "إدارة السيرفرات")}</b></a>` +
       `<a href="sources.html#backupPanel"><span>${ICON.backup}</span><b>${T("Backup", "باك اب الرسيفر")}</b></a>` +
+      `<a class="dk-import-tool" href="sources.html#importPanel"><span>${ICON.importFile}</span><b>${T("Import Servers", "استيراد السيرفرات")}</b></a>` +
       "</div>";
     let lastSrc = "";
     try {

@@ -162,6 +162,7 @@ body.ph .dk-hero h2{font-size:40px!important;text-align:center!important}
 body.ph .dk-hero-copy p{text-align:center!important;font-size:14.5px!important}
 body.ph .dk-hero-tools{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:8px!important}
 body.ph .dk-hero-tools a{flex-direction:column;justify-content:center;height:86px!important;padding:8px!important;font-size:12px!important;text-align:center;gap:8px!important}
+body.ph .dk-hero-tools .dk-import-tool{grid-column:1/-1;flex-direction:row;height:46px!important}
 body.ph .dk-row-h{margin:26px 4px 12px!important}
 body.ph .dk-row-h h3{font-size:24px!important}
 body.ph .dk-sources{grid-template-columns:1fr!important;gap:14px!important}

@@ -102,6 +102,7 @@
     }
   });
   refreshBackup();
+  document.addEventListener("us-servers-imported", () => refreshBackup());
   ["connSaveBtn", "managerSaveBtn"].forEach((id) => $(id) && $(id).addEventListener("click", () => setTimeout(() => refreshBackup(), 900)));
   if (location.hash) {
     const el = document.querySelector(location.hash);

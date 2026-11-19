@@ -10,4 +10,31 @@
 .backup-card .btn{margin-top:auto;justify-content:center}
 .backup-card .launch-half-kicker{font-size:10px;letter-spacing:.12em;color:#d1b77b;font-weight:850}
 #backupResult{white-space:pre-line}
+.import-panel[hidden],.import-panel [hidden]{display:none!important}
+.import-panel{scroll-margin-top:74px}
+.import-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.import-actions .btn{justify-content:center}
+.import-file{position:relative;cursor:pointer;overflow:hidden}
+.import-file input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.import-file:focus-within{outline:2px solid #e2c07c;outline-offset:3px}
+.import-panel progress{display:block;width:100%;height:8px;margin:14px 0;accent-color:#e2c07c}
+.import-rows{display:grid;gap:6px;list-style:none;padding:0;max-height:440px;overflow:auto;margin:10px 0 14px;overscroll-behavior:contain}
+.import-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,238,192,.045);border:1px solid rgba(255,238,192,.12);border-radius:12px}
+.import-row input{width:18px;height:18px;accent-color:#e2c07c}
+.import-identity{display:grid;min-width:0;gap:2px}
+.import-identity strong{font-size:14px;overflow-wrap:anywhere}
+.import-identity small{color:#d9c494;font-size:11px;overflow-wrap:anywhere}
+.import-status{font-size:12px;color:#e7c891;text-align:end}
+.import-status[data-status=working]{color:#8ee6a3}
+.import-status[data-status=expired],.import-status[data-status=blocked],.import-status[data-status=auth_failed]{color:#f4a398}
+.import-row .btn{min-height:40px;padding:6px 10px;font-size:12px}
+.import-panel .btn:disabled{opacity:.45;cursor:default}
+body.desk-sources #importPanel{grid-column:1/-1}
+@media(max-width:520px){
+  .import-row{grid-template-columns:auto minmax(0,1fr) auto;column-gap:8px}
+  .import-row input{grid-row:1/3}
+  .import-row .btn{grid-column:3;grid-row:1/3}
+  .import-status{grid-column:2;text-align:start}
+  .import-actions>.btn{flex:1 1 140px}
+}
 @media(max-width:760px){.backup-grid{grid-template-columns:1fr}.manager-actions{grid-template-columns:1fr!important}}

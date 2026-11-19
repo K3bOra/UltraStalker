@@ -382,8 +382,9 @@
   }
   const SESSIONS = new Map();
   class Stalker {
-    constructor(profile) {
+    constructor(profile, transport = relayFetch) {
       this.p = profile;
+      this.transport = transport;
       this.mac = canonicalMac(profile.mac);
       this.key = accountId(profile);
       const saved = load("us-web-sess-" + this.key, null);
@@ -407,8 +408,9 @@
     }
     async raw(endpoint, params, token) {
       const url = endpoint + (endpoint.includes("?") ? "&" : "?") + new URLSearchParams(params).toString();
-      const res = await relayFetch(url, this.headers(token));
+      const res = await this.transport(url, this.headers(token));
       const text = await res.text();
+      if (this.transport !== relayFetch && !res.ok) throw new WebError("Portal answered " + res.status, res.status);
       if (!res.ok && !text) throw new WebError("Portal answered " + res.status, 502);
       const obj = parseJsonText(text);
       if (obj === undefined) {
@@ -475,7 +477,7 @@
               }
             }
             if (prof && prof.status === 2 && /block/i.test(str(prof.msg))) throw new WebError("Portal reports this account blocked", 403);
-            save("us-web-sess-" + this.key, { endpoint: ep });
+            if (this.transport === relayFetch) save("us-web-sess-" + this.key, { endpoint: ep });
             return;
           } catch (e) {
             last = e;
@@ -899,8 +901,9 @@
   const cleanTitle = (v) => str(v).replace(/\s+/g, " ");
 
   class Xtream {
-    constructor(profile) {
+    constructor(profile, transport = relayFetch) {
       this.p = profile;
+      this.transport = transport;
       this.c = xtreamCreds(profile.portal);
       if (!this.c) throw new WebError("Xtream details are incomplete", 400);
       this.cache = new Map();
@@ -910,8 +913,9 @@
       const k = key || action + JSON.stringify(extra);
       if (this.cache.has(k)) return this.cache.get(k);
       const q = new URLSearchParams(Object.assign({ username: this.c.user, password: this.c.pass }, action ? { action } : {}, extra));
-      const res = await relayFetch(this.c.base + "/player_api.php?" + q.toString(), { "User-Agent": ua || this.ua || "VLC/3.0.20 LibVLC/3.0.20" }, { timeout: 45000 });
+      const res = await this.transport(this.c.base + "/player_api.php?" + q.toString(), { "User-Agent": ua || this.ua || "VLC/3.0.20 LibVLC/3.0.20" }, { timeout: 45000 });
       const text = await res.text();
+      if (this.transport !== relayFetch && !res.ok) throw new WebError("Server answered " + res.status, res.status);
       const js = parseJsonText(text);
       if (js === undefined) throw new WebError(res.ok ? "Server sent an unreadable answer" : "Server answered " + res.status, 502);
       if (action && !/info$/.test(action)) this.cache.set(k, js);
@@ -1857,16 +1861,32 @@
     throw new WebError("connection type must be portal, xtream or m3u");
   }
   API["connections"] = () => ({ ok: true, connections: activeProfiles().map(editorRow) });
+  function appendProfiles(profiles) {
+    const known = new Set(activeProfiles().map((p) => keyText(profileKey(p))));
+    const rows = store.profiles();
+    const added = new Set();
+    for (const p of profiles) {
+      const key = keyText(profileKey(p));
+      if (known.has(key)) continue;
+      known.add(key);
+      added.add(key);
+      const existing = rows.findIndex((row) => keyText(profileKey(row)) === key);
+      if (existing < 0) rows.push(p);
+      else rows[existing] = p;
+    }
+    if (added.size) {
+      store.setProfiles(rows);
+      const disabled = store.disabled();
+      const remaining = disabled.filter((d) => !added.has(keyText(d)));
+      if (remaining.length !== disabled.length) store.setDisabled(remaining);
+    }
+    return { saved: added.size, duplicates: profiles.length - added.size };
+  }
   API["connection-save"] = (url, body) => {
     const f = formPayload(body);
     const p = normalizeProfile(Object.assign(f.raw, { name: f.name, source: "web", state: "Not checked", explicit_http_accepted: /^http:/i.test(f.raw.portal) }), "web");
     if (!p) throw new WebError("Connection details are not valid");
-    const k = keyText(profileKey(p));
-    if (activeProfiles().some((x) => keyText(profileKey(x)) === k)) return { ok: true, saved: false, duplicate: true, kind: f.kind, message: "Connection already exists" };
-    const rows = store.profiles();
-    rows.push(p);
-    store.setProfiles(rows);
-    store.setDisabled(store.disabled().filter((d) => keyText(d) !== k));
+    if (!appendProfiles([p]).saved) return { ok: true, saved: false, duplicate: true, kind: f.kind, message: "Connection already exists" };
     return { ok: true, saved: true, duplicate: false, kind: f.kind, name: p.name, message: f.kind.toUpperCase() + " connection saved" };
   };
   API["connection-test"] = async (url, body) => {
@@ -1907,6 +1927,160 @@
       return { status: s, detail: e.message };
     }
   }
+
+  // Import checks are cancellable and read just enough of each stream to verify media.
+  async function readPrefix(response, limit, enough) {
+    const bytes = new Uint8Array(limit);
+    if (!response.body) return bytes.subarray(0, 0);
+    const reader = response.body.getReader();
+    let size = 0;
+    try {
+      while (size < limit) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        const part = value.subarray(0, limit - size);
+        bytes.set(part, size);
+        size += part.length;
+        if (enough && enough(bytes.subarray(0, size))) break;
+      }
+      return bytes.subarray(0, size);
+    } finally {
+      reader.cancel().catch(() => {});
+    }
+  }
+
+  function hasMediaBytes(bytes) {
+    if (bytes.length < 12) return false;
+    const tag = (offset, length) => String.fromCharCode(...bytes.subarray(offset, offset + length));
+    if (["ftyp", "styp", "moof"].includes(tag(4, 4)) || ["OggS", "FLV"].some((t) => tag(0, t.length) === t)) return true;
+    if (tag(0, 4) === "RIFF" && ["WAVE", "AVI "].includes(tag(8, 4))) return true;
+    if (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3) return true;
+    if (bytes[0] === 0 && bytes[1] === 0 && bytes[2] === 1 && bytes[3] === 0xba) return true;
+    if (bytes[0] === 0xff && (bytes[1] & 0xf6) === 0xf0) {
+      const next = ((bytes[3] & 3) << 11) | (bytes[4] << 3) | (bytes[5] >> 5);
+      if (next >= 7 && bytes[next] === 0xff && (bytes[next + 1] & 0xf6) === 0xf0) return true;
+    }
+    for (const step of [188, 192]) {
+      for (let i = 0; i < step && i + 2 * step < bytes.length; i++) {
+        if (bytes[i] === 0x47 && bytes[i + step] === 0x47 && bytes[i + 2 * step] === 0x47) return true;
+      }
+    }
+    return false;
+  }
+
+  async function probeImportStream(url, headers, request, depth = 0) {
+    const res = await request(url, headers, depth ? { Range: "bytes=0-16383" } : undefined);
+    const bytes = await readPrefix(res, 256 * 1024, hasMediaBytes);
+    if (hasMediaBytes(bytes)) return true;
+    if (depth >= 3) return false;
+    const text = new TextDecoder().decode(bytes).trimStart();
+    if (!text.startsWith("#EXTM3U")) return false;
+    const lines = text.split(/\r?\n/).map((line) => line.trim());
+    // Ignore a partial final URL when the playlist is larger than the sample.
+    if (bytes.length === 256 * 1024 && !text.endsWith("\n")) lines.pop();
+    const entries = lines.filter((line) => line && !line.startsWith("#"));
+    const candidates = lines.some((line) => /^#EXT-X-(?:TARGETDURATION|MEDIA-SEQUENCE):/.test(line)) ? entries.slice(-2).reverse() : entries.slice(0, 3);
+    const base = res.headers.get("X-Final-Url") || url;
+    for (const entry of candidates) {
+      try {
+        const target = new URL(entry, base);
+        // The relay rewrites HLS links through its own /p endpoint.
+        const next = target.origin === new URL(relayBase()).origin && target.pathname === "/p" ? target.searchParams.get("u") : target.href;
+        if (next && next !== url && await probeImportStream(next, headers, request, depth + 1)) return true;
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  function importAccountStatus(info, kind) {
+    const status = str(info.status || info.account_status).toLowerCase();
+    const rawExpiry = str(info.end_date || info.exp_date || info.expire_billing_date || info.expire_date || info.expiration);
+    const date = /^\d{9,13}$/.test(rawExpiry) ? new Date(Number(rawExpiry) * (rawExpiry.length <= 10 ? 1000 : 1))
+      : new Date(/^\d{4}-\d{2}-\d{2}(?:$|[ T])/.test(rawExpiry) ? rawExpiry : NaN);
+    const expiry = Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : "";
+    if (Stalker.flag(info.blocked) || ["blocked", "banned"].includes(status)) return { status: "blocked", expiry };
+    if (status === "expired" || (expiry && date.getTime() + (rawExpiry.length === 10 && rawExpiry.includes("-") ? 86400000 : 0) <= Date.now())) return { status: "expired", expiry };
+    if (["disabled", "inactive", "not active", "not_active"].includes(status)) return { status: "inactive", expiry };
+    if (kind === "xtream") {
+      if (String(info.auth) === "0" || info.auth === false) return { status: "auth_failed", expiry };
+      if (status && status !== "active") return { status: "inactive", expiry };
+      if (String(info.auth) !== "1" && info.auth !== true && status !== "active") return { status: "auth_failed", expiry };
+    }
+    return { expiry };
+  }
+
+  async function checkImportedProfile(profile, signal) {
+    const ctrl = new AbortController();
+    const stop = () => ctrl.abort();
+    if (signal.aborted) return { status: "pending" };
+    signal.addEventListener("abort", stop, { once: true });
+    const timeout = setTimeout(stop, 45000);
+    const kind = profileKind(profile);
+    const streamHeaders = { "User-Agent": kind === "portal" ? UA : "VLC/3.0.20 LibVLC/3.0.20" };
+    const request = async (url, headers, range) => {
+      if (!/^https?:\/\//i.test(url)) throw new WebError("Unsupported URL", 400);
+      const res = await nativeFetch(relayUrl(url, headers), { signal: ctrl.signal, cache: "no-store", headers: range });
+      if (!res.ok) {
+        if (res.body) res.body.cancel().catch(() => {});
+        throw new WebError("Server answered " + res.status, res.status);
+      }
+      return res;
+    };
+    const probe = (url) => probeImportStream(url, streamHeaders, request);
+    let expiry = "";
+    let catalogued = false;
+    try {
+      if (kind === "m3u") return { status: await probe(profile.portal) ? "working" : "no_stream" };
+      if (kind === "xtream") {
+        const xt = new Xtream(profile, request);
+        const auth = await xt.api("", {}, "import-auth");
+        if (!auth?.user_info) return { status: "auth_failed" };
+        const account = importAccountStatus(auth.user_info, kind);
+        expiry = account.expiry;
+        if (account.status) return account;
+        catalogued = true;
+        for (const [media, action] of [["itv", "get_live_streams"], ["vod", "get_vod_streams"]]) {
+          const rows = Xtream.asRows(await xt.api(action).catch(() => null)).filter((row) => /^\d+$/.test(str(row.stream_id)));
+          for (const row of rows.slice(0, 2)) {
+            const ext = media === "itv" ? "ts" : str(row.container_extension).match(/^\w+$/)?.[0] || "mp4";
+            if (await probe(xt.streamUrl(media, row.stream_id, ext)).catch(() => false)) return { status: "working", expiry };
+          }
+        }
+        if (await probe(profile.portal).catch(() => false)) return { status: "working", expiry };
+      } else {
+        const portal = new Stalker(profile, request);
+        await portal.authorize(true);
+        const account = importAccountStatus(await portal.accountInfo() || {}, kind);
+        expiry = account.expiry;
+        if (account.status) return account;
+        catalogued = true;
+        for (const media of ["itv", "vod"]) {
+          let rows = await portal.page(media, "*", 1).then((page) => page.rows).catch(() => []);
+          if (!rows.length && media === "itv") {
+            rows = Stalker.rows(await portal.call({ type: "itv", action: "get_all_channels", JsHttpRequest: "1-xml" }).catch(() => null));
+          }
+          if (!rows.length) {
+            const [category] = await portal.categories(media).catch(() => []);
+            if (category) rows = await portal.page(media, category.id, 1).then((page) => page.rows).catch(() => []);
+          }
+          for (const row of rows.filter((item) => item.cmd || item.command || item.url).slice(0, 3)) {
+            const url = await portal.link(row, media).catch(() => "");
+            if (url && await probe(url).catch(() => false)) return { status: "working", expiry };
+          }
+        }
+      }
+      return { status: ctrl.signal.aborted ? "timeout" : "no_stream", expiry };
+    } catch (error) {
+      const status = ctrl.signal.aborted ? "timeout" : error.status === 401 ? "auth_failed"
+        : error.status === 403 ? (/account blocked/i.test(error.message) ? "blocked" : "access_denied")
+          : catalogued ? "no_stream" : "unreachable";
+      return { status, expiry };
+    } finally {
+      clearTimeout(timeout);
+      signal.removeEventListener("abort", stop);
+    }
+  }
+
   API["connection-update"] = (url, body) => {
     const oldKey = Array.isArray(body && body.key) ? keyText(body.key) : "";
     if (!oldKey) throw new WebError("missing connection identity");
@@ -2082,6 +2256,11 @@
     tmdbGet,
     store,
     normalizeProfile,
+    appendProfiles,
+    checkImportedProfile,
+    xtreamCreds,
+    xtreamPlaylist,
+    looksLikeM3u,
     profileKey,
     keyText,
     profileKind,

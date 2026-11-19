@@ -447,7 +447,7 @@ body.web-premium .launch-half:not(.active):not(.on):not(.selected):focus-visible
 @media (hover:hover){body.web-premium .launch-half:not(.active):not(.on):not(.selected):hover,body.web-premium .filebox:not(.active):not(.on):not(.selected):hover,body.web-premium .deep-stat:not(.active):not(.on):not(.selected):hover{transform:translateY(-2px)!important;box-shadow:0 22px 44px -22px rgba(var(--ra),.42),0 10px 34px -18px rgba(var(--rc),.30),inset 0 1px 0 rgba(255,255,255,.10)!important;filter:brightness(1.06)}}
 @media (prefers-reduced-motion:reduce){body.web-premium .glass:not(.active):not(.on):not(.selected),body.web-premium .launch-half:not(.active):not(.on):not(.selected),body.web-premium .filebox:not(.active):not(.on):not(.selected),body.web-premium .deep-stat:not(.active):not(.on):not(.selected){transition:none!important}}
 </style>
-<link rel="stylesheet" href="sources.css?v=35"><link rel="stylesheet" href="fonts.css?v=35"><link rel="stylesheet" href="theme.css?v=35"><link rel="stylesheet" href="desktop.css?v=35"><script src="coi.js?v=35"></script><script src="i18n.js?v=35"></script><script src="config.js?v=35"></script><script src="hash.js?v=35"></script><script src="engine.js?v=35"></script><script src="backup.js?v=35"></script><script src="desktop.js?v=35"></script>
+<link rel="stylesheet" href="sources.css?v=36"><link rel="stylesheet" href="fonts.css?v=35"><link rel="stylesheet" href="theme.css?v=36"><link rel="stylesheet" href="desktop.css?v=35"><script src="coi.js?v=35"></script><script src="i18n.js?v=35"></script><script src="config.js?v=35"></script><script src="hash.js?v=35"></script><script src="engine.js?v=38"></script><script src="backup.js?v=35"></script><script src="desktop.js?v=36"></script>
 </head>
 <body class="web-premium web-cleaner-premium">
 <div class="ambient"><div class="orb a"></div><div class="orb b"></div><div class="scan"></div></div>
@@ -485,6 +485,7 @@ body.web-premium .launch-half:not(.active):not(.on):not(.selected):focus-visible
     </div>
     <div class="connection-actions"><button type="button" class="btn" id="connTestBtn">◉ Test Connection</button><button type="button" class="btn green" id="connSaveBtn">＋ Save Connection</button></div>
     <div class="connection-result" id="connResult" aria-live="polite">Choose a connection type, enter its details, then test or save it.</div>
+    <div class="manager-links"><a class="btn" href="#importPanel">Import a server file</a></div>
   </section>
 
   <section class="glass manager-panel" id="managerPanel">
@@ -505,7 +506,33 @@ body.web-premium .launch-half:not(.active):not(.on):not(.selected):focus-visible
     </div>
     <div class="manager-actions"><button type="button" class="btn green" id="managerSaveBtn" disabled>Save Changes</button><button type="button" class="btn danger" id="managerDeleteBtn" disabled>Remove</button></div>
     <div class="connection-result" id="managerResult" aria-live="polite">Choose a saved connection to edit or move it.</div>
-    <div class="manager-links"><a class="btn" href="#connectionPanel">＋ Add Connection</a><a class="btn" href="index.html">‹ Browse Ultra Stalker</a></div>
+    <div class="manager-links"><a class="btn" href="#connectionPanel">＋ Add Connection</a><a class="btn" href="#importPanel">Import Servers</a><a class="btn" href="index.html">‹ Browse Ultra Stalker</a></div>
+  </section>
+
+  <section class="glass connection-panel import-panel" id="importPanel">
+    <div class="connection-head">
+      <div><h2>Import Servers</h2><p>Clean a file of Stalker, Xtream or M3U subscriptions, then check which ones can stream.</p></div>
+    </div>
+    <div class="import-actions">
+      <label class="btn green import-file">Choose server file<input id="importFile" type="file" accept=".txt,.json,.m3u,.m3u8,text/plain,application/json,application/x-mpegurl"></label>
+      <button class="btn" id="importCheck" type="button" hidden>Check again</button>
+      <button class="btn" id="importStop" type="button" hidden>Stop checking</button>
+    </div>
+    <div class="connection-result" id="importNotice" role="status">Choose a TXT, JSON or M3U file containing server details.</div>
+    <div id="importResults" hidden>
+      <progress id="importProgress" aria-label="Server check progress" value="0" max="1"></progress>
+      <div class="import-actions import-downloads">
+        <button class="btn" id="importClean" type="button">Download cleaned file</button>
+        <button class="btn" id="importWorking" type="button" disabled>Download working only</button>
+      </div>
+      <ul id="importRows" class="import-rows" aria-label="Server check results"></ul>
+      <div class="import-actions">
+        <button class="btn" id="importSelected" type="button" disabled>Add selected</button>
+        <button class="btn green" id="importAll" type="button" disabled>Add all working</button>
+        <a class="btn" href="index.html">Browse saved sources</a>
+      </div>
+      <div class="connection-result" id="importSaved" role="status" hidden></div>
+    </div>
   </section>
 
   <section class="glass connection-panel backup-panel" id="backupPanel">
@@ -534,11 +561,6 @@ body.web-premium .launch-half:not(.active):not(.on):not(.selected):focus-visible
 window.usTr=window.usTr||function(v){return String(v==null?"":v)};
 window.usStatus=window.usStatus||function(v){return String(v||"STATUS").toUpperCase()};
 const $=id=>document.getElementById(id);
-const state={clean:{portal:[],portalGroups:[],xtream:[],m3u:[]},dups:0,dupsByKind:{portal:0,xtream:0,m3u:0},invalid:0,invalidByKind:{portal:0,xtream:0,m3u:0},recognizedByKind:{portal:0,xtream:0,m3u:0},imported:0,validation:null};
-let deepStartedAt=0,currentDeepJob=null,deepPollEpoch=0,lastDeepProgress=null;
-const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-
-
 let connectionKind='portal',lastConnectionTest=null;
 const connectionTabs = [...document.querySelectorAll('#connectionPanel .connection-tab')];
 function setConnectionKind(kind) {
@@ -706,6 +728,7 @@ $('managerSaveBtn').addEventListener('click', async () => {
 });
 loadManager();
 </script>
-<script src="sources.js?v=35"></script>
+<script src="sources.js?v=36"></script>
+<script src="import.js?v=1"></script>
 </body>
 </html>
